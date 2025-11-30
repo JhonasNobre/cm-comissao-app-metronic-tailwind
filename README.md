@@ -62,18 +62,20 @@ cd c:\Users\Jhonas\source\repos\ClickMenosComissao\cm-comissao-app-metronic-tail
 npm install
 ```
 
-### 3️⃣ Configurar Keycloak
+### 3️⃣ Configurar Frontend no Keycloak
+
+> [!IMPORTANT]
+> **Use o Keycloak que já está rodando para a API!** Não inicie outro.
+
+O frontend usa o **mesmo Keycloak** da API (`cm-keycloak` na porta 8080).
 
 Siga o guia: [docs/setup/KEYCLOAK_SETUP.md](docs/setup/KEYCLOAK_SETUP.md)
 
 **TL;DR:**
-```bash
-# Na raiz do workspace (ClickMenosComissao/)
-docker-compose up -d
-
-# Acessar: http://localhost:8080/admin
-# Login: admin / admin
-```
+1. Acesse: http://localhost:8080/admin (login: `admin` / `admin`)
+2. No realm `clickmenos`, crie o client `clickmenos-frontend`
+3. Configure redirect URIs: `http://localhost:4200/*`
+4. Habilite PKCE (S256)
 
 ### 4️⃣ Iniciar o servidor de desenvolvimento
 

@@ -1,76 +1,59 @@
 # 🔐 Guia de Configuração do Keycloak
 
-Este guia detalha como configurar o Keycloak para o sistema Clickmenos.
+Este guia detalha como configurar o **frontend** no Keycloak **existente** (que já roda para a API).
 
 ---
 
 ## 📋 Pré-requisitos
 
-- **Docker Desktop** instalado e rodando
-- **Porta 8080** disponível (Keycloak)
-- **Porta 5433** disponível (PostgreSQL do Keycloak)
+- ✅ **Keycloak já rodando** (container `cm-keycloak` da API)
+- ✅ **Porta 8080** acessível
+- ✅ **Realm `clickmenos`** já criado (pela API)
+
+> [!IMPORTANT]
+> **Você NÃO precisa iniciar outro Keycloak!** Use o mesmo que já está rodando para a API.
 
 ---
 
-## 🚀 Passo 1: Iniciar Containers
+## 🚀 Passo 1: Verificar Keycloak da API
 
-### 1.1. Iniciar Docker Compose
+### 1.1. Confirmar que está rodando
 
-Na pasta raiz do projeto frontend (`cm-comissao-app-metronic-tailwind/`):
-
-```bash
-docker-compose up -d
-```
-
-### 1.2. Verificar Status
+Verifique no Docker Desktop ou via comando:
 
 ```bash
-docker-compose ps
+docker ps | findstr keycloak
 ```
 
 Você deve ver:
-
 ```
-NAME                          STATUS
-clickmenos-keycloak          Up (healthy)
-clickmenos-frontend-postgres Up (healthy)
+cm-keycloak    Up (healthy)    8080:8080
 ```
 
-### 1.3. Aguardar Inicialização
-
-O Keycloak pode levar **1-2 minutos** para inicializar completamente. Aguarde até que o healthcheck mostre `(healthy)`.
-
----
-
-## 🔐 Passo 2: Acessar Console Admin
-
-### 2.1. Abrir Browser
+### 1.2. Acessar Console Admin
 
 Acesse: **http://localhost:8080/admin**
 
-### 2.2. Fazer Login
-
+**Login:**
 - **Username:** `admin`
-- **Password:** `admin`
+- **Password:** `admin` (ou a senha configurada na API)
 
 ---
 
-## 🏢 Passo 3: Criar Realm
+## 🏢 Passo 2: Selecionar Realm
 
-### 3.1. Criar Realm "clickmenos"
+1. No menu superior esquerdo, selecione o realm **`clickmenos`** (já deve existir)
+2. Se não existir, crie conforme documentação da API
 
-1. No menu lateral esquerdo, clique no dropdown do realm (padrão: **master**)
-2. Clique em **"Create Realm"**
-3. Preencha:
-   - **Realm name:** `clickmenos`
-   - **Enabled:** ✅ ON
-4. Clique em **"Create"**
 
 ---
 
-## 🔌 Passo 4: Criar Clients
+## 🔌 Passo 3: Criar Client do Frontend
 
-### 4.1. Client: clickmenos-frontend (Frontend Angular)
+> [!NOTE]
+> O client `cm-comissao-api` (backend) já deve existir. Você vai criar apenas o client do **frontend**.
+
+### 3.1. Client: clickmenos-frontend
 
 #### Criar Client
 
@@ -88,6 +71,7 @@ Acesse: **http://localhost:8080/admin**
    - ✅ **Direct access grants** (ON)
    - ⬜ **Implicit flow** (OFF)
    - ⬜ **Service accounts roles** (OFF)
+   - **Client authentication:** ⬜ OFF (public client)
 6. Clique em **"Next"**
 
 #### Login Settings
@@ -102,91 +86,45 @@ Acesse: **http://localhost:8080/admin**
 
 #### Advanced Settings (PKCE)
 
-9. Na aba **"Advanced"**, role até **"Advanced settings"**:
-   - **Proof Key for Code Exchange Code Challenge Method:** `S256`
-10. Clique em **"Save"**
+9. Clique no client `clickmenos-frontend` que você acabou de criar
+10. Vá na aba **"Advanced"**
+11. Role até **"Advanced settings"**:
+    - **Proof Key for Code Exchange Code Challenge Method:** `S256`
+12. Clique em **"Save"**
 
 ---
 
-### 4.2. Client: clickmenos-backend (Backend API)
+## 👥 Passo 4: Verificar Roles
 
-#### Criar Client
-
-1. Vá em **"Clients"** → **"Create client"**
-2. **General Settings:**
-   - **Client type:** `OpenID Connect`
-   - **Client ID:** `clickmenos-backend`
-3. Clique em **"Next"**
-
-#### Capability Config
-
-4. **Authentication flow:**
-   - ⬜ **Standard flow** (OFF)
-   - ⬜ **Direct access grants** (OFF)
-   - ⬜ **Implicit flow** (OFF)
-   - ⬜ **Service accounts roles** (OFF)
-   - ✅ **OAuth 2.0 Device Authorization Grant** (OFF)
-   - **Client authentication:** ✅ ON (Bearer-only client)
-5. Clique em **"Next"**
-6. Clique em **"Save"**
-
----
-
-## 👥 Passo 5: Criar Roles
-
-### 5.1. Criar Roles do Realm
+> [!NOTE]
+> As roles já devem existir (criadas pela configuração da API). Apenas verifique se estão lá.
 
 1. No menu lateral, vá em **"Realm roles"**
-2. Clique em **"Create role"**
+2. Confirme que existem:
+   - ✅ `admin-clickmenos`
+   - ✅ `gestor-imobiliaria`
+   - ✅ `corretor`
 
-#### Role: admin-clickmenos
-
-3. Preencha:
-   - **Role name:** `admin-clickmenos`
-   - **Description:** `Super administrador do sistema Clickmenos`
-4. Clique em **"Save"**
-
-#### Role: gestor-imobiliaria
-
-5. Clique em **"Create role"** novamente
-6. Preencha:
-   - **Role name:** `gestor-imobiliaria`
-   - **Description:** `Gestor de uma imobiliária`
-7. Clique em **"Save"**
-
-#### Role: corretor
-
-8. Clique em **"Create role"** novamente
-9. Preencha:
-   - **Role name:** `corretor`
-   - **Description:** `Corretor de imóveis`
-10. Clique em **"Save"**
+Se não existirem, crie-as conforme documentação da API.
 
 ---
 
-## 🏘️ Passo 6: Criar Grupos (Multitenancy)
+## 🏘️ Passo 5: Verificar Grupos
 
-### 6.1. Criar Grupo "Imobiliaria_1"
+> [!NOTE]
+> O grupo `Imobiliaria_1` já deve existir. Apenas verifique.
 
 1. No menu lateral, vá em **"Groups"**
-2. Clique em **"Create group"**
-3. Preencha:
-   - **Name:** `Imobiliaria_1`
-4. Clique em **"Create"**
-
-### 6.2. Adicionar Atributo `id_imobiliaria`
-
-5. Clique no grupo **"Imobiliaria_1"** que você acabou de criar
-6. Vá na aba **"Attributes"**
-7. Clique em **"Add an attribute"**
-8. Preencha:
+2. Confirme que existe o grupo **`Imobiliaria_1`**
+3. Clique nele e verifique se tem o atributo:
    - **Key:** `id_imobiliaria`
    - **Value:** `1`
-9. Clique em **"Save"**
 
 ---
 
-## 👤 Passo 7: Criar Usuário de Teste
+## 👤 Passo 6: Verificar/Criar Usuário de Teste
+
+Se já existe um usuário de teste na API, você pode usar o mesmo. Caso contrário:
 
 ### 7.1. Criar Usuário
 
