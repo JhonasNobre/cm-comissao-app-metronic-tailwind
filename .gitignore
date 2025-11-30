@@ -1,0 +1,32 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Angular
+dist/
+.angular/
+.nx/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Test coverage
+coverage/
+
+# Misc
+*.log
+.cache/
+
+# Docker volumes (if any local data)
+postgres_keycloak_data/

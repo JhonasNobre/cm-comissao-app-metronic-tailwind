@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # PostgreSQL - Banco de dados do Keycloak
+  postgres-keycloak:
+    image: postgres:16
+    container_name: clickmenos-frontend-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: keycloak
+    ports:
+      - "5433:5432" # Porta 5433 para não conflitar com o PostgreSQL da API
+    volumes:
+      - postgres_keycloak_data:/var/lib/postgresql/data
+    networks:
+      - clickmenos-frontend-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Keycloak - Servidor de autenticação centralizada
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: clickmenos-keycloak
+    environment:
+      # Admin credentials
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+
+      # Database configuration
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres123
+
+      # Hostname configuration
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+
+      # Proxy configuration (for development)
+      KC_PROXY: edge
+    command: start-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-keycloak:
+        condition: service_healthy
+    networks:
+      - clickmenos-frontend-network
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  postgres_keycloak_data:
+    driver: local
+
+networks:
+  clickmenos-frontend-network:
+    driver: bridge
