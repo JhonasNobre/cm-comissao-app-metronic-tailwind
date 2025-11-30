@@ -239,14 +239,28 @@ Para que o token JWT contenha as informações necessárias, configure os mapper
    - **Add to userinfo:** ✅ ON
 5. Clique em **"Save"**
 
-### 7.3. Vincular Scope ao Client Frontend
+### 7.3. Verificar Scopes Vinculados
+
+> [!NOTE]
+> **Os scopes necessários já foram adicionados automaticamente!**
+> 
+> Quando você criou o client `clickmenos-frontend`, o Keycloak automaticamente vinculou os scopes padrão (`profile`, `email`, `roles`, `web-origins`).
+
+**Para verificar:**
 
 1. Vá em **"Clients"** → `clickmenos-frontend`
 2. Vá na aba **"Client scopes"**
-3. Clique em **"Add client scope"**
-4. Selecione o scope que contém os mappers (ex: `roles`)
-5. Escolha **"Default"**
-6. Clique em **"Add"**
+3. Na tabela **"Assigned client scope"**, você deve ver:
+   - ✅ `profile` (Default)
+   - ✅ `email` (Default)
+   - ✅ `roles` (Default)
+   - ✅ `web-origins` (Default)
+
+4. Se você clicar em **"Add client scope"**, verá: **"No client scopes - There are no client scopes left to add"**
+   - Isso é **NORMAL e CORRETO**! Significa que tudo já está configurado.
+
+> [!TIP]
+> Se por algum motivo algum scope estiver faltando (raro), você pode criá-lo manualmente em **"Client scopes"** no menu lateral e depois adicioná-lo aqui.
 
 ---
 
