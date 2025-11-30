@@ -1,6 +1,6 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthService } from '../auth/auth.service';
+import { OAuthService } from 'angular-oauth2-oidc';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 
@@ -11,11 +11,11 @@ import { catchError, throwError } from 'rxjs';
  * Interceptor funcional (Angular 14+)
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-    const authService = inject(AuthService);
+    const oauthService = inject(OAuthService);
     const router = inject(Router);
 
     // Clonar requisição e adicionar header Authorization
-    const token = authService.getAccessToken();
+    const token = oauthService.getAccessToken();
 
     if (token) {
         req = req.clone({
@@ -31,7 +31,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             if (error.status === 401) {
                 // Token expirado ou inválido
                 console.warn('Token expirado ou inválido. Redirecionando para login...');
-                authService.logout();
+                oauthService.logOut();
                 router.navigate(['/auth/login']);
             }
 

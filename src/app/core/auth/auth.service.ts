@@ -17,6 +17,9 @@ export class AuthService {
     private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
     public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
+    private isDoneLoadingSubject = new BehaviorSubject<boolean>(false);
+    public isDoneLoading$ = this.isDoneLoadingSubject.asObservable();
+
     constructor(
         private oauthService: OAuthService,
         private router: Router
@@ -73,11 +76,27 @@ export class AuthService {
         this.oauthService.configure(authConfig);
 
         // Carregar discovery document do Keycloak
+        console.log('AuthService: Loading discovery document...');
         this.oauthService.loadDiscoveryDocumentAndTryLogin().then(() => {
+            console.log('AuthService: Discovery loaded. Checking token...');
             if (this.oauthService.hasValidAccessToken()) {
+                console.log('AuthService: Token is VALID.');
                 this.isAuthenticatedSubject.next(true);
                 this.setupAutomaticSilentRefresh();
+
+                console.log('AuthService: Current URL:', this.router.url);
+                // Se estiver na página de login, redirecionar para a home
+                if (this.router.url.includes('/auth/login')) {
+                    console.log('AuthService: Redirecting to home...');
+                    this.router.navigate(['/']);
+                }
+            } else {
+                console.log('AuthService: Token is INVALID or MISSING.');
             }
+            this.isDoneLoadingSubject.next(true);
+        }).catch(err => {
+            console.error('AuthService: Error loading discovery:', err);
+            this.isDoneLoadingSubject.next(true);
         });
 
         // Eventos de token
@@ -103,9 +122,21 @@ export class AuthService {
      * Realiza o logout do usuário
      */
     logout(): void {
+        const idToken = this.oauthService.getIdToken();
+        const logoutUrl = this.oauthService.logoutUrl;
+
         this.oauthService.logOut();
         this.isAuthenticatedSubject.next(false);
-        this.router.navigate(['/auth/login']);
+
+        if (logoutUrl && idToken) {
+            // Construir URL de logout do Keycloak (RP-Initiated Logout)
+            // Requer id_token_hint para evitar confirmação e post_logout_redirect_uri para voltar ao app
+            const url = `${logoutUrl}?post_logout_redirect_uri=${encodeURIComponent(environment.keycloak.postLogoutRedirectUri)}&id_token_hint=${idToken}`;
+            window.location.href = url;
+        } else {
+            // Fallback se não tiver URL de logout ou token
+            this.router.navigate(['/auth/login']);
+        }
     }
 
     /**

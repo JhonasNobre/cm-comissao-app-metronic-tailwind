@@ -4,7 +4,8 @@ import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-profile-default',
-  imports: [CommonModule, RouterLink],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './profile-default.component.html',
   styleUrl: './profile-default.component.scss'
 })
