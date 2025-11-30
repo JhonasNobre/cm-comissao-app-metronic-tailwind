@@ -11,6 +11,24 @@ import { AuthService } from '../../core/auth/auth.service';
 export class HeaderComponent {
   private authService = inject(AuthService);
 
+  userName: string = 'Usuário';
+  userEmail: string = '';
+  userAvatar: string = 'assets/media/avatars/300-2.png'; // Default avatar
+
+  ngOnInit(): void {
+    this.loadUserInfo();
+  }
+
+  private loadUserInfo(): void {
+    if (this.authService.isAuthenticated()) {
+      const claims = this.authService.getUserInfo();
+      if (claims) {
+        this.userName = claims.name || claims.preferred_username || 'Usuário';
+        this.userEmail = claims.email || '';
+      }
+    }
+  }
+
   logout() {
     this.authService.logout();
   }

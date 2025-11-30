@@ -107,6 +107,15 @@ export class AuthService {
             if (event.type === 'logout' || event.type === 'token_error') {
                 this.isAuthenticatedSubject.next(false);
             }
+
+            // Tratamento específico para erro de nonce/state inválido
+            if (event.type === 'invalid_nonce_in_state') {
+                console.warn('AuthService: Invalid nonce/state detected. Resetting flow...');
+                // Limpar storage para remover estado inválido
+                sessionStorage.clear();
+                // Redirecionar para login para tentar novamente
+                this.router.navigate(['/auth/login']);
+            }
         });
     }
 
