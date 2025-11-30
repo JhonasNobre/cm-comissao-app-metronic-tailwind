@@ -132,107 +132,67 @@ export class AuthService {
     /**
      * Obtém as informações do usuário (claims do token)
      */
-    getUserInfo(): any {
-        const claims = this.oauthService.getIdentityClaims();
-        return claims;
+
+    if(!claims) return[];
+
+    // Keycloak pode colocar roles em diferentes lugares
+    // realm_access.roles (padrão) ou roles direto
+    if(claims.realm_access && claims.realm_access.roles) {
+    return claims.realm_access.roles;
+}
+
+if (claims.roles) {
+    return Array.isArray(claims.roles) ? claims.roles : [claims.roles];
+}
+
+return [];
     }
 
-    /**
-     * Obtém o ID da imobiliária do usuário (multitenancy)
-     * Extrai do claim 'groups' no formato: /imobiliaria_{UUID}
-     */
-    getIdImobiliaria(): string | null {
-        const claims: any = this.oauthService.getIdentityClaims();
+/**
+ * Verifica se o usuário tem uma role específica
+ */
+hasRole(role: string): boolean {
+    const roles = this.getUserRoles();
+    return roles.includes(role);
+}
 
-        if (!claims || !claims.groups) {
-            console.warn('Claim groups não encontrado no token');
-            return null;
-        }
+/**
+ * Verifica se o usuário é administrador
+ */
+isAdmin(): boolean {
+    return this.hasRole('Admin') || this.hasRole('admin-clickmenos');
+}
 
-        // Groups pode ser array ou string
-        const groups = Array.isArray(claims.groups) ? claims.groups : [claims.groups];
+/**
+ * Verifica se o usuário é gestor
+ */
+isGestor(): boolean {
+    return this.hasRole('Gestor') || this.hasRole('gestor-imobiliaria');
+}
 
-        // Procurar por grupo que começa com 'imobiliaria_' ou '/imobiliaria_'
-        const imobiliariaGroup = groups.find((g: string) =>
-            g.includes('imobiliaria_')
-        );
-
-        if (!imobiliariaGroup) {
-            console.warn('Grupo de imobiliária não encontrado');
-            return null;
-        }
-
-        // Extrair UUID do formato: /imobiliaria_{UUID} ou imobiliaria_{UUID}
-        const match = imobiliariaGroup.match(/imobiliaria_([a-f0-9-]+)/i);
-        return match ? match[1] : null;
-    }
-
-    /**
-     * Obtém as roles do usuário
-     */
-    getUserRoles(): string[] {
-        const claims: any = this.oauthService.getIdentityClaims();
-
-        if (!claims) return [];
-
-        // Keycloak pode colocar roles em diferentes lugares
-        // realm_access.roles (padrão) ou roles direto
-        if (claims.realm_access && claims.realm_access.roles) {
-            return claims.realm_access.roles;
-        }
-
-        if (claims.roles) {
-            return Array.isArray(claims.roles) ? claims.roles : [claims.roles];
-        }
-
-        return [];
-    }
-
-    /**
-     * Verifica se o usuário tem uma role específica
-     */
-    hasRole(role: string): boolean {
-        const roles = this.getUserRoles();
-        return roles.includes(role);
-    }
-
-    /**
-     * Verifica se o usuário é administrador
-     */
-    isAdmin(): boolean {
-        return this.hasRole('Admin') || this.hasRole('admin-clickmenos');
-    }
-
-    /**
-     * Verifica se o usuário é gestor
-     */
-    isGestor(): boolean {
-        return this.hasRole('Gestor') || this.hasRole('gestor-imobiliaria');
-    }
-
-    /**
-    * Verifica se o usuário é vendedor
-    */
-    isVendedor(): boolean {
-        return this.hasRole('Vendedor') || this.hasRole('corretor');
-    }
+/**
+* Verifica se o usuário é vendedor
+*/
+isVendedor(): boolean {
+    return this.hasRole('Vendedor') || this.hasRole('corretor');
+}
 
     /**
      * Configura renovação automática do token (silent refresh)
      */
     private setupAutomaticSilentRefresh(): void {
-        this.oauthService.setupAutomaticSilentRefresh();
-    }
+    this.oauthService.setupAutomaticSilentRefresh();
+}
 
     /**
      * Renova o token manualmente
      */
-    async refreshToken(): Promise<void> {
-        try {
-            await this.oauthService.silentRefresh();
-        } catch (error) {
-            console.error('Erro ao renovar token:', error);
-            this.logout();
-        }
+    async refreshToken(): Promise < void> {
+    try {
+        await this.oauthService.silentRefresh();
+    } catch(error) {
+        console.error('Erro ao renovar token:', error);
+        this.logout();
     }
+}
 }

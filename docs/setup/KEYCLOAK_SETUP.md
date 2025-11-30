@@ -5,11 +5,10 @@ Este guia detalha como configurar o **frontend** no Keycloak **existente** (que 
 > [!IMPORTANT]
 > **Você NÃO precisa iniciar outro Keycloak!** Use o mesmo que já está rodando para a API (`cm-keycloak` na porta 8080).
 
-> [!WARNING]
-> **Mudança Planejada (Futuro):**
-> - **Atual:** `imobiliaria_{UUID}` e `id_imobiliaria`
-> - **Futuro:** `empresa_{UUID}` e `id_empresa`
-> - Quando a mudança acontecer, este guia será atualizado
+> [!NOTE]
+> **Nomenclatura Atualizada:**
+> - Usamos `empresa_{UUID}` e `id_empresa` (nova nomenclatura)
+> - O código antigo usava `imobiliaria_{UUID}` mas foi atualizado
 
 ---
 
@@ -18,6 +17,7 @@ Este guia detalha como configurar o **frontend** no Keycloak **existente** (que 
 - ✅ **Keycloak já rodando** (container `cm-keycloak` da API)
 - ✅ **Porta 8080** acessível
 - ✅ **Realm `clickmenos`** já criado (pela API)
+- ✅ **Branch da API atualizada** com nomenclatura `empresa`
 
 ---
 
@@ -142,73 +142,72 @@ Se as roles abaixo **NÃO existirem**, crie-as:
    - **Description:** `Vendedor`
 3. Clique em **"Save"**
 
-> [!IMPORTANT]
-> **Compatibilidade com Backend:**
-> - O backend verifica a role `admin-clickmenos` em alguns lugares
-> - Mas também aceita `Admin` conforme documentação
-> - Se houver problemas de autorização, pode ser necessário criar também `admin-clickmenos`
-
 ---
 
-## 🏘️ Passo 5: Verificar Grupo (Multitenancy)
+## 🏘️ Passo 5: Criar/Atualizar Grupo (Multitenancy)
 
-> [!NOTE]
-> O backend extrai `id_imobiliaria` do grupo do usuário no formato: `imobiliaria_{UUID}`
+> [!IMPORTANT]
+> **Nova Nomenclatura:** Use `empresa_{UUID}` em vez de `imobiliaria_{UUID}`
 
-### 5.1. Verificar Grupo Existente
+### 5.1. Deletar Grupos Antigos (se existirem)
+
+Se você tem grupos com o formato `imobiliaria_{UUID}`:
 
 1. No menu lateral, vá em **"Groups"**
-2. Confirme que existe um grupo com formato: `imobiliaria_{UUID}`
-   - Exemplo: `imobiliaria_550e8400-e29b-41d4-a716-446655440000`
+2. Selecione cada grupo `imobiliaria_*`
+3. Clique em **"Delete"**
+4. Confirme a exclusão
 
-### 5.2. Criar Novo Grupo (se necessário)
-
-Se precisar criar um grupo para uma nova imobiliária:
+### 5.2. Criar Novo Grupo
 
 1. Clique em **"Create group"**
-2. **Name:** `imobiliaria_{UUID}` 
+2. **Name:** `empresa_{UUID}` 
    - **Importante:** Use um UUID válido (pode gerar em https://www.uuidgenerator.net/)
-   - Exemplo: `imobiliaria_a1b2c3d4-e5f6-7890-abcd-ef1234567890`
+   - Exemplo: `empresa_550e8400-e29b-41d4-a716-446655440000`
 3. Clique em **"Create"**
 
-> [!WARNING]
-> **Mudança Futura:**
-> - O formato atual é: `imobiliaria_{UUID}`
-> - Em breve será alterado para: `empresa_{UUID}`
-> - Quando isso acontecer, todos os grupos existentes precisarão ser renomeados
+### 5.3. Adicionar Atributo (Opcional)
+
+Se a API precisar do atributo `id_empresa`:
+
+1. Clique no grupo que você acabou de criar
+2. Vá na aba **"Attributes"**
+3. Clique em **"Add an attribute"**
+4. Preencha:
+   - **Key:** `id_empresa`
+   - **Value:** `{mesmo UUID usado no nome do grupo}`
+5. Clique em **"Save"**
 
 ---
 
-## 👤 Passo 6: Verificar/Configurar Usuário de Teste
+## 👤 Passo 6: Configurar Usuário de Teste
 
-### 6.1. Verificar se usuário existe
+### 6.1. Atualizar Usuário Existente
 
 1. No menu lateral, vá em **"Users"**
-2. Procure por `jhonas.teste` ou outro usuário de teste
-3. Se já existe, vá para **6.2**
-4. Se não existe, crie conforme documentação da API
+2. Clique no usuário (ex: `jhonas.teste`)
 
-### 6.2. Atribuir Role ao Usuário
-
-1. Clique no usuário (ex: `jhonas.teste`)
-2. Vá na aba **"Role mapping"**
-3. Clique em **"Assign role"**
-4. Filtre por **"Filter by realm roles"**
-5. Selecione a role adequada (ex: `Gestor` ou `Admin`)
-6. Clique em **"Assign"**
-
-### 6.3. Adicionar ao Grupo
+### 6.2. Remover Grupo Antigo (se existir)
 
 1. Vá na aba **"Groups"**
+2. Se o usuário estiver em algum grupo `imobiliaria_*`, clique em **"Leave"**
+
+### 6.3. Adicionar ao Novo Grupo
+
+1. Ainda na aba **"Groups"**
 2. Clique em **"Join group"**
-3. Selecione o grupo `imobiliaria_{UUID}`
+3. Selecione o grupo `empresa_{UUID}` que você criou
 4. Clique em **"Join"**
+
+### 6.4. Verificar Role
+
+1. Vá na aba **"Role mapping"**
+2. Confirme que o usuário tem uma role atribuída (ex: `Gestor`)
+3. Se não tiver, clique em **"Assign role"** e adicione
 
 ---
 
 ## 🔧 Passo 7: Configurar Client Scopes (Mappers)
-
-Para que o token JWT contenha as informações necessárias, configure os mappers:
 
 ### 7.1. Mapear Groups no Token
 
@@ -244,7 +243,7 @@ Para que o token JWT contenha as informações necessárias, configure os mapper
 > [!NOTE]
 > **Os scopes necessários já foram adicionados automaticamente!**
 > 
-> Quando você criou o client `clickmenos-frontend`, o Keycloak automaticamente vinculou os scopes padrão (`profile`, `email`, `roles`, `web-origins`).
+> Quando você criou o client `clickmenos-frontend`, o Keycloak automaticamente vinculou os scopes padrão.
 
 **Para verificar:**
 
@@ -256,19 +255,11 @@ Para que o token JWT contenha as informações necessárias, configure os mapper
    - ✅ `roles` (Default)
    - ✅ `web-origins` (Default)
 
-4. Se você clicar em **"Add client scope"**, verá: **"No client scopes - There are no client scopes left to add"**
-   - Isso é **NORMAL e CORRETO**! Significa que tudo já está configurado.
-
-> [!TIP]
-> Se por algum motivo algum scope estiver faltando (raro), você pode criá-lo manualmente em **"Client scopes"** no menu lateral e depois adicioná-lo aqui.
-
 ---
 
 ## ✅ Passo 8: Testar Configuração
 
 ### 8.1. Obter Token de Teste
-
-Teste se o token contém as informações corretas:
 
 ```bash
 curl -X POST http://localhost:8080/realms/clickmenos/protocol/openid-connect/token \
@@ -290,63 +281,36 @@ curl -X POST http://localhost:8080/realms/clickmenos/protocol/openid-connect/tok
   "realm_access": {
     "roles": ["Admin", "Gestor", "ou Vendedor"]
   },
-  "groups": ["/imobiliaria_550e8400-e29b-41d4-a716-446655440000"]
+  "groups": ["/empresa_550e8400-e29b-41d4-a716-446655440000"]
 }
 ```
 
 > [!IMPORTANT]
 > **O que o Backend espera:**
-> - **Claim `groups`:** valor como `imobiliaria_{UUID}` (pode vir com ou sem `/` no início)
+> - **Claim `groups`:** valor como `empresa_{UUID}` (pode vir com ou sem `/` no início)
 > - **Claim `realm_access.roles`:** array com roles do usuário
-> - O backend extrai o UUID fazendo: `groupsClaim.Replace("imobiliaria_", "").Replace("/", "")`
+> - O backend extrai o UUID fazendo: `groupsClaim.Replace("empresa_", "").Replace("/", "")`
 
 ---
 
 ## 🎉 Conclusão
 
-Configuração do frontend no Keycloak concluída! Agora você tem:
+Configuração do frontend no Keycloak concluída com a **nova nomenclatura**!
 
-✅ Client `clickmenos-frontend` configurado (PKCE, redirect URIs)
+✅ Client `clickmenos-frontend` configurado
 ✅ Roles criadas (`Admin`, `Gestor`, `Vendedor`)
-✅ Grupos no formato `imobiliaria_{UUID}`
+✅ Grupos no formato `empresa_{UUID}` (**nova nomenclatura**)
 ✅ Mappers configurados (groups, roles)
-✅ Token JWT com informações necessárias
+✅ Token JWT com informações corretas
 
 ---
 
 ## 🔄 Próximos Passos
 
-1. ✅ Keycloak configurado para frontend
-2. 📝 Prosseguir para Fase 3: Implementar autenticação no Angular
-3. 🔧 Criar `AuthService`, `AuthGuard`, `HttpInterceptor`
-4. 🧪 Testar login end-to-end
-
----
-
-## 📝 Notas sobre Mudança Futura
-
-Quando a migração de `imobiliaria` → `empresa` acontecer:
-
-### Backend (API)
-- Alterar `TenantService.cs`:
-  ```csharp
-  // De:
-  if (groupsClaim.StartsWith("imobiliaria_"))
-  
-  // Para:
-  if (groupsClaim.StartsWith("empresa_"))
-  ```
-- Renomear coluna no banco: `id_imobiliaria` → `id_empresa`
-- Atualizar migrations
-
-### Keycloak
-- Renomear todos os grupos:
-  - De: `imobiliaria_{UUID}`
-  - Para: `empresa_{UUID}`
-
-### Frontend
-- Atualizar textos na UI
-- Variáveis/funções com "imobiliaria" → "empresa"
+1. ✅ Keycloak configurado com nomenclatura atualizada
+2. 🧪 Testar login no frontend
+3. 🧪 Testar chamadas à API
+4. ✅ Verificar que multitenancy funciona corretamente
 
 ---
 
