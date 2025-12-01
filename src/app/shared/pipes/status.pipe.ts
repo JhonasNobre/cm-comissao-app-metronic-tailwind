@@ -1,5 +1,5 @@
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
+// import { TranslocoService } from '@jsverse/transloco';
 
 @Injectable({
     providedIn: 'root'
@@ -11,10 +11,7 @@ import { TranslocoService } from '@jsverse/transloco';
 })
 
 export class StatusPipe implements PipeTransform {
-    constructor(private translate: TranslocoService) { }
-
     transform(value: any, args?: any): any {
-        const key = value ? "general.singular.active" : "general.singular.inactive";
-        return this.translate.translate(key);
+        return value ? "Ativo" : "Inativo";
     }
 }

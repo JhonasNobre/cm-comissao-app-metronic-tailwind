@@ -4,7 +4,7 @@
         <!-- Top Header -->
         <div class="flex flex-wrap items-center lg:items-end justify-between gap-5">
             <div class="flex flex-col justify-center gap-2">
-                <h1 class="text-xl font-medium leading-none text-mono">Users</h1>
+                <h1 class="text-xl font-medium leading-none font-mono">Users</h1>
                 <div class="flex items-center flex-wrap gap-1.5 font-medium">
                     <span class="text-base text-secondary-foreground">All Users:</span>
                     <span class="text-base text-foreground font-medium">{{ (users$ | async)?.length || 0 }}</span>
@@ -26,7 +26,7 @@
                 </h3>
                 <div class="flex flex-wrap gap-2 lg:gap-5">
                     <div class="flex">
-                        <label class="kt-input">
+                        <label class="flex items-center gap-2">
                             <i class="ki-filled ki-magnifier"></i>
                             <input type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')"
                                 placeholder="Search users" />
@@ -41,7 +41,7 @@
                 </div>
             </div>
             <div class="kt-card-content">
-                <div class="kt-scrollable-x-auto">
+                <div class="overflow-x-auto">
                     <p-table #dt [value]="(users$ | async) || []" [rows]="10" [rowsPerPageOptions]="[10, 25, 50, 100]"
                         [paginator]="true" [globalFilterFields]="['name', 'email', 'role', 'status']"
                         [tableStyle]="{ 'min-width': '75rem' }" [rowHover]="true" dataKey="id"
@@ -51,37 +51,34 @@
                         <ng-template pTemplate="header">
                             <tr>
                                 <th class="w-[60px] text-center pl-5">
-                                    <input class="kt-checkbox kt-checkbox-sm" type="checkbox" />
+                                    <input type="checkbox" />
                                 </th>
                                 <th pSortableColumn="name" class="min-w-[300px]">
-                                    <span class="kt-table-col">
-                                        <span class="kt-table-col-label">User</span>
-                                        <span class="kt-table-col-sort"><p-sortIcon field="name"></p-sortIcon></span>
-                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        User
+                                        <p-sortIcon field="name"></p-sortIcon>
+                                    </div>
                                 </th>
                                 <th pSortableColumn="role" class="min-w-[150px]">
-                                    <span class="kt-table-col">
-                                        <span class="kt-table-col-label">Role</span>
-                                        <span class="kt-table-col-sort"><p-sortIcon field="role"></p-sortIcon></span>
-                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        Role
+                                        <p-sortIcon field="role"></p-sortIcon>
+                                    </div>
                                 </th>
                                 <th pSortableColumn="status" class="min-w-[150px]">
-                                    <span class="kt-table-col">
-                                        <span class="kt-table-col-label">Status</span>
-                                        <span class="kt-table-col-sort"><p-sortIcon field="status"></p-sortIcon></span>
-                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        Status
+                                        <p-sortIcon field="status"></p-sortIcon>
+                                    </div>
                                 </th>
                                 <th pSortableColumn="joinedDate" class="min-w-[150px]">
-                                    <span class="kt-table-col">
-                                        <span class="kt-table-col-label">Joined Date</span>
-                                        <span class="kt-table-col-sort"><p-sortIcon
-                                                field="joinedDate"></p-sortIcon></span>
-                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        Joined Date
+                                        <p-sortIcon field="joinedDate"></p-sortIcon>
+                                    </div>
                                 </th>
                                 <th class="w-[100px]">
-                                    <span class="kt-table-col">
-                                        <span class="kt-table-col-label">Actions</span>
-                                    </span>
+                                    Actions
                                 </th>
                             </tr>
                         </ng-template>
@@ -89,7 +86,7 @@
                         <ng-template pTemplate="body" let-user>
                             <tr>
                                 <td class="text-center pl-5">
-                                    <input class="kt-checkbox kt-checkbox-sm" type="checkbox" />
+                                    <input type="checkbox" />
                                 </td>
                                 <td>
                                     <div class="flex items-center gap-2.5">
@@ -98,7 +95,7 @@
                                         </div>
                                         <div class="flex flex-col">
                                             <a [routerLink]="[user.id]"
-                                                class="text-sm font-medium text-mono hover:text-primary mb-px">{{
+                                                class="text-sm font-medium font-mono hover:text-primary mb-px">{{
                                                 user.name
                                                 }}</a>
                                             <a [routerLink]="[user.id]"
@@ -111,10 +108,10 @@
                                     {{ user.role }}
                                 </td>
                                 <td>
-                                    <span class="custom-badge" [ngClass]="getStatusBadgeClass(user.status)">
-                                        <span class="custom-badge-dot"
-                                            [ngClass]="getStatusDotClass(user.status)"></span>
-                                        {{ user.status }}
+                                    <span class="kt-badge kt-badge-success kt-badge-outline rounded-[30px]">
+                                        <span class="kt-badge-dot size-1.5">
+                                        </span>
+                                        In Office
                                     </span>
                                 </td>
                                 <td class="text-foreground font-normal">

@@ -4,6 +4,7 @@ import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { providePrimeNG } from 'primeng/config';
+import Aura from '@primeng/themes/aura';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -25,7 +26,12 @@ export const appConfig: ApplicationConfig = {
     ),
     provideOAuthClient(),
     providePrimeNG({
-      // theme: { ... } // Removed as per user request (not using PrimeNG CSS)
+      theme: {
+        preset: Aura,
+        options: {
+          darkModeSelector: '.app-dark'
+        }
+      }
     }),
     MessageService,
     ConfirmationService,

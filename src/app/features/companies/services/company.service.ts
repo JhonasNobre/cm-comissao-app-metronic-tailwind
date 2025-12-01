@@ -62,6 +62,171 @@ export class CompanyService {
             email: 'contato@paoquente.com',
             status: CompanyStatus.BLOCKED,
             createdAt: new Date('2023-08-01')
+        },
+         {
+            id: '1',
+            name: 'Click Menos Comissão',
+            tradeName: 'Click Menos',
+            cnpj: '12.345.678/0001-90',
+            email: 'contato@clickmenos.com.br',
+            phone: '(11) 99999-9999',
+            status: CompanyStatus.ACTIVE,
+            address: {
+                street: 'Av. Paulista',
+                number: '1000',
+                neighborhood: 'Bela Vista',
+                city: 'São Paulo',
+                state: 'SP',
+                zipCode: '01310-100'
+            },
+            createdAt: new Date('2023-01-15')
+        },
+        {
+            id: '2',
+            name: 'Tech Solutions Ltda',
+            tradeName: 'TechSol',
+            cnpj: '98.765.432/0001-10',
+            email: 'admin@techsol.com',
+            phone: '(41) 3333-3333',
+            status: CompanyStatus.ACTIVE,
+            createdAt: new Date('2023-03-20')
+        },
+        {
+            id: '3',
+            name: 'Comércio de Bebidas Silva',
+            tradeName: 'Adega Silva',
+            cnpj: '45.678.901/0001-23',
+            email: 'financeiro@adegasilva.com.br',
+            status: CompanyStatus.PENDING,
+            createdAt: new Date('2023-06-10')
+        },
+        {
+            id: '4',
+            name: 'Transportadora Veloz',
+            tradeName: 'Veloz Log',
+            cnpj: '11.222.333/0001-44',
+            email: 'sac@velozlog.com.br',
+            status: CompanyStatus.INACTIVE,
+            createdAt: new Date('2022-11-05')
+        },
+        {
+            id: '5',
+            name: 'Padaria Pão Quente',
+            tradeName: 'Pão Quente',
+            cnpj: '55.444.333/0001-22',
+            email: 'contato@paoquente.com',
+            status: CompanyStatus.BLOCKED,
+            createdAt: new Date('2023-08-01')
+        },
+         {
+            id: '1',
+            name: 'Click Menos Comissão',
+            tradeName: 'Click Menos',
+            cnpj: '12.345.678/0001-90',
+            email: 'contato@clickmenos.com.br',
+            phone: '(11) 99999-9999',
+            status: CompanyStatus.ACTIVE,
+            address: {
+                street: 'Av. Paulista',
+                number: '1000',
+                neighborhood: 'Bela Vista',
+                city: 'São Paulo',
+                state: 'SP',
+                zipCode: '01310-100'
+            },
+            createdAt: new Date('2023-01-15')
+        },
+        {
+            id: '2',
+            name: 'Tech Solutions Ltda',
+            tradeName: 'TechSol',
+            cnpj: '98.765.432/0001-10',
+            email: 'admin@techsol.com',
+            phone: '(41) 3333-3333',
+            status: CompanyStatus.ACTIVE,
+            createdAt: new Date('2023-03-20')
+        },
+        {
+            id: '3',
+            name: 'Comércio de Bebidas Silva',
+            tradeName: 'Adega Silva',
+            cnpj: '45.678.901/0001-23',
+            email: 'financeiro@adegasilva.com.br',
+            status: CompanyStatus.PENDING,
+            createdAt: new Date('2023-06-10')
+        },
+        {
+            id: '4',
+            name: 'Transportadora Veloz',
+            tradeName: 'Veloz Log',
+            cnpj: '11.222.333/0001-44',
+            email: 'sac@velozlog.com.br',
+            status: CompanyStatus.INACTIVE,
+            createdAt: new Date('2022-11-05')
+        },
+        {
+            id: '5',
+            name: 'Padaria Pão Quente',
+            tradeName: 'Pão Quente',
+            cnpj: '55.444.333/0001-22',
+            email: 'contato@paoquente.com',
+            status: CompanyStatus.BLOCKED,
+            createdAt: new Date('2023-08-01')
+        },
+         {
+            id: '1',
+            name: 'Click Menos Comissão',
+            tradeName: 'Click Menos',
+            cnpj: '12.345.678/0001-90',
+            email: 'contato@clickmenos.com.br',
+            phone: '(11) 99999-9999',
+            status: CompanyStatus.ACTIVE,
+            address: {
+                street: 'Av. Paulista',
+                number: '1000',
+                neighborhood: 'Bela Vista',
+                city: 'São Paulo',
+                state: 'SP',
+                zipCode: '01310-100'
+            },
+            createdAt: new Date('2023-01-15')
+        },
+        {
+            id: '2',
+            name: 'Tech Solutions Ltda',
+            tradeName: 'TechSol',
+            cnpj: '98.765.432/0001-10',
+            email: 'admin@techsol.com',
+            phone: '(41) 3333-3333',
+            status: CompanyStatus.ACTIVE,
+            createdAt: new Date('2023-03-20')
+        },
+        {
+            id: '3',
+            name: 'Comércio de Bebidas Silva',
+            tradeName: 'Adega Silva',
+            cnpj: '45.678.901/0001-23',
+            email: 'financeiro@adegasilva.com.br',
+            status: CompanyStatus.PENDING,
+            createdAt: new Date('2023-06-10')
+        },
+        {
+            id: '4',
+            name: 'Transportadora Veloz',
+            tradeName: 'Veloz Log',
+            cnpj: '11.222.333/0001-44',
+            email: 'sac@velozlog.com.br',
+            status: CompanyStatus.INACTIVE,
+            createdAt: new Date('2022-11-05')
+        },
+        {
+            id: '5',
+            name: 'Padaria Pão Quente',
+            tradeName: 'Pão Quente',
+            cnpj: '55.444.333/0001-22',
+            email: 'contato@paoquente.com',
+            status: CompanyStatus.BLOCKED,
+            createdAt: new Date('2023-08-01')
         }
     ];
 

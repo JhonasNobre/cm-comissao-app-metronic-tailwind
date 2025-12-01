@@ -1,10 +1,10 @@
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
-import { Color } from '../models/common/enuns/color.enum';
+// import { TranslocoService } from '@jsverse/transloco';
+// import { Color } from '../models/common/enuns/color.enum';
 
 const enumMap: Record<string, any> = {
-    DocumentType,
-    Color
+    // DocumentType,
+    // Color
 };
 
 @Injectable({
@@ -16,8 +16,6 @@ const enumMap: Record<string, any> = {
     standalone: true
 })
 export class EnumLabelPipe implements PipeTransform {
-    constructor(private translate: TranslocoService) { }
-
     transform(value: number, enumType: string | any): string {
         if (value == null || value === undefined) return '';
 
@@ -29,6 +27,6 @@ export class EnumLabelPipe implements PipeTransform {
 
         if (!enumKey) return value.toString();
 
-        return this.translate.translate(enumKey);
+        return enumKey;
     }
 }

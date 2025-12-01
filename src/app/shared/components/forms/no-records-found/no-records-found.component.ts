@@ -1,13 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { ButtonComponent } from '../../buttons/app-button.component';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-no-records-found',
   templateUrl: './no-records-found.component.html',
   standalone: true,
-  imports: [CommonModule, TranslocoPipe, ButtonComponent],
+  imports: [CommonModule, ButtonModule],
 })
 export class NoRecordsFoundComponent {
 
@@ -19,6 +18,6 @@ export class NoRecordsFoundComponent {
   @Output() onClick = new EventEmitter<any>();
 
   onClickButton(event: Event) {
-      this.onClick.emit(event);
+    this.onClick.emit(event);
   }
 }

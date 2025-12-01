@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, ContentChild, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
+import { Component, ContentChild, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { BadgeModule } from 'primeng/badge';
@@ -15,24 +14,23 @@ import { Table, TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { debounceTime, Subject, tap } from 'rxjs';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { BaseModel } from '../../../models/base-model';
-import { ColumnHeader } from '../../../models/common/column-header.model';
-import { CountryCustom } from '../../../models/config/country-custom.model';
-import { PermissionStoreService } from '../../../services/permission-store.service';
-import { SessionService } from '../../../services/session.service';
-import { TableFormattingService } from '../../../services/table-formatting.service';
+import { BaseEntity } from '../../../models/base-model';
 import { NoRecordsFoundComponent } from '../../forms/no-records-found/no-records-found.component';
+import { ColumnHeader } from '../../../models/column-header.model';
+import { TableFormattingService } from '../../../services/table-formatting.service';
+// import { PermissionStoreService } from '../../../services/permission-store.service';
 
 @Component({
     selector: 'app-generic-p-table',
     templateUrl: './generic-p-table.component.html',
     standalone: true,
-    imports: [CommonModule, FormsModule, TranslocoModule,
+    imports: [CommonModule, FormsModule,
         TableModule, TooltipModule, InputTextModule, ButtonModule, IconField, InputIcon,
         NoRecordsFoundComponent, AvatarModule, AvatarGroupModule, BadgeModule, MultiSelectModule, FloatLabelModule],
+    encapsulation: ViewEncapsulation.None
 })
 
-export class GenericPTableComponent<T extends BaseModel> implements OnInit, OnChanges {
+export class GenericPTableComponent<T extends BaseEntity> implements OnInit, OnChanges {
     @ContentChild('customActions') customActionsTemplate: TemplateRef<any> | undefined;
 
     @ViewChild('dt') dt: Table | undefined;
@@ -97,7 +95,6 @@ export class GenericPTableComponent<T extends BaseModel> implements OnInit, OnCh
     @Input() displayEditAction = false;
     @Input() displayDeleteAction = false;
     @Input() disableDeleteCondition?: (item: any) => boolean;
-    countryCustom?: CountryCustom;
 
     @Output() genericEvent = new EventEmitter<T>();
     @Output() detail = new EventEmitter<T>();
@@ -117,10 +114,9 @@ export class GenericPTableComponent<T extends BaseModel> implements OnInit, OnCh
 
     private hasFormattingErrorOccurred = false;
 
-    private transloco = inject(TranslocoService);
-    private permissionStore = inject(PermissionStoreService);
+    // private permissionStore = inject(PermissionStoreService);
 
-    constructor(private sessionService: SessionService,
+    constructor(
         private notificationService: NotificationService, private formattingService: TableFormattingService) {
         this.filterSubject.pipe(
             debounceTime(300), // A lógica de debounce continua perfeita
@@ -143,18 +139,19 @@ export class GenericPTableComponent<T extends BaseModel> implements OnInit, OnCh
      * - Approval: habilita tudo
      */
     get isCreateButtonDisabled(): boolean {
+        return false;
         // --- VERIFICAÇÕES DE PERMISSÃO ---
-        const isSupportProfile = this.permissionStore.hasPermissionByLabel('support');
-        const isApprovalProfile = this.permissionStore.hasPermissionByLabel('approvalButton');
-        const isRequeryProfile = this.permissionStore.hasPermissionByLabel('requeryButton');
-        
-        // --- POLÍTICA DE SEGURANÇA: SEM PERMISSÕES = TUDO BLOQUEADO ---
-        const hasAnyPermission = isApprovalProfile || isSupportProfile || isRequeryProfile;
-        const noPermissionsBlock = !hasAnyPermission; // Se não tem nenhuma permissão, bloqueia tudo
-        
-        // --- RESULTADO ---
-        // Support desabilita tudo, outros perfis habilitam o botão Novo
-        return noPermissionsBlock || isSupportProfile;
+        // const isSupportProfile = this.permissionStore.hasPermissionByLabel('support');
+        // const isApprovalProfile = this.permissionStore.hasPermissionByLabel('approvalButton');
+        // const isRequeryProfile = this.permissionStore.hasPermissionByLabel('requeryButton');
+
+        // // --- POLÍTICA DE SEGURANÇA: SEM PERMISSÕES = TUDO BLOQUEADO ---
+        // const hasAnyPermission = isApprovalProfile || isSupportProfile || isRequeryProfile;
+        // const noPermissionsBlock = !hasAnyPermission; // Se não tem nenhuma permissão, bloqueia tudo
+
+        // // --- RESULTADO ---
+        // // Support desabilita tudo, outros perfis habilitam o botão Novo
+        // return noPermissionsBlock || isSupportProfile;
     }
 
     public get displayActionsColumn(): boolean {
@@ -166,9 +163,9 @@ export class GenericPTableComponent<T extends BaseModel> implements OnInit, OnCh
     }
 
     ngOnInit(): void {
-        this.sessionService.getSession().then(sess => {
-            this.countryCustom = sess?.countryCustom;
-        });
+        // this.sessionService.getSession().then(sess => {
+        //     this.countryCustom = sess?.countryCustom;
+        // });
         const state = JSON.parse(sessionStorage.getItem('state-' + this.tableName) || '{}');
         this.filter = state.filters?.global?.value || '';
 
@@ -224,6 +221,10 @@ export class GenericPTableComponent<T extends BaseModel> implements OnInit, OnCh
      * Getter que transforma o array de colunas selecionadas em uma string para exibição,
      * respeitando o limite de 'maxSelectedLabels'.
      */
+    /**
+     * Getter que transforma o array de colunas selecionadas em uma string para exibição,
+     * respeitando o limite de 'maxSelectedLabels'.
+     */
     public get selectedColumnsLabel(): string {
         if (!this.selectedColumns || this.selectedColumns.length === 0) {
             return ''; // Retorna vazio para o placeholder aparecer
@@ -234,12 +235,12 @@ export class GenericPTableComponent<T extends BaseModel> implements OnInit, OnCh
         // Se a quantidade de itens selecionados for maior que o limite...
         if (count > this.maxSelectedLabels) {
             // Retorna uma mensagem como "4 colunas selecionadas"
-            return this.transloco.translate('components.generic-table.selected-items-count', { count: count });
+            return `${count} colunas selecionadas`;
         }
 
         // Se for menor ou igual ao limite, mostra os nomes separados por vírgula
         return this.selectedColumns
-            .map(col => this.transloco.translate(col.header))
+            .map(col => col.header)
             .join(', ');
     }
 
@@ -274,14 +275,14 @@ export class GenericPTableComponent<T extends BaseModel> implements OnInit, OnCh
 
     public getFormattedValue(item: T, column: ColumnHeader<T>): string {
         try {
-            return this.formattingService.formatCell(item, column, this.countryCustom);
+            return this.formattingService.formatCell(item, column);
         } catch (error) {
             console.error('Erro retornado pelo serviço de formatação:', error);
 
             if (!this.hasFormattingErrorOccurred) {
                 this.notificationService.error(
-                    this.transloco.translate('components.generic-table.formatting-error-message'),
-                    this.transloco.translate('components.generic-table.formatting-error-title')
+                    'Erro de formatação',
+                    'Ocorreu um erro ao formatar os dados da tabela.'
                 ); this.hasFormattingErrorOccurred = true;
             }
 

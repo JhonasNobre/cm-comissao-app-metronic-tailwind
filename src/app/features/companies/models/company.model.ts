@@ -1,3 +1,5 @@
+import { BaseEntity } from "../../../shared/models/base-model";
+
 export enum CompanyStatus {
     ACTIVE = 'Active',
     INACTIVE = 'Inactive',
@@ -5,7 +7,7 @@ export enum CompanyStatus {
     BLOCKED = 'Blocked'
 }
 
-export interface Company {
+export interface Company extends BaseEntity {
     id: string;
     name: string;
     tradeName: string; // Nome Fantasia

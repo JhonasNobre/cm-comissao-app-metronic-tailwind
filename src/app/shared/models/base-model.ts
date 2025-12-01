@@ -1,6 +1,14 @@
 // base-model.ts
-export abstract class BaseModel {
-    id!: number;
+export interface BaseEntity {
+    id: number | string;
+    updateBy?: string;
+    updateDate?: Date;
+    deleteDate?: Date;
+    active?: boolean;
+}
+
+export abstract class BaseModel implements BaseEntity {
+    id!: number | string;
     updateBy!: string;
     updateDate!: Date;
     deleteDate?: Date;
