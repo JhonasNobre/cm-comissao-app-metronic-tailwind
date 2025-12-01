@@ -19,6 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimations(),
     provideHttpClient(
+      withFetch(),
       withInterceptors([
         loadingInterceptor,
         errorInterceptor

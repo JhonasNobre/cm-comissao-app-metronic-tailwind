@@ -6,8 +6,6 @@ import { AvatarGroupModule } from 'primeng/avatargroup';
 import { BadgeModule } from 'primeng/badge';
 import { ButtonModule } from 'primeng/button';
 import { FloatLabelModule } from 'primeng/floatlabel';
-import { IconField } from 'primeng/iconfield';
-import { InputIcon } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { Table, TableModule } from 'primeng/table';
@@ -25,7 +23,7 @@ import { TableFormattingService } from '../../../services/table-formatting.servi
     templateUrl: './generic-p-table.component.html',
     standalone: true,
     imports: [CommonModule, FormsModule,
-        TableModule, TooltipModule, InputTextModule, ButtonModule, IconField, InputIcon,
+        TableModule, TooltipModule, InputTextModule, ButtonModule,
         NoRecordsFoundComponent, AvatarModule, AvatarGroupModule, BadgeModule, MultiSelectModule, FloatLabelModule],
     encapsulation: ViewEncapsulation.None,
     styles: [`

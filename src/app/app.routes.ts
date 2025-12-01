@@ -11,6 +11,7 @@ export const routes: Routes = [
     children: [
       { path: '', component: DashboardComponent },
       { path: 'users', loadComponent: () => import('./features/users/components/user-list/user-list.component').then(m => m.UserListComponent) },
+      { path: 'users/:id', loadComponent: () => import('./features/users/components/user-profile/user-profile.component').then(m => m.UserProfileComponent) },
       { path: 'companies', loadComponent: () => import('./features/companies/components/company-list/company-list.component').then(m => m.CompanyListComponent) },
       { path: 'companies/new', loadComponent: () => import('./features/companies/components/company-form/company-form.component').then(m => m.CompanyFormComponent) },
       { path: 'companies/:id', loadComponent: () => import('./features/companies/components/company-form/company-form.component').then(m => m.CompanyFormComponent) },

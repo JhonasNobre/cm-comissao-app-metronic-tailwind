@@ -1,0 +1,146 @@
+<div class="kt-container-fluid px-5">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="flex justify-center items-center py-20">
+        <div class="text-lg">Loading user profile...</div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="kt-card p-6">
+        <div class="text-center text-red-600">
+            <i class="ki-filled ki-information text-4xl mb-4"></i>
+            <p class="text-lg font-medium">{{ error }}</p>
+            <button (click)="goBack()" class="kt-btn kt-btn-primary mt-4">
+                <i class="ki-filled ki-left"></i>
+                Back to Users
+            </button>
+        </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div *ngIf="user && !loading" class="flex flex-col gap-5 lg:gap-7.5">
+        <!-- Header Section -->
+        <div class="flex flex-wrap items-center justify-between gap-5 pb-5">
+            <div class="flex items-center gap-4">
+                <button (click)="goBack()" class="kt-btn kt-btn-icon kt-btn-light">
+                    <i class="ki-filled ki-left"></i>
+                </button>
+                <div>
+                    <h1 class="text-2xl font-semibold leading-none">User Profile</h1>
+                    <p class="text-sm text-secondary-foreground mt-1">View user information</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="kt-card kt-card-grid">
+            <div class="kt-card-content p-8">
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+                    <!-- Avatar -->
+                    <div class="kt-avatar size-24 shrink-0">
+                        <img *ngIf="user.avatar" [src]="user.avatar" [alt]="user.name" class="rounded-full" />
+                        <div *ngIf="!user.avatar"
+                            class="rounded-full bg-primary text-white flex items-center justify-center text-3xl font-bold">
+                            {{ user.name.charAt(0).toUpperCase() }}
+                        </div>
+                    </div>
+
+                    <!-- User Info -->
+                    <div class="flex-1 text-center md:text-left">
+                        <h2 class="text-2xl font-semibold mb-2">{{ user.name }}</h2>
+                        <p class="text-lg text-secondary-foreground mb-4">{{ user.email }}</p>
+
+                        <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+                            <span [class]="'kt-badge kt-badge-outline rounded-[30px] ' + getRoleBadgeClass(user.role)">
+                                <span class="kt-badge-dot size-1.5"></span>
+                                {{ user.role }}
+                            </span>
+                            <span
+                                [class]="'kt-badge kt-badge-outline rounded-[30px] ' + getStatusBadgeClass(user.status)">
+                                <span class="kt-badge-dot size-1.5"></span>
+                                {{ user.status }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Role Card -->
+            <div class="kt-card">
+                <div class="kt-card-content">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center justify-center size-12 rounded-lg bg-primary/10">
+                            <i class="ki-filled ki-shield-tick text-primary text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary-foreground">Role</p>
+                            <p class="text-lg font-semibold">{{ user.role }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Card -->
+            <div class="kt-card">
+                <div class="kt-card-content">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center justify-center size-12 rounded-lg bg-success/10">
+                            <i class="ki-filled ki-check-circle text-success text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary-foreground">Status</p>
+                            <p class="text-lg font-semibold">{{ user.status }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Joined Date Card -->
+            <div class="kt-card">
+                <div class="kt-card-content">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center justify-center size-12 rounded-lg bg-info/10">
+                            <i class="ki-filled ki-calendar text-info text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary-foreground">Joined Date</p>
+                            <p class="text-lg font-semibold">{{ user.joinedDate | date: 'dd/MM/yyyy' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phone Card (if available) -->
+            <div *ngIf="user.phoneNumber" class="kt-card">
+                <div class="kt-card-content">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center justify-center size-12 rounded-lg bg-warning/10">
+                            <i class="ki-filled ki-phone text-warning text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary-foreground">Phone</p>
+                            <p class="text-lg font-semibold">{{ user.phoneNumber }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Last Login Card (if available) -->
+            <div *ngIf="user.lastLogin" class="kt-card">
+                <div class="kt-card-content">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center justify-center size-12 rounded-lg bg-secondary/10">
+                            <i class="ki-filled ki-time text-secondary text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-secondary-foreground">Last Login</p>
+                            <p class="text-lg font-semibold">{{ user.lastLogin | date: 'dd/MM/yyyy HH:mm' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

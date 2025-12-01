@@ -127,19 +127,17 @@
                         </ng-container>
 
                         <a *ngIf="isDetailActionVisible(rowData)" (click)="onDetail(rowData)"
-                            class="kt-btn kt-btn-icon kt-btn-sm kt-btn-light" attr.aria-label="Detalhes"
-                            title="Detalhes">
+                            class="text-gray-500 hover:text-gray-700 ml-3" attr.aria-label="Detalhes" title="Detalhes">
                             <i class="ki-filled ki-information"></i>
                         </a>
 
                         <a *ngIf="displayEditAction" (click)="onEdit(rowData)"
-                            class="kt-btn kt-btn-icon kt-btn-sm kt-btn-light ml-2" attr.aria-label="Editar"
-                            title="Editar">
+                            class="text-gray-500 hover:text-gray-700 ml-3" attr.aria-label="Editar" title="Editar">
                             <i class="ki-filled ki-pencil"></i>
                         </a>
 
                         <a *ngIf="canShowDeleteButton(rowData)" (click)="onDelete(rowData)"
-                            class="kt-btn kt-btn-icon kt-btn-sm kt-btn-destructive ml-2" attr.aria-label="Excluir"
+                            class="text-gray-500 hover:text-gray-700 hover:text-red-600 ml-3" attr.aria-label="Excluir"
                             title="Excluir">
                             <i class="ki-filled ki-trash"></i>
                         </a>
