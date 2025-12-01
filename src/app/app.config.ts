@@ -19,9 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideOAuthClient(),
     provideAnimationsAsync(),
     providePrimeNG({
-      theme: {
-        none: true
-      }
+      // theme: { ... } // Removed to fix TS error, checking default behavior
     })
   ]
 };
