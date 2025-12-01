@@ -1,0 +1,9 @@
+<div *ngIf="invalidControle.length" class="card border border-danger">
+  <div class="card-header bg-transparent border-danger">
+    <h5 class="my-0 text-danger"><i class="mdi mdi-block-helper mr-3"></i>&nbsp; {{'SHARED.COMPONENTS.FORMS.FORM_INVALID.FORM_DETAILS' | transloco }}</h5>
+  </div>
+  <div class="card-body">
+    <h5 class="card-title mt-0">{{'SHARED.COMPONENTS.FORMS.FORM_INVALID.INVALID_FIELDS' | transloco }}</h5>
+    <p class="card-text">{{ invalidControle | json }}</p>
+  </div>
+</div>

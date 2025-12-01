@@ -1,0 +1,51 @@
+<div class="grid grid-cols-12 gap-x-6 gap-y-4">
+    <!-- CEP/POSTAL NUMBER/ZIPCODE -->
+    <div class="col-span-12 sm:col-span-6 md:col-span-3">
+        <!-- <app-custom-textbox-mask label="SHARED.COMMON.ADDRESS.ZIP_CODE" formControlName="zipCode" [mask]="zipCodeMask">
+        </app-custom-textbox-mask> -->
+         <app-custom-textbox label="SHARED.COMMON.ADDRESS.ZIP_CODE" formControlName="zipCode">
+        </app-custom-textbox>
+    </div>
+    <!-- Rua -->
+    <div class="col-span-12 sm:col-span-6 md:col-span-6">
+        <app-custom-textbox label="SHARED.COMMON.ADDRESS.STREET" formControlName="street">
+        </app-custom-textbox>
+    </div>
+    <!-- Numero -->
+    <div class="col-span-12 sm:col-span-12 md:col-span-3">
+        <app-custom-textbox label="SHARED.COMMON.ADDRESS.STREET_NUMBER" formControlName="streetNumber">
+        </app-custom-textbox>
+    </div>
+    <!-- Complemento -->
+    <div *ngIf="hasComplement" class="col-span-12 md:col-span-6">
+        <app-custom-textbox label="SHARED.COMMON.ADDRESS.COMPLEMENT" formControlName="complement">
+        </app-custom-textbox>
+    </div>
+    <!-- Distrito -->
+    <div class="col-span-12" [ngClass]="hasComplement ? 'md:col-span-6' : 'md:col-span-12'">
+        <app-custom-textbox label="SHARED.COMMON.ADDRESS.DISTINCT" formControlName="district">
+        </app-custom-textbox>
+    </div>
+    <!-- País -->
+    <div class="col-span-12 md:col-span-3">
+        <app-custom-select label="MODULES.REGISTER.COUNTRY.COUNTRY" formControlName="countryId" fetchCountries>
+        </app-custom-select>
+    </div>
+    <!-- Estado -->
+    <div class="col-span-12" [ngClass]="hasProvince ? 'md:col-span-3' : 'md:col-span-4'">
+        <app-custom-select label="MODULES.REGISTER.STATE.STATE" formControlName="stateId"
+            [fetchStatesFromCountry]="countryId">
+        </app-custom-select>
+    </div>
+    <!-- Província -->
+    <div *ngIf="hasProvince" class="col-span-12 md:col-span-3">
+        <app-custom-select label="MODULES.REGISTER.PROVINCE.PROVINCE" formControlName="provinceId"
+            [fetchProvincesFromState]="stateId">
+        </app-custom-select>
+    </div>
+    <!-- Cidade -->
+    <div class="col-span-12" [ngClass]="hasProvince ? 'md:col-span-3' : 'md:col-span-4'">
+        <app-custom-select label="MODULES.REGISTER.CITY.CITY" formControlName="cityId" [fetchCitiesFromState]="stateId">
+        </app-custom-select>
+    </div>
+</div>

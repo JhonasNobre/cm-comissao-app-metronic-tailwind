@@ -1,0 +1,127 @@
+<div class="card mb-5 mb-xl-8">
+    <div class="card-header border-0 pt-5">
+        <h3 class="card-title align-items-start flex-column">
+            <span class="card-label fw-bold fs-3 mb-1">{{ isEditMode ? 'Editar Empresa' : 'Nova Empresa' }}</span>
+            <span class="text-muted mt-1 fw-semibold fs-7">Preencha os dados da empresa</span>
+        </h3>
+    </div>
+
+    <div class="card-body py-3">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form">
+            <p-toast></p-toast>
+
+            <div class="row mb-6">
+                <div class="col-lg-6 mb-4">
+                    <label class="form-label required fw-semibold fs-6">Razão Social</label>
+                    <input type="text" pInputText formControlName="name"
+                        class="form-control form-control-lg form-control-solid mb-3 mb-lg-0"
+                        placeholder="Razão Social" />
+                    <div *ngIf="form.get('name')?.invalid && form.get('name')?.touched" class="text-danger mt-1">
+                        Razão Social é obrigatória (min 3 caracteres).
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <label class="form-label required fw-semibold fs-6">Nome Fantasia</label>
+                    <input type="text" pInputText formControlName="tradeName"
+                        class="form-control form-control-lg form-control-solid" placeholder="Nome Fantasia" />
+                    <div *ngIf="form.get('tradeName')?.invalid && form.get('tradeName')?.touched"
+                        class="text-danger mt-1">
+                        Nome Fantasia é obrigatório.
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-6">
+                <div class="col-lg-6 mb-4">
+                    <label class="form-label required fw-semibold fs-6">CNPJ</label>
+                    <p-inputMask mask="99.999.999/9999-99" formControlName="cnpj"
+                        styleClass="form-control form-control-lg form-control-solid"
+                        placeholder="00.000.000/0000-00"></p-inputMask>
+                    <div *ngIf="form.get('cnpj')?.invalid && form.get('cnpj')?.touched" class="text-danger mt-1">
+                        CNPJ é obrigatório.
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <label class="form-label required fw-semibold fs-6">Email</label>
+                    <input type="email" pInputText formControlName="email"
+                        class="form-control form-control-lg form-control-solid" placeholder="email@empresa.com" />
+                    <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="text-danger mt-1">
+                        Email válido é obrigatório.
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-6">
+                <div class="col-lg-6 mb-4">
+                    <label class="form-label fw-semibold fs-6">Telefone</label>
+                    <p-inputMask mask="(99) 99999-9999" formControlName="phone"
+                        styleClass="form-control form-control-lg form-control-solid"
+                        placeholder="(00) 00000-0000"></p-inputMask>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <label class="form-label required fw-semibold fs-6">Status</label>
+                    <!-- <p-dropdown [options]="statusOptions" formControlName="status" styleClass="w-100 form-control-solid"
+                        appendTo="body"></p-dropdown> -->
+                </div>
+            </div>
+
+            <h3 class="fw-bold fs-4 mb-5 mt-5">Endereço</h3>
+
+            <div formGroupName="address">
+                <div class="row mb-6">
+                    <div class="col-lg-4 mb-4">
+                        <label class="form-label fw-semibold fs-6">CEP</label>
+                        <p-inputMask mask="99999-999" formControlName="zipCode"
+                            styleClass="form-control form-control-lg form-control-solid"
+                            placeholder="00000-000"></p-inputMask>
+                    </div>
+                    <div class="col-lg-8 mb-4">
+                        <label class="form-label fw-semibold fs-6">Rua</label>
+                        <input type="text" pInputText formControlName="street"
+                            class="form-control form-control-lg form-control-solid" placeholder="Rua" />
+                    </div>
+                </div>
+
+                <div class="row mb-6">
+                    <div class="col-lg-4 mb-4">
+                        <label class="form-label fw-semibold fs-6">Número</label>
+                        <input type="text" pInputText formControlName="number"
+                            class="form-control form-control-lg form-control-solid" placeholder="Número" />
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <label class="form-label fw-semibold fs-6">Complemento</label>
+                        <input type="text" pInputText formControlName="complement"
+                            class="form-control form-control-lg form-control-solid" placeholder="Complemento" />
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <label class="form-label fw-semibold fs-6">Bairro</label>
+                        <input type="text" pInputText formControlName="neighborhood"
+                            class="form-control form-control-lg form-control-solid" placeholder="Bairro" />
+                    </div>
+                </div>
+
+                <div class="row mb-6">
+                    <div class="col-lg-8 mb-4">
+                        <label class="form-label fw-semibold fs-6">Cidade</label>
+                        <input type="text" pInputText formControlName="city"
+                            class="form-control form-control-lg form-control-solid" placeholder="Cidade" />
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <label class="form-label fw-semibold fs-6">Estado</label>
+                        <input type="text" pInputText formControlName="state"
+                            class="form-control form-control-lg form-control-solid" placeholder="UF" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer d-flex justify-content-end py-6 px-9">
+                <button type="button" class="btn btn-light btn-active-light-primary me-2"
+                    (click)="onCancel()">Cancelar</button>
+                <button type="submit" class="btn btn-primary" [disabled]="loading">
+                    <span *ngIf="!loading">{{ isEditMode ? 'Salvar Alterações' : 'Criar Empresa' }}</span>
+                    <span *ngIf="loading">Aguarde...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

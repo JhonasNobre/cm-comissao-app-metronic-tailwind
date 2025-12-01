@@ -1,0 +1,39 @@
+<p-fileUpload
+    name="files[]"
+    [multiple]="maxFiles > 1"
+    [accept]="acceptType"
+    [disabled]="disabled"
+    [customUpload]="true"
+    [fileLimit]="maxFiles"
+    [showUploadButton]="false"
+    [showCancelButton]="false"
+    [chooseLabel]="'SHARED.COMPONENTS.INPUT.BUTTON.CHOOSE' | transloco"
+    (onSelect)="onFileSelect($event)"
+    (onRemove)="onFileRemove($event)"
+    (onClear)="onFilesClear()"
+    (uploadHandler)="onUploadHandler($event)"
+>
+    <ng-template pTemplate="content">
+        <div class="flex flex-col items-center justify-center p-4 text-center">
+            <i class="pi pi-cloud-upload text-4xl text-gray-500 mb-3"></i>
+            <p class="text-gray-600 font-semibold">
+                {{ "SHARED.COMMON.MESSAGE_UPLOAD_FILE" | transloco }}
+            </p>
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="file" let-file>
+        <div class="flex items-center justify-between p-2 border-t">
+            <div class="flex items-center gap-2">
+                <img
+                    [src]="file.objectURL"
+                    [alt]="file.name"
+                    width="50"
+                    class="rounded"
+                />
+                <span class="font-semibold">{{ file.name }}</span>
+                <span>({{ file.size | number }})</span>
+            </div>
+        </div>
+    </ng-template>
+</p-fileUpload>

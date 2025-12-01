@@ -1,0 +1,22 @@
+<div class="p-4">
+  <p-fileUpload
+    #fileUpload
+    name="image_upload"
+    mode="advanced"
+    accept="image/*"
+    chooseLabel="Escolher Imagem"
+    uploadLabel="Enviar"
+    cancelLabel="Cancelar"
+    invalidFileSizeMessageSummary="{0}: Tamanho de arquivo inválido,"
+    invalidFileSizeMessageDetail="o tamanho máximo permitido é de {0}."
+    [customUpload]="true"
+    (uploadHandler)="onCustomUpload($event)"
+  >
+    <ng-template pTemplate="empty">
+      <div class="flex items-center justify-center flex-col">
+        <i class="pi pi-image mt-3 p-5" style="font-size: 5em"></i>
+        <p class="mt-4 mb-0">Arraste e solte a imagem aqui ou clique em "Escolher Imagem".</p>
+      </div>
+    </ng-template>
+  </p-fileUpload>
+</div>
