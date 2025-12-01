@@ -29,6 +29,19 @@ import { TableFormattingService } from '../../../services/table-formatting.servi
         NoRecordsFoundComponent, AvatarModule, AvatarGroupModule, BadgeModule, MultiSelectModule, FloatLabelModule],
     encapsulation: ViewEncapsulation.None,
     styles: [`
+        /* Table Header Background */
+        .p-datatable .p-datatable-thead > tr > th,
+        .kt-table.kt-table-border thead tr th {
+            background-color: #F9FAFB !important;
+            border-right: 1px solid #EFF2F5 !important;
+        }
+        
+        /* Remove vertical border from last header cell */
+        .p-datatable .p-datatable-thead > tr > th:last-child,
+        .kt-table.kt-table-border thead tr th:last-child {
+            border-right: none !important;
+        }
+        
         /* Table Body Cell Borders */
         .kt-table tbody td {
             border-right: 1px solid #EFF2F5 !important;
@@ -132,7 +145,7 @@ export class GenericPTableComponent<T extends BaseEntity> implements OnInit, OnC
 
     filteredTableData: T[] = [];
     filter = '';
-    rowsPerPageOptions = [5, 10, 25, 50, 100];
+    rowsPerPageOptions = [10, 25, 50, 100];
 
     private imageFields = ['image', 'photo', 'flag', 'photoData'];
     private filterSubject = new Subject<string>();

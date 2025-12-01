@@ -17,6 +17,11 @@ import { TableModule } from 'primeng/table';
     templateUrl: './user-list.component.html',
     encapsulation: ViewEncapsulation.None,
     styles: [`        
+        /* Table Header Background */
+        .kt-table thead {
+            background-color: #F9FAFB;
+        }
+        
         /* Table Body Cell Padding */
         .kt-table tbody td {
             border-right: 1px solid #EFF2F5 !important;
