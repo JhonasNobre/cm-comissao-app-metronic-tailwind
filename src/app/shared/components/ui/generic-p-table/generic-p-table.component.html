@@ -1,130 +1,154 @@
-<p-table #dt [value]="serverSidePagination ? tableData : filteredTableData" [rows]="rows" [stripedRows]="stripedRows"
-    [totalRecords]="serverSidePagination ? totalRecords : filteredTableData.length" [lazy]="serverSidePagination"
-    (onLazyLoad)="onLazyLoad($event)" [columns]="visibleColumns" scrollHeight="auto" [showCurrentPageReport]="true"
-    [rowsPerPageOptions]="rowsPerPageOptions" [paginator]="true" stateStorage="session" stateKey="state-{{ tableName }}"
-    currentPageReportTemplate="Exibindo {first} a {last} de {totalRecords} registros" dataKey="id"
-    [selection]="selection" (selectionChange)="onInternalSelectionChange($event)">
-    <!-- CAPTION: busca, criação e colunas dinâmicas -->
-    <ng-template #caption>
-        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+<div class="kt-card kt-card-grid min-w-full">
+    <div class="kt-card-header flex-wrap gap-2">
+        <div class="flex">
+            <label class="kt-input">
+                <i class="ki-filled ki-magnifier">
+                </i>
+                <input type="text" placeholder="Busca Global" [(ngModel)]="filter"
+                    (ngModelChange)="onFilterChange($event)" />
+            </label>
+        </div>
+        <div class="flex flex-wrap gap-2 lg:gap-5">
+            <p-floatlabel *ngIf="optionalColumnOptions.length > 0" variant="on">
+                <p-multiSelect [options]="optionalColumnOptions" [(ngModel)]="selectedColumns"
+                    (onChange)="onColumnSelectionChange()" optionLabel="header" styleClass="w-60 md:w-72">
 
-            <div class="flex items-center gap-2 w-full md:w-auto">
-                <!-- Busca Rápida -->
-                <p-icon-field class="w-full sm:w-80 order-1 sm:order-none">
-                    <p-inputicon class="pi pi-search" />
-                    <input pInputText type="text" placeholder="Busca Global" class="w-full" [(ngModel)]="filter"
-                        (ngModelChange)="onFilterChange($event)" />
-                </p-icon-field>
-            </div>
+                    <ng-template let-value pTemplate="selectedItems">
+                        <div *ngIf="!value || value.length === 0">
+                            Selecione colunas
+                        </div>
 
-            <div class="flex items-center gap-2 self-end md:self-auto">
-                <!-- MultiSelect -->
-                <p-floatlabel *ngIf="optionalColumnOptions.length > 0" variant="on">
-                    <p-multiSelect [options]="optionalColumnOptions" [(ngModel)]="selectedColumns"
-                        (onChange)="onColumnSelectionChange()" optionLabel="header" styleClass="w-60 md:w-72">
+                        <div *ngIf="value && value.length > 0">
+                            {{ selectedColumnsLabel }}
+                        </div>
+                    </ng-template>
 
-                        <ng-template let-value pTemplate="selectedItems">
-                            <div *ngIf="!value || value.length === 0">
-                                Selecione colunas
-                            </div>
+                    <ng-template let-option pTemplate="item">
+                        <div>{{ option.header }}</div>
+                    </ng-template>
+                </p-multiSelect>
 
-                            <div *ngIf="value && value.length > 0">
-                                {{ selectedColumnsLabel }}
-                            </div>
-                        </ng-template>
+                <label for="columnSelector">
+                    Selecione colunas
+                </label>
+            </p-floatlabel>
 
-                        <ng-template let-option pTemplate="item">
-                            <div>{{ option.header }}</div>
-                        </ng-template>
-                    </p-multiSelect>
+            <!-- Item Dinâmico -->
+            <ng-content></ng-content>
 
-                    <label for="columnSelector">
-                        Selecione colunas
-                    </label>
-                </p-floatlabel>
-
-                <!-- Item Dinâmico -->
-                <ng-content></ng-content>
-
-                <p-button *ngIf="displayCreateAction" (onClick)="onAdd()" label="Novo" icon="pi pi-plus"
-                    [disabled]="isCreateButtonDisabled">
-                </p-button>
+            <div class="flex flex-wrap gap-2.5">
+                <a *ngIf="displayCreateAction" (click)="onAdd()" class="kt-btn kt-btn-primary"
+                    [class.opacity-50]="isCreateButtonDisabled" [class.pointer-events-none]="isCreateButtonDisabled">
+                    <i class="ki-filled ki-plus"></i>
+                    Novo
+                </a>
             </div>
         </div>
-    </ng-template>
+    </div>
+    <div class="kt-card-content">
+        <p-table #dt [value]="serverSidePagination ? tableData : filteredTableData" [rows]="rows"
+            [totalRecords]="serverSidePagination ? totalRecords : filteredTableData.length"
+            [lazy]="serverSidePagination" (onLazyLoad)="onLazyLoad($event)" [columns]="visibleColumns"
+            scrollHeight="auto" [rowsPerPageOptions]="rowsPerPageOptions" [paginator]="true" stateStorage="session"
+            stateKey="state-{{ tableName }}"
+            currentPageReportTemplate="Exibindo {first} a {last} de {totalRecords} registros" [rowHover]="true"
+            dataKey="id" tableStyleClass="kt-table table-auto kt-table-border" [showCurrentPageReport]="true"
+            paginatorDropdownAppendTo="body" [selection]="selection"
+            (selectionChange)="onInternalSelectionChange($event)">
 
-    <!-- HEADER -->
-    <ng-template #header let-columns>
-        <tr>
-            <th *ngIf="enableSelection" style="width: 4rem">
-                <p-tableHeaderCheckbox />
-            </th>
-            <th *ngFor="let col of columns; trackBy: trackByField" [pSortableColumn]="col.field" [style]="col.style">
-                <span class="flex items-center gap-2">
-                    {{ col.header }}
-                    <p-sortIcon [field]="col.field"></p-sortIcon>
-                    <p-columnFilter *ngIf="col.filter" type="text" [field]="col.field" display="menu"></p-columnFilter>
-                </span>
-            </th>
-            <th *ngIf="displayActionsColumn" style="min-width: 12rem;"></th>
-        </tr>
-    </ng-template>
+            <!-- HEADER -->
+            <ng-template #header let-columns>
+                <tr>
+                    <th *ngIf="enableSelection" class="w-[60px] text-center">
+                        <input class="kt-checkbox kt-checkbox-sm" type="checkbox"
+                            (change)="onHeaderCheckboxToggle($event)" />
+                    </th>
+                    <th *ngFor="let col of columns; trackBy: trackByField" [pSortableColumn]="col.field"
+                        [style]="col.style">
+                        <span class="kt-table-col">
+                            <span class="kt-table-col-label">
+                                {{ col.header }}
+                            </span>
+                            <span class="kt-table-col-sort">
+                                <p-sortIcon [field]="col.field"></p-sortIcon>
+                            </span>
+                        </span>
+                        <p-columnFilter *ngIf="col.filter" type="text" [field]="col.field"
+                            display="menu"></p-columnFilter>
+                    </th>
+                    <th *ngIf="displayActionsColumn" class="w-[130px]"></th>
+                </tr>
+            </ng-template>
 
-    <!-- BODY -->
-    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
-        <tr [ngClass]="rowStyleClass ? rowStyleClass(rowData) : null">
-            <td *ngIf="enableSelection">
-                <p-tableCheckbox [value]="rowData"
-                    [disabled]="isRowSelectable ? !isRowSelectable({ data: rowData }) : false">
-                </p-tableCheckbox>
-            </td>
-            <td *ngFor="let col of columns; trackBy: trackByField">
-                <ng-container *ngIf="isImageField(col.field); else textCell">
-                    <div class="flex items-center gap-2">
-                        <p-avatar [image]="getImageSrc(col.field, rowData)" shape="circle"></p-avatar>
-                    </div>
-                </ng-container>
-
-                <ng-template #textCell>
-                    <ng-container *ngIf="col.displayAs === 'badge'; else priorityCell">
-                        <p-badge [value]="getFormattedValue(rowData, col)"
-                            [severity]="col.badgeSeverityMap?.[rowData[col.field]] || 'info'">
-                        </p-badge>
-                    </ng-container>
-
-                    <ng-template #priorityCell>
-                        <ng-container *ngIf="col.enumType === 'Priority'; else defaultTextCell">
-                            <p-badge [value]="getFormattedValue(rowData, col)"
-                                [severity]="getPrioritySeverity(rowData[col.field])">
-                            </p-badge>
+            <!-- BODY -->
+            <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+                <tr [ngClass]="rowStyleClass ? rowStyleClass(rowData) : null">
+                    <td *ngIf="enableSelection" class="text-center">
+                        <input class="kt-checkbox kt-checkbox-sm" type="checkbox" [checked]="isSelected(rowData)"
+                            (change)="onRowCheckboxToggle(rowData, $event)"
+                            [disabled]="isRowSelectable ? !isRowSelectable({ data: rowData }) : false" />
+                    </td>
+                    <td *ngFor="let col of columns; trackBy: trackByField">
+                        <ng-container *ngIf="isImageField(col.field); else textCell">
+                            <div class="flex items-center gap-2">
+                                <div class="kt-avatar size-9 shrink-0">
+                                    <img [src]="getImageSrc(col.field, rowData)" alt="" class="rounded-full" />
+                                </div>
+                            </div>
                         </ng-container>
-                    </ng-template>
 
-                    <ng-template #defaultTextCell>
-                        <span>{{ getFormattedValue(rowData, col) }}</span>
-                    </ng-template>
-                </ng-template>
-            </td>
-            <td *ngIf="displayActionsColumn" style="display: flex; justify-content: flex-end">
-                <ng-container *ngIf="customActionsTemplate" [ngTemplateOutlet]="customActionsTemplate"
-                    [ngTemplateOutletContext]="{ $implicit: rowData }">
-                </ng-container>
+                        <ng-template #textCell>
+                            <ng-container *ngIf="col.displayAs === 'badge'; else priorityCell">
+                                <span
+                                    [class]="'kt-badge kt-badge-' + (col.badgeSeverityMap?.[rowData[col.field]] || 'primary') + ' kt-badge-outline rounded-[30px]'">
+                                    <span class="kt-badge-dot size-1.5"></span>
+                                    {{ getFormattedValue(rowData, col) }}
+                                </span>
+                            </ng-container>
 
-                <p-button *ngIf="isDetailActionVisible(rowData)" (onClick)="onDetail(rowData)"
-                    styleClass="mr-2 p-button-sm" variant="outlined" icon="pi pi-info-circle" attr.aria-label="Detalhes"
-                    severity="primary" pTooltip="Detalhes" tooltipPosition="top" />
+                            <ng-template #priorityCell>
+                                <ng-container *ngIf="col.enumType === 'Priority'; else defaultTextCell">
+                                    <span
+                                        [class]="'kt-badge kt-badge-' + getPrioritySeverity(rowData[col.field]) + ' kt-badge-outline rounded-[30px]'">
+                                        <span class="kt-badge-dot size-1.5"></span>
+                                        {{ getFormattedValue(rowData, col) }}
+                                    </span>
+                                </ng-container>
+                            </ng-template>
 
-                <p-button *ngIf="displayEditAction" (onClick)="onEdit(rowData)" styleClass="mr-2 p-button-sm"
-                    variant="outlined" icon="pi pi-pencil" attr.aria-label="Editar" severity="primary" pTooltip="Editar"
-                    tooltipPosition="top" />
+                            <ng-template #defaultTextCell>
+                                <span>{{ getFormattedValue(rowData, col) }}</span>
+                            </ng-template>
+                        </ng-template>
+                    </td>
+                    <td *ngIf="displayActionsColumn">
+                        <ng-container *ngIf="customActionsTemplate" [ngTemplateOutlet]="customActionsTemplate"
+                            [ngTemplateOutletContext]="{ $implicit: rowData }">
+                        </ng-container>
 
-                <p-button *ngIf="canShowDeleteButton(rowData)" (onClick)="onDelete(rowData)"
-                    styleClass="mr-2 p-button-sm" variant="outlined" icon="pi pi-trash" attr.aria-label="Excluir"
-                    severity="danger" pTooltip="Excluir" tooltipPosition="top" />
-            </td>
-        </tr>
-    </ng-template>
-</p-table>
+                        <a *ngIf="isDetailActionVisible(rowData)" (click)="onDetail(rowData)"
+                            class="kt-btn kt-btn-icon kt-btn-sm kt-btn-light" attr.aria-label="Detalhes"
+                            title="Detalhes">
+                            <i class="ki-filled ki-information"></i>
+                        </a>
 
-<app-no-records-found [length]="tableData.length || 0" [hasBtnCreate]="displayCreateAction && hasBtnCreate"
-    (onClick)="onAdd()"></app-no-records-found>
+                        <a *ngIf="displayEditAction" (click)="onEdit(rowData)"
+                            class="kt-btn kt-btn-icon kt-btn-sm kt-btn-light ml-2" attr.aria-label="Editar"
+                            title="Editar">
+                            <i class="ki-filled ki-pencil"></i>
+                        </a>
+
+                        <a *ngIf="canShowDeleteButton(rowData)" (click)="onDelete(rowData)"
+                            class="kt-btn kt-btn-icon kt-btn-sm kt-btn-destructive ml-2" attr.aria-label="Excluir"
+                            title="Excluir">
+                            <i class="ki-filled ki-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+        <app-no-records-found [length]="tableData.length || 0" [hasBtnCreate]="displayCreateAction && hasBtnCreate"
+            (onClick)="onAdd()"></app-no-records-found>
+    </div>
+</div>

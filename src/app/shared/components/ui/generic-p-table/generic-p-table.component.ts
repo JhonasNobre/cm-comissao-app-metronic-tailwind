@@ -27,7 +27,32 @@ import { TableFormattingService } from '../../../services/table-formatting.servi
     imports: [CommonModule, FormsModule,
         TableModule, TooltipModule, InputTextModule, ButtonModule, IconField, InputIcon,
         NoRecordsFoundComponent, AvatarModule, AvatarGroupModule, BadgeModule, MultiSelectModule, FloatLabelModule],
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    styles: [`
+        /* Table Body Cell Borders */
+        .kt-table tbody td {
+            border-right: 1px solid #EFF2F5 !important;
+        }
+        
+        /* Remove vertical border from last body cell */
+        .kt-table tbody td:last-child {
+            border-right: none !important;
+        }
+        
+        /* Force padding on first column */
+        .kt-table th:first-child,
+        .kt-table td:first-child {
+            padding-left: 1.25rem !important;
+        }
+       
+        /* Current Page Report (Showing X to Y of Z) */
+        .p-datatable .p-paginator .p-paginator-current,
+        .p-paginator .p-paginator-current {
+            font-size: 0.875rem !important;
+            margin-right: auto !important;
+            order: -1 !important;
+        }
+    `]
 })
 
 export class GenericPTableComponent<T extends BaseEntity> implements OnInit, OnChanges {
@@ -262,7 +287,7 @@ export class GenericPTableComponent<T extends BaseEntity> implements OnInit, OnC
         // Caso especial para a nossa foto em Base64
         if (field === 'photoData') {
             if (rowData.photoData) {
-                return `data:${rowData.photoContentType};base64,${rowData.photoData}`;
+                return `data:${rowData.photoContentType}; base64, ${rowData.photoData} `;
             }
             // Retorna um avatar padrão se não houver foto
             return './images/default-avatar.png';
@@ -434,6 +459,38 @@ export class GenericPTableComponent<T extends BaseEntity> implements OnInit, OnC
             this.dt.clearState(); // Comanda a p-table a limpar seu estado do Session Storage
             // Opcional: this.dt.reset() para limpar também filtros e ordenação
         }
+    }
+
+    /**
+     * Checkbox Methods (Metronic Manual Checkboxes)
+     */
+    isSelected(rowData: T): boolean {
+        return this.selection.some(item => item['id'] === rowData['id']);
+    }
+
+    onHeaderCheckboxToggle(event: any): void {
+        const checked = event.target.checked;
+        if (checked) {
+            // Select all visible rows
+            const visibleData = this.serverSidePagination ? this.tableData : this.filteredTableData;
+            this.selection = [...visibleData];
+        } else {
+            // Deselect all
+            this.selection = [];
+        }
+        this.selectionChange.emit(this.selection);
+    }
+
+    onRowCheckboxToggle(rowData: T, event: any): void {
+        const checked = event.target.checked;
+        if (checked) {
+            // Add to selection
+            this.selection = [...this.selection, rowData];
+        } else {
+            // Remove from selection
+            this.selection = this.selection.filter(item => item['id'] !== rowData['id']);
+        }
+        this.selectionChange.emit(this.selection);
     }
 
 }

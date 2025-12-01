@@ -19,9 +19,6 @@ import { TableModule } from 'primeng/table';
     styles: [`        
         /* Table Body Cell Padding */
         .kt-table tbody td {
-            padding-inline: calc(var(--spacing) * 2);
-            padding-block: calc(var(--spacing) * 1);
-            vertical-align: middle;
             border-right: 1px solid #EFF2F5 !important;
         }
         
