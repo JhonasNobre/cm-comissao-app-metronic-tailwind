@@ -1,9 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { UserListDTO, UserRole, UserStatus } from '../../models/user.model';
 import { Observable } from 'rxjs';
+import { MetronicInitService } from '../../../../core/services/metronic-init.service';
 
 @Component({
     selector: 'app-user-list',
@@ -11,13 +12,18 @@ import { Observable } from 'rxjs';
     imports: [CommonModule, RouterModule],
     templateUrl: './user-list.component.html',
 })
-export class UserListComponent implements OnInit {
+export class UserListComponent implements OnInit, AfterViewInit {
     private userService = inject(UserService);
+    private metronicInitService = inject(MetronicInitService);
 
     users$: Observable<UserListDTO[]> = this.userService.getUsers();
 
     ngOnInit(): void {
         // Initial load handled by async pipe
+    }
+
+    ngAfterViewInit(): void {
+        this.metronicInitService.init();
     }
 
     getRoleBadgeClass(role: UserRole): string {

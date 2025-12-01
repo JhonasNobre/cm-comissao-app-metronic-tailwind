@@ -1,20 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, AfterViewInit, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { MetronicInitService } from '../../../core/services/metronic-init.service';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-test-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule],
   templateUrl: './test-page.component.html',
   styleUrl: './test-page.component.scss'
 })
-export class TestPageComponent implements AfterViewInit {
-  private metronicInitService = inject(MetronicInitService);
+export class TestPageComponent {
 
-  ngAfterViewInit(): void {
-    // Inicializa os componentes Metronic (datatable, selects, menus, etc)
-    this.metronicInitService.init();
-  }
 }
