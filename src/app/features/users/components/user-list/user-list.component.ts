@@ -1,8 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { UserService } from '../../../core/services/user.service';
-import { UserListDTO, UserRole, UserStatus } from '../../../core/models/user.model';
+import { UserService } from '../../services/user.service';
+import { UserListDTO, UserRole, UserStatus } from '../../models/user.model';
 import { Observable } from 'rxjs';
 
 @Component({

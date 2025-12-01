@@ -10,13 +10,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', component: DashboardComponent },
-      { path: 'users', loadComponent: () => import('./pages/users/user-list/user-list.component').then(m => m.UserListComponent) },
-      { path: 'test', loadComponent: () => import('./pages/test-page/test-page.component').then(m => m.TestPageComponent) },
-      { path: 'profile/default', loadComponent: () => import('./pages/profile-default/profile-default.component').then(m => m.ProfileDefaultComponent) },
+      { path: 'users', loadComponent: () => import('./features/users/components/user-list/user-list.component').then(m => m.UserListComponent) },
+      { path: 'test', loadComponent: () => import('./features/testing/components/test-page/test-page.component').then(m => m.TestPageComponent) },
     ],
   },
   {
     path: 'auth/login',
-    loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent)
+    loadComponent: () => import('./features/auth/components/login/login.component').then(m => m.LoginComponent)
   }
 ];
