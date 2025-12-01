@@ -96,15 +96,32 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- Pagination (Mock) -->
-                <div class="flex justify-between items-center p-5 border-t border-gray-200">
-                    <div class="text-sm text-gray-500">
-                        Showing 1 to {{ (users$ | async)?.length || 0 }} of {{ (users$ | async)?.length || 0 }} entries
+                <!-- Pagination Footer -->
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 border-t border-gray-200">
+                    <div class="flex items-center gap-2 text-sm text-gray-500">
+                        <span>Show</span>
+                        <select class="kt-select kt-select-sm w-16">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>per page</span>
                     </div>
-                    <div class="flex gap-1">
-                        <button class="kt-btn kt-btn-sm kt-btn-light disabled">Previous</button>
-                        <button class="kt-btn kt-btn-sm kt-btn-primary">1</button>
-                        <button class="kt-btn kt-btn-sm kt-btn-light">Next</button>
+                    <div class="flex items-center gap-2.5">
+                        <div class="text-sm text-gray-500">
+                            1-{{ (users$ | async)?.length || 0 }} of {{ (users$ | async)?.length || 0 }}
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-light disabled">
+                                <i class="ki-outline ki-left"></i>
+                            </button>
+                            <span class="text-sm font-medium text-gray-700">1</span>
+                            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-light disabled">
+                                <i class="ki-outline ki-right"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
