@@ -15,7 +15,7 @@ import { TableModule } from 'primeng/table';
         TableModule
     ],
     templateUrl: './user-list.component.html',
-    encapsulation: ViewEncapsulation.None,  // Permite que os estilos sejam aplicados ao PrimeNG
+    encapsulation: ViewEncapsulation.None,
     styles: [`
         /* PrimeNG Table Border Customization */
         /* Apply light borders directly to table cells */

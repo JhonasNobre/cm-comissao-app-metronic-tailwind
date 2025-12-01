@@ -1,0 +1,32 @@
+<form [formGroup]="form" class="flex flex-col gap-4">
+    <!-- Upload de arquivos -->
+    <div *ngIf="hasFileUpload && !fileName" class="mb-3">
+        <app-input-file-drag [acceptType]="acceptType" [maxFiles]="maxFiles"
+            (inputFile)="onFilesChange($event)"></app-input-file-drag>
+    </div>
+
+    <!-- Se já houver arquivo carregado -->
+    <h4 *ngIf="fileName && hasFileUpload" class="fw-bold">
+        Nome do arquivo: {{ fileName }}
+    </h4>
+
+    <!-- Perguntas dinâmicas -->
+    <ng-container *ngFor="let q of questions">
+        <app-dynamic-form-question *ngIf="q.buildInForm" [question]="q" [form]="form"></app-dynamic-form-question>
+    </ng-container>
+
+    <!-- Informação de última atualização -->
+    <div *ngIf="userUpdate && convertedDate" class="mt-3">
+        <small class="text-muted">
+            {{ 'SHARED.COMPONENTS.FORMS.FORM_UPDATE.DATE_OF_LAST_CHANGE' | transloco }}
+            {{ convertedDate }}, {{ userUpdate }}
+        </small>
+    </div>
+    <div class="flex justify-end gap-4 mt-4">
+        <button pButton type="button" label="{{ 'SHARED.COMMON.CANCEL' | transloco }}" class="p-button-secondary"
+            (click)="onClose()"></button>
+        <button pButton label="{{ 'general.singular.save' | transloco }}"
+            (click)="submitForm(form.value)">
+        </button>
+    </div>
+</form>

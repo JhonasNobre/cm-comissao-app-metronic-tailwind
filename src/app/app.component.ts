@@ -1,18 +1,30 @@
 import { Component, inject, signal, Renderer2, DOCUMENT } from '@angular/core';
 import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
-
 import { filter } from 'rxjs/operators';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
+import { LoadingOverlayComponent } from './shared/components/ui/loading-overlay/loading-overlay.component';
+import { LoadingService } from './core/services/loading.service';
+import { CommonModule } from '@angular/common';
 import { MetronicInitService } from './core/services/metronic-init.service';
 
 @Component({
   selector: 'body[app-root]',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    ToastModule,
+    ConfirmDialogComponent,
+    LoadingOverlayComponent
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  title = 'metronic-tailwind-angular';
+  title = 'cm-comissao-app-metronic-tailwind';
 
+  loadingService = inject(LoadingService);
   private router = inject(Router);
   private document = inject(DOCUMENT);
   private renderer = inject(Renderer2);

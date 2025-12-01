@@ -1,0 +1,135 @@
+<p-table #dt [value]="serverSidePagination ? tableData : filteredTableData" [rows]="rows" [stripedRows]="stripedRows"
+    [totalRecords]="serverSidePagination ? totalRecords : filteredTableData.length" [lazy]="serverSidePagination"
+    (onLazyLoad)="onLazyLoad($event)" [columns]="visibleColumns" scrollHeight="auto" [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="rowsPerPageOptions" [paginator]="true" stateStorage="session" stateKey="state-{{ tableName }}"
+    currentPageReportTemplate="{{
+        'general.phrase.show_rows' | transloco
+    }}" dataKey="id" [selection]="selection" (selectionChange)="onInternalSelectionChange($event)">
+    <!-- CAPTION: busca, criação e colunas dinâmicas -->
+    <ng-template #caption>
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+
+            <div class="flex items-center gap-2 w-full md:w-auto">
+                <!-- Busca Rápida -->
+                <p-icon-field class="w-full sm:w-80 order-1 sm:order-none">
+                    <p-inputicon class="pi pi-search" />
+                    <input pInputText type="text"
+                        [placeholder]="'components.generic-table.global-search-placeholder' | transloco" class="w-full"
+                        [(ngModel)]="filter" (ngModelChange)="onFilterChange($event)" />
+                </p-icon-field>
+            </div>
+
+            <div class="flex items-center gap-2 self-end md:self-auto">
+                <!-- MultiSelect -->
+                <p-floatlabel *ngIf="optionalColumnOptions.length > 0" variant="on">
+                    <p-multiSelect [options]="optionalColumnOptions" [(ngModel)]="selectedColumns"
+                        (onChange)="onColumnSelectionChange()" optionLabel="header" styleClass="w-60 md:w-72">
+
+                        <ng-template let-value pTemplate="selectedItems">
+                            <div *ngIf="!value || value.length === 0">
+                                {{ 'components.generic-table.column-selector-placeholder' | transloco }}
+                            </div>
+
+                            <div *ngIf="value && value.length > 0">
+                                {{ selectedColumnsLabel }}
+                            </div>
+                        </ng-template>
+
+                        <ng-template let-option pTemplate="item">
+                            <div>{{ option.header | transloco }}</div>
+                        </ng-template>
+                    </p-multiSelect>
+
+                    <label for="columnSelector">
+                        {{ 'components.generic-table.column-selector-placeholder' | transloco }}
+                    </label>
+                </p-floatlabel>
+
+                <!-- Item Dinâmico -->
+                <ng-content></ng-content>
+
+                <p-button *ngIf="displayCreateAction" (onClick)="onAdd()" [label]="'general.singular.new' | transloco"
+                    icon="pi pi-plus" [disabled]="isCreateButtonDisabled">
+                </p-button>
+            </div>
+        </div>
+    </ng-template>
+
+    <!-- HEADER -->
+    <ng-template #header let-columns>
+        <tr>
+            <th *ngIf="enableSelection" style="width: 4rem">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th *ngFor="let col of columns; trackBy: trackByField" [pSortableColumn]="col.field" [style]="col.style">
+                <span class="flex items-center gap-2">
+                    {{ col.header | transloco }}
+                    <p-sortIcon [field]="col.field"></p-sortIcon>
+                    <p-columnFilter *ngIf="col.filter" type="text" [field]="col.field" display="menu"></p-columnFilter>
+                </span>
+            </th>
+            <th *ngIf="displayActionsColumn" style="min-width: 12rem;"></th>
+        </tr>
+    </ng-template>
+
+    <!-- BODY -->
+    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+        <tr [ngClass]="rowStyleClass ? rowStyleClass(rowData) : null">
+            <td *ngIf="enableSelection">
+                <p-tableCheckbox [value]="rowData"
+                    [disabled]="isRowSelectable ? !isRowSelectable({ data: rowData }) : false">
+                </p-tableCheckbox>
+            </td>
+            <td *ngFor="let col of columns; trackBy: trackByField">
+                <ng-container *ngIf="isImageField(col.field); else textCell">
+                    <div class="flex items-center gap-2">
+                        <p-avatar [image]="getImageSrc(col.field, rowData)" shape="circle"></p-avatar>
+                    </div>
+                </ng-container>
+
+                <ng-template #textCell>
+                    <ng-container *ngIf="col.displayAs === 'badge'; else priorityCell">
+                        <p-badge [value]="getFormattedValue(rowData, col)"
+                            [severity]="col.badgeSeverityMap?.[rowData[col.field]] || 'info'">
+                        </p-badge>
+                    </ng-container>
+
+                    <ng-template #priorityCell>
+                        <ng-container *ngIf="col.enumType === 'Priority'; else defaultTextCell">
+                            <p-badge [value]="getFormattedValue(rowData, col)"
+                                [severity]="getPrioritySeverity(rowData[col.field])">
+                            </p-badge>
+                        </ng-container>
+                    </ng-template>
+
+                    <ng-template #defaultTextCell>
+                        <span>{{ getFormattedValue(rowData, col) }}</span>
+                    </ng-template>
+                </ng-template>
+            </td>
+            <td *ngIf="displayActionsColumn" style="display: flex; justify-content: flex-end">
+                <ng-container *ngIf="customActionsTemplate" [ngTemplateOutlet]="customActionsTemplate"
+                    [ngTemplateOutletContext]="{ $implicit: rowData }">
+                </ng-container>
+
+                <p-button *ngIf="isDetailActionVisible(rowData)" (onClick)="onDetail(rowData)"
+                    styleClass="mr-2 p-button-sm" variant="outlined" icon="pi pi-info-circle"
+                    [attr.aria-label]="'components.generic-table.actions.details' | transloco" severity="primary"
+                    [pTooltip]="'components.generic-table.actions.details' | transloco" tooltipPosition="top" />
+
+                <p-button *ngIf="displayEditAction" (onClick)="onEdit(rowData)" styleClass="mr-2 p-button-sm"
+                    variant="outlined" icon="pi pi-pencil"
+                    [attr.aria-label]="'components.generic-table.actions.edit' | transloco" severity="primary"
+                    [pTooltip]="'components.generic-table.actions.edit' | transloco" tooltipPosition="top" />
+
+                <p-button *ngIf="canShowDeleteButton(rowData)" (onClick)="onDelete(rowData)"
+                    styleClass="mr-2 p-button-sm" variant="outlined" icon="pi pi-trash"
+                    [attr.aria-label]="'components.generic-table.actions.delete' | transloco" severity="danger"
+                    [pTooltip]="'components.generic-table.actions.delete' | transloco" tooltipPosition="top" />
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<app-no-records-found [length]="tableData.length || 0" [hasBtnCreate]="displayCreateAction && hasBtnCreate"
+    (onClick)="onAdd()"></app-no-records-found>

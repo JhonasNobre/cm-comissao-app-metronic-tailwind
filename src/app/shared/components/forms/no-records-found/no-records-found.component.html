@@ -1,0 +1,14 @@
+<div *ngIf="length === 0" class="row g-3">
+  <div class="search-box col-xxl-4 col-lg-4">
+    <div class="position-relative">
+      <p class="text-muted mb-2">{{ label | transloco}}</p>
+    </div>
+  </div>
+  <div class="col-sm-8">
+    <div class="text-sm-end">
+      <app-button *ngIf="hasBtnCreate" (click)="onClickButton($event)" [label]="btnLabel" icon="pi pi-plus label-icon font-size-20"
+        btnClass="btn btn-primary btn-label waves-light mb-2 me-2">
+      </app-button>
+    </div>
+  </div>
+</div>

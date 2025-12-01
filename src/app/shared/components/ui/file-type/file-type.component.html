@@ -1,0 +1,12 @@
+<div class="grid grid-cols-12 gap-4">
+    <a href="javascript: void(0);" *ngFor="let folder of listPropertyFiles" class="col-span-12 md:col-span-6 xl:col-span-3"  (click)="details(folder.id)">
+        <div
+            class="p-4 border border-surface-200 dark:border-surface-700 flex items-center justify-between hover:bg-surface-100 dark:hover:bg-surface-700 rounded">
+            <div class="flex items-center">
+                <i ngClass="pi pi-folder" class="text-2xl mr-4"></i>
+                <span class="text-surface-900 dark:text-surface-0 text-lg font-medium">{{ folder.description }}</span>
+            </div>
+            <span *ngIf="folder.quantity > 0" class="text-surface-600 dark:text-surface-200 text-lg font-semibold">{{ folder.quantity }}</span>
+        </div>
+    </a>
+</div>

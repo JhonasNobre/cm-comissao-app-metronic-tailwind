@@ -1,0 +1,85 @@
+<div [formGroup]="form">
+    <!-- Checkbox -->
+    <div *ngIf="question.controlType === 'checkbox'">
+        <div class="flex items-center gap-1">
+            <p-checkbox [formControlName]="question.key" binary="true" inputId="{{ question.key }}" />
+            <label for="{{ question.key }}" class="ml-2">{{ question.label | transloco }}</label>
+            <small *ngIf="question.placeholder" class="p-text-secondary">
+                {{ question.placeholder | transloco }}
+            </small>
+        </div>
+        <app-form-field-error [control]="control" [fieldName]="question.label | transloco"></app-form-field-error>
+    </div>
+
+    <!-- Textbox / number -->
+    <div *ngIf="question.controlType === 'textbox' || question.controlType === 'number'">
+        <label for="{{ question.key }}" class="block font-bold">
+            {{ question.label | transloco }}<span *ngIf="question.required">*</span>
+        </label>
+        <input pInputText [id]="question.key" [formControlName]="question.key" [type]="question.controlType"
+            placeholder="{{question.placeholder | transloco}}" class="w-full" />
+        <app-form-field-error [control]="control" [fieldName]="question.label | transloco"></app-form-field-error>
+    </div>
+
+    <!-- Currency -->
+    <div *ngIf="question.controlType === 'currency'">
+        <label for="{{ question.key }}" class="block font-bold">
+            {{ question.label | transloco }}<span *ngIf="question.required">*</span>
+        </label>
+        <p-inputNumber
+            [id]="question.key"
+            [formControlName]="question.key"
+            mode="currency"
+            [currency]="currencyCode"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            [placeholder]="question.placeholder | transloco"
+            class="w-full"
+        ></p-inputNumber>
+        <app-form-field-error [control]="control" [fieldName]="question.label | transloco"></app-form-field-error>
+    </div>
+
+    <!-- Textarea -->
+    <div *ngIf="question.controlType === 'textarea'">
+        <label for="{{ question.key }}" class="block font-bold">
+            {{ question.label | transloco }}<span *ngIf="question.required">*</span>
+        </label>
+        <textarea pTextarea [id]="question.key" [formControlName]="question.key"
+            placeholder="{{question.placeholder | transloco}}" rows="3" class="w-full">
+        </textarea>
+        <app-form-field-error [control]="control" [fieldName]="question.label | transloco"></app-form-field-error>
+    </div>
+
+    <!-- Date -->
+    <div *ngIf="question.controlType === 'date'">
+        <label for="{{ question.key }}" class="block font-bold">
+            {{ question.label | transloco }}<span *ngIf="question.required">*</span>
+        </label>
+        <p-datePicker [formControlName]="question.key" [id]="question.key" dateFormat="dd/mm/yy" [showIcon]="true"
+            placeholder="{{question.placeholder | transloco}}" class="w-full">
+        </p-datePicker>
+        <app-form-field-error [control]="control" [fieldName]="question.label | transloco"></app-form-field-error>
+    </div>
+
+    <!-- Select -->
+    <div *ngIf="question.controlType === 'dropdown'">
+        <label for="{{ question.key }}" class="block font-bold">
+            {{ question.label | transloco }}<span *ngIf="question.required">*</span>
+        </label>
+        <p-select [formControlName]="question.key" [options]="question.options" optionLabel="label" optionValue="value"
+            placeholder="{{question.placeholder | transloco}}" [filter]="true" filterBy="label" class="w-full" />
+        <app-form-field-error [control]="control" [fieldName]="question.label | transloco"></app-form-field-error>
+    </div>
+
+    <!-- Multiple Select -->
+    <div *ngIf="question.controlType === 'multipleDropdown'">
+        <label for="{{ question.key }}" class="block font-bold">
+            {{ question.label | transloco }}<span *ngIf="question.required">*</span>
+        </label>
+        <p-multiSelect [formControlName]="question.key" [options]="question.options" optionLabel="label"
+            optionValue="value" placeholder="{{question.placeholder | transloco}}" [filter]="true" filterBy="label"
+            class="w-full">
+        </p-multiSelect>
+        <app-form-field-error [control]="control" [fieldName]="question.label | transloco"></app-form-field-error>
+    </div>
+</div>
