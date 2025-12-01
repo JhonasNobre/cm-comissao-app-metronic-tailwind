@@ -20,220 +20,98 @@
 
         <!-- Card -->
         <div class="kt-card kt-card-grid min-w-full">
-            <div class="kt-card-header flex-wrap gap-2">
-                <h3 class="kt-card-title text-sm">
-                    Showing {{ (users$ | async)?.length || 0 }} users
-                </h3>
-                <div class="flex flex-wrap gap-2 lg:gap-5">
-                    <div class="flex">
-                        <label class="kt-input">
-                            <i class="ki-filled ki-magnifier"></i>
-                            <input type="text" placeholder="Search users" />
-                        </label>
+            <p-table #dt [value]="(users$ | async) || []" [rows]="10" [paginator]="true"
+                [globalFilterFields]="['name', 'email', 'role', 'status']" [tableStyle]="{ 'min-width': '75rem' }"
+                [rowHover]="true" dataKey="id"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                [showCurrentPageReport]="true" [rowsPerPageOptions]="[10, 25, 50]"
+                styleClass="kt-table table-auto kt-table-border">
+                <ng-template pTemplate="caption">
+                    <div class="kt-card-header flex-wrap gap-2 border-0 px-0 pt-0">
+                        <h3 class="kt-card-title text-sm">
+                            Users List
+                        </h3>
+                        <div class="flex flex-wrap gap-2 lg:gap-5">
+                            <div class="flex">
+                                <p-iconField iconPosition="left" class="w-full">
+                                    <p-inputIcon styleClass="ki-filled ki-magnifier" />
+                                    <input pInputText type="text"
+                                        (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+                                        placeholder="Search users" class="kt-input pl-10" />
+                                </p-iconField>
+                            </div>
+                            <div class="flex flex-wrap gap-2.5">
+                                <button class="kt-btn kt-btn-outline kt-btn-primary">
+                                    <i class="ki-filled ki-setting-4"></i>
+                                    Filters
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex flex-wrap gap-2.5">
-                        <button class="kt-btn kt-btn-outline kt-btn-primary">
-                            <i class="ki-filled ki-setting-4"></i>
-                            Filters
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="kt-card-content">
-                <div class="kt-scrollable-x-auto">
-                    <table class="kt-table table-auto kt-table-border" data-kt-datatable-table="true">
-                        <thead>
-                            <tr>
-                                <th class="w-[60px] text-center">
-                                    <input class="kt-checkbox kt-checkbox-sm" type="checkbox" />
-                                </th>
-                                <th class="min-w-[300px]">User</th>
-                                <th class="min-w-[150px]">Role</th>
-                                <th class="min-w-[150px]">Status</th>
-                                <th class="min-w-[150px]">Joined Date</th>
-                                <th class="w-[100px]">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let user of users$ | async">
-                                <td class="text-center">
-                                    <input class="kt-checkbox kt-checkbox-sm" type="checkbox" />
-                                </td>
-                                <td>
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="kt-avatar size-9 shrink-0">
-                                            <img [src]="user.avatar" alt="" class="rounded-full" />
-                                        </div>
-                                        <div class="flex flex-col">
-                                            <a [routerLink]="[user.id]"
-                                                class="text-sm font-medium text-mono hover:text-primary mb-px">{{
-                                                user.name
-                                                }}</a>
-                                            <a [routerLink]="[user.id]"
-                                                class="text-sm text-secondary-foreground font-normal hover:text-primary">{{
-                                                user.email }}</a>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="kt-badge kt-badge-sm" [ngClass]="getRoleBadgeClass(user.role)">{{
-                                        user.role
-                                        }}</span>
-                                </td>
-                                <td>
-                                    <span class="kt-badge kt-badge-sm" [ngClass]="getStatusBadgeClass(user.status)">{{
-                                        user.status }}</span>
-                                </td>
-                                <td class="text-foreground font-normal">
-                                    {{ user.joinedDate | date:'dd MMM yyyy' }}
-                                </td>
-                                <td>
-                                    <a [routerLink]="[user.id]" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-light">
-                                        <i class="ki-filled ki-pencil"></i>
-                                        <!-- Container -->
-                                        <div class="kt-container-fluid">
-                                            <div class="flex flex-col gap-5 lg:gap-7.5 w-full">
-                                                <!-- Top Header -->
-                                                <div
-                                                    class="flex flex-wrap items-center lg:items-end justify-between gap-5">
-                                                    <div class="flex flex-col justify-center gap-2">
-                                                        <h1 class="text-xl font-medium leading-none text-mono">Users
-                                                        </h1>
-                                                        <div class="flex items-center flex-wrap gap-1.5 font-medium">
-                                                            <span class="text-base text-secondary-foreground">All
-                                                                Users:</span>
-                                                            <span class="text-base text-foreground font-medium">{{
-                                                                (users$ | async)?.length || 0 }}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex items-center gap-2.5">
-                                                        <a class="kt-btn kt-btn-primary" routerLink="new">
-                                                            <i class="ki-filled ki-plus"></i>
-                                                            Add User
-                                                        </a>
-                                                    </div>
-                                                </div>
+                </ng-template>
 
-                                                <!-- Card -->
-                                                <div class="kt-card kt-card-grid min-w-full">
-                                                    <div class="kt-card-header flex-wrap gap-2">
-                                                        <h3 class="kt-card-title text-sm">
-                                                            Showing {{ (users$ | async)?.length || 0 }} users
-                                                        </h3>
-                                                        <div class="flex flex-wrap gap-2 lg:gap-5">
-                                                            <div class="flex">
-                                                                <label class="kt-input">
-                                                                    <i class="ki-filled ki-magnifier"></i>
-                                                                    <input type="text" placeholder="Search users" />
-                                                                </label>
-                                                            </div>
-                                                            <div class="flex flex-wrap gap-2.5">
-                                                                <button class="kt-btn kt-btn-outline kt-btn-primary">
-                                                                    <i class="ki-filled ki-setting-4"></i>
-                                                                    Filters
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="kt-card-content">
-                                                        <div class="kt-scrollable-x-auto">
-                                                            <table class="kt-table table-auto kt-table-border"
-                                                                data-kt-datatable-table="true">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th class="w-[60px] text-center">
-                                                                            <input class="kt-checkbox kt-checkbox-sm"
-                                                                                type="checkbox" />
-                                                                        </th>
-                                                                        <th class="min-w-[300px]">User</th>
-                                                                        <th class="min-w-[150px]">Role</th>
-                                                                        <th class="min-w-[150px]">Status</th>
-                                                                        <th class="min-w-[150px]">Joined Date</th>
-                                                                        <th class="w-[100px]">Actions</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    <tr *ngFor="let user of users$ | async">
-                                                                        <td class="text-center">
-                                                                            <input class="kt-checkbox kt-checkbox-sm"
-                                                                                type="checkbox" />
-                                                                        </td>
-                                                                        <td>
-                                                                            <div class="flex items-center gap-2.5">
-                                                                                <div class="kt-avatar size-9 shrink-0">
-                                                                                    <img [src]="user.avatar" alt=""
-                                                                                        class="rounded-full" />
-                                                                                </div>
-                                                                                <div class="flex flex-col">
-                                                                                    <a [routerLink]="[user.id]"
-                                                                                        class="text-sm font-medium text-mono hover:text-primary mb-px">{{
-                                                                                        user.name
-                                                                                        }}</a>
-                                                                                    <a [routerLink]="[user.id]"
-                                                                                        class="text-sm text-secondary-foreground font-normal hover:text-primary">{{
-                                                                                        user.email }}</a>
-                                                                                </div>
-                                                                            </div>
-                                                                        </td>
-                                                                        <td>
-                                                                            <span class="kt-badge kt-badge-sm"
-                                                                                [ngClass]="getRoleBadgeClass(user.role)">{{
-                                                                                user.role
-                                                                                }}</span>
-                                                                        </td>
-                                                                        <td>
-                                                                            <span class="kt-badge kt-badge-sm"
-                                                                                [ngClass]="getStatusBadgeClass(user.status)">{{
-                                                                                user.status }}</span>
-                                                                        </td>
-                                                                        <td class="text-foreground font-normal">
-                                                                            {{ user.joinedDate | date:'dd MMM yyyy' }}
-                                                                        </td>
-                                                                        <td>
-                                                                            <a [routerLink]="[user.id]"
-                                                                                class="kt-btn kt-btn-icon kt-btn-sm kt-btn-light">
-                                                                                <i class="ki-filled ki-pencil"></i>
-                                                                            </a>
-                                                                        </td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                        <!-- Pagination Footer -->
-                                                        <div
-                                                            class="kt-card-footer justify-center md:justify-between flex-col md:flex-row gap-5 text-secondary-foreground text-sm font-medium">
-                                                            <div class="flex items-center gap-2 order-2 md:order-1">
-                                                                <span>Show</span>
-                                                                <select class="kt-select w-16" data-kt-select="true"
-                                                                    data-kt-select-placeholder="10">
-                                                                    <option value="10">10</option>
-                                                                    <option value="25">25</option>
-                                                                    <option value="50">50</option>
-                                                                    <option value="100">100</option>
-                                                                </select>
-                                                                <span>per page</span>
-                                                            </div>
-                                                            <div class="flex items-center gap-4 order-1 md:order-2">
-                                                                <span data-kt-datatable-info="true">
-                                                                    1-{{ (users$ | async)?.length || 0 }} of {{ (users$
-                                                                    | async)?.length || 0 }}
-                                                                </span>
-                                                                <div class="flex items-center gap-1">
-                                                                    <button
-                                                                        class="kt-btn kt-btn-sm kt-btn-icon kt-btn-light disabled">
-                                                                        <i class="ki-outline ki-left"></i>
-                                                                    </button>
-                                                                    <span
-                                                                        class="text-sm font-medium text-gray-700">1</span>
-                                                                    <button
-                                                                        class="kt-btn kt-btn-sm kt-btn-icon kt-btn-light disabled">
-                                                                        <i class="ki-outline ki-right"></i>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th class="w-[60px] text-center">
+                            <input class="kt-checkbox kt-checkbox-sm" type="checkbox" />
+                        </th>
+                        <th pSortableColumn="name" class="min-w-[300px]">User <p-sortIcon field="name" /></th>
+                        <th pSortableColumn="role" class="min-w-[150px]">Role <p-sortIcon field="role" /></th>
+                        <th pSortableColumn="status" class="min-w-[150px]">Status <p-sortIcon field="status" /></th>
+                        <th pSortableColumn="joinedDate" class="min-w-[150px]">Joined Date <p-sortIcon
+                                field="joinedDate" /></th>
+                        <th class="w-[100px]">Actions</th>
+                    </tr>
+                </ng-template>
 
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                <ng-template pTemplate="body" let-user>
+                    <tr>
+                        <td class="text-center">
+                            <input class="kt-checkbox kt-checkbox-sm" type="checkbox" />
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2.5">
+                                <div class="kt-avatar size-9 shrink-0">
+                                    <img [src]="user.avatar" alt="" class="rounded-full" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <a [routerLink]="[user.id]"
+                                        class="text-sm font-medium text-mono hover:text-primary mb-px">{{
+                                        user.name
+                                        }}</a>
+                                    <a [routerLink]="[user.id]"
+                                        class="text-sm text-secondary-foreground font-normal hover:text-primary">{{
+                                        user.email }}</a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="kt-badge kt-badge-sm" [ngClass]="getRoleBadgeClass(user.role)">{{
+                                user.role
+                                }}</span>
+                        </td>
+                        <td>
+                            <span class="kt-badge kt-badge-sm" [ngClass]="getStatusBadgeClass(user.status)">{{
+                                user.status }}</span>
+                        </td>
+                        <td class="text-foreground font-normal">
+                            {{ user.joinedDate | date:'dd MMM yyyy' }}
+                        </td>
+                        <td>
+                            <a [routerLink]="[user.id]" class="kt-btn kt-btn-icon kt-btn-sm kt-btn-light">
+                                <i class="ki-filled ki-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="paginatorleft">
+                    <!-- Custom content if needed -->
+                </ng-template>
+                <ng-template pTemplate="paginatorright">
+                    <!-- Custom content if needed -->
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+</div>
