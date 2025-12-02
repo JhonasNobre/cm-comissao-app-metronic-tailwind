@@ -34,15 +34,27 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req).pipe(
         catchError((error) => {
             if (error.status === 401) {
-                // Token expirado ou inválido
-                console.warn('Token expirado ou inválido. Redirecionando para login...');
-                authService.logout();
+                // 401 pode significar:
+                // 1. Token expirado/inválido → Deslogar
+                // 2. Token válido mas sem permissão para este recurso → NÃO deslogar
+
+                const token = authService.getAccessToken();
+
+                // Se não há token OU token está expirado → Deslogar
+                if (!token || authService.isTokenExpired(token)) {
+                    console.warn('Token ausente ou expirado. Redirecionando para login...');
+                    authService.logout();
+                } else {
+                    // Token válido mas sem permissão para este recurso específico
+                    console.warn('Acesso negado ao recurso:', req.url);
+                    // Não desloga, apenas retorna o erro para o componente tratar
+                }
             }
 
             if (error.status === 403) {
-                // Acesso negado (usuário não tem permissão)
-                console.warn('Acesso negado. Usuário não possui permissão.');
-                // router.navigate(['/error/403']); // Opcional: criar página de erro 403
+                // Acesso negado (usuário autenticado mas sem permissão)
+                console.warn('Acesso negado. Usuário não possui permissão para:', req.url);
+                // Nunca desloga em 403
             }
 
             return throwError(() => error);
