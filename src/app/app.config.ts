@@ -1,7 +1,7 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
-import { provideOAuthClient } from 'angular-oauth2-oidc';
+
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeng/themes/aura';
@@ -21,11 +21,11 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withFetch(),
       withInterceptors([
+        authInterceptor,
         loadingInterceptor,
         errorInterceptor
       ])
     ),
-    provideOAuthClient(),
     providePrimeNG({
       theme: {
         preset: Aura,

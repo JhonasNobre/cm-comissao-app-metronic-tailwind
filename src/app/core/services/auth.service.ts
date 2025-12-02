@@ -1,14 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, tap, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { LoginRequest, LoginResponse } from '../models/auth.model';
 
 /**
- * Serviço de autenticação usando Keycloak via OAuth2/OIDC
- * 
- * Implementa o fluxo Authorization Code + PKCE para autenticação segura
- * sem necessidade de client secret (public client).
+ * Serviço de autenticação usando API Backend (JWT)
  */
 @Injectable({
     providedIn: 'root'
@@ -17,164 +15,125 @@ export class AuthService {
     private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
     public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-    private isDoneLoadingSubject = new BehaviorSubject<boolean>(false);
-    public isDoneLoading$ = this.isDoneLoadingSubject.asObservable();
+    private currentUserSubject = new BehaviorSubject<any>(null);
+    public currentUser$ = this.currentUserSubject.asObservable();
+
+    private readonly TOKEN_KEY = 'auth_token';
 
     constructor(
-        private oauthService: OAuthService,
+        private http: HttpClient,
         private router: Router
     ) {
-        this.configureOAuth();
+        this.checkToken();
     }
 
     /**
-     * Configuração do OAuth2/OIDC para Keycloak
+     * Verifica se existe um token válido no storage ao iniciar
      */
-    private configureOAuth(): void {
-        const authConfig: AuthConfig = {
-            // URL do servidor de autorização (Keycloak realm)
-            issuer: environment.keycloak.issuer,
-
-            // Client ID registrado no Keycloak
-            clientId: environment.keycloak.clientId,
-
-            // URL de redirecionamento após login
-            redirectUri: environment.keycloak.redirectUri,
-
-            // URL de redirecionamento após logout
-            postLogoutRedirectUri: environment.keycloak.postLogoutRedirectUri,
-
-            // Tipo de resposta (code = Authorization Code Flow)
-            responseType: environment.keycloak.responseType,
-
-            // Scopes solicitados
-            scope: environment.keycloak.scope,
-
-            // Exigir HTTPS apenas em produção
-            requireHttps: environment.keycloak.requireHttps,
-
-            // Mostrar informações de debug no console
-            showDebugInformation: environment.keycloak.showDebugInformation,
-
-            // URL para silent refresh (renovação automática do token)
-            silentRefreshRedirectUri: environment.keycloak.silentRefreshRedirectUri,
-
-            // Timeout para silent refresh
-            silentRefreshTimeout: 5000,
-
-            // Usar silent refresh
-            useSilentRefresh: environment.keycloak.silentRefresh,
-
-            // Tempo de vida da sessão
-            sessionChecksEnabled: true,
-
-            // Clearstorage on logout
-            clearHashAfterLogin: false
-        };
-
-        // Aplicar configuração
-        this.oauthService.configure(authConfig);
-
-        // Carregar discovery document do Keycloak
-        console.log('AuthService: Loading discovery document...');
-        this.oauthService.loadDiscoveryDocumentAndTryLogin().then(() => {
-            console.log('AuthService: Discovery loaded. Checking token...');
-            if (this.oauthService.hasValidAccessToken()) {
-                console.log('AuthService: Token is VALID.');
-                this.isAuthenticatedSubject.next(true);
-                this.setupAutomaticSilentRefresh();
-
-                console.log('AuthService: Current URL:', this.router.url);
-                // Se estiver na página de login, redirecionar para a home
-                if (this.router.url.includes('/auth/login')) {
-                    console.log('AuthService: Redirecting to home...');
-                    this.router.navigate(['/']);
-                }
+    private checkToken(): void {
+        const token = this.getAccessToken();
+        if (token) {
+            if (this.isTokenExpired(token)) {
+                this.logout();
             } else {
-                console.log('AuthService: Token is INVALID or MISSING.');
-            }
-            this.isDoneLoadingSubject.next(true);
-        }).catch(err => {
-            console.error('AuthService: Error loading discovery:', err);
-            this.isDoneLoadingSubject.next(true);
-        });
-
-        // Eventos de token
-        this.oauthService.events.subscribe(event => {
-            if (event.type === 'token_received' || event.type === 'token_refreshed') {
                 this.isAuthenticatedSubject.next(true);
+                this.updateCurrentUser(token);
             }
-            if (event.type === 'logout' || event.type === 'token_error') {
-                this.isAuthenticatedSubject.next(false);
-            }
-
-            // Tratamento específico para erro de nonce/state inválido
-            if (event.type === 'invalid_nonce_in_state') {
-                console.warn('AuthService: Invalid nonce/state detected. Resetting flow...');
-                // Limpar storage para remover estado inválido
-                sessionStorage.clear();
-                // Redirecionar para login para tentar novamente
-                this.router.navigate(['/auth/login']);
-            }
-        });
+        }
     }
 
     /**
-     * Inicia o fluxo de login redirecionando para o Keycloak
+     * Realiza o login na API
      */
-    async login(): Promise<void> {
-        await this.oauthService.loadDiscoveryDocument();
-        this.oauthService.initCodeFlow();
+    login(credentials: LoginRequest): Observable<LoginResponse> {
+        return this.http.post<LoginResponse>(`${environment.apiUrl}/authentication/legacy-login`, credentials)
+            .pipe(
+                tap(response => {
+                    if (response && response.access_token) {
+                        this.setSession(response.access_token);
+                    }
+                })
+            );
+    }
+
+    /**
+     * Salva o token e atualiza o estado
+     */
+    private setSession(token: string): void {
+        localStorage.setItem(this.TOKEN_KEY, token);
+        this.isAuthenticatedSubject.next(true);
+        this.updateCurrentUser(token);
+    }
+
+    /**
+     * Atualiza os dados do usuário a partir do token
+     */
+    private updateCurrentUser(token: string): void {
+        try {
+            const claims = this.decodeToken(token);
+            this.currentUserSubject.next(claims);
+        } catch (e) {
+            console.error('Erro ao decodificar token', e);
+        }
     }
 
     /**
      * Realiza o logout do usuário
      */
     logout(): void {
-        const idToken = this.oauthService.getIdToken();
-        const logoutUrl = this.oauthService.logoutUrl;
-
-        this.oauthService.logOut();
+        localStorage.removeItem(this.TOKEN_KEY);
         this.isAuthenticatedSubject.next(false);
-
-        if (logoutUrl && idToken) {
-            // Construir URL de logout do Keycloak (RP-Initiated Logout)
-            // Requer id_token_hint para evitar confirmação e post_logout_redirect_uri para voltar ao app
-            const url = `${logoutUrl}?post_logout_redirect_uri=${encodeURIComponent(environment.keycloak.postLogoutRedirectUri)}&id_token_hint=${idToken}`;
-            window.location.href = url;
-        } else {
-            // Fallback se não tiver URL de logout ou token
-            this.router.navigate(['/auth/login']);
-        }
+        this.currentUserSubject.next(null);
+        this.router.navigate(['/auth/login']);
     }
 
     /**
      * Verifica se o usuário está autenticado
      */
     isAuthenticated(): boolean {
-        return this.oauthService.hasValidAccessToken();
+        const token = this.getAccessToken();
+        return !!token && !this.isTokenExpired(token);
     }
 
     /**
      * Obtém o access token JWT
      */
-    getAccessToken(): string {
-        return this.oauthService.getAccessToken();
-    }
-
-    /**
-     * Obtém o ID token JWT
-     */
-    getIdToken(): string {
-        return this.oauthService.getIdToken();
+    getAccessToken(): string | null {
+        return localStorage.getItem(this.TOKEN_KEY);
     }
 
     /**
      * Obtém as informações do usuário (claims do token)
      */
     getUserInfo(): any {
-        const claims = this.oauthService.getIdentityClaims();
-        return claims;
+        return this.currentUserSubject.value;
+    }
+
+    /**
+     * Decodifica o payload do JWT
+     */
+    private decodeToken(token: string): any {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Verifica se o token expirou
+     */
+    private isTokenExpired(token: string): boolean {
+        const decoded = this.decodeToken(token);
+        if (!decoded || !decoded.exp) return true;
+
+        const expirationDate = decoded.exp * 1000;
+        return new Date().getTime() > expirationDate;
     }
 
     /**
@@ -182,10 +141,9 @@ export class AuthService {
      * Extrai do claim 'groups' no formato: /empresa_{UUID}
      */
     getIdEmpresa(): string | null {
-        const claims: any = this.oauthService.getIdentityClaims();
+        const claims = this.getUserInfo();
 
         if (!claims || !claims.groups) {
-            console.warn('Claim groups não encontrado no token');
             return null;
         }
 
@@ -198,7 +156,6 @@ export class AuthService {
         );
 
         if (!empresaGroup) {
-            console.warn('Grupo de empresa não encontrado');
             return null;
         }
 
@@ -211,7 +168,7 @@ export class AuthService {
      * Obtém as roles do usuário
      */
     getUserRoles(): string[] {
-        const claims: any = this.oauthService.getIdentityClaims();
+        const claims = this.getUserInfo();
 
         if (!claims) return [];
 
@@ -255,24 +212,5 @@ export class AuthService {
     */
     isVendedor(): boolean {
         return this.hasRole('Vendedor') || this.hasRole('corretor');
-    }
-
-    /**
-     * Configura renovação automática do token (silent refresh)
-     */
-    private setupAutomaticSilentRefresh(): void {
-        this.oauthService.setupAutomaticSilentRefresh();
-    }
-
-    /**
-     * Renova o token manualmente
-     */
-    async refreshToken(): Promise<void> {
-        try {
-            await this.oauthService.silentRefresh();
-        } catch (error) {
-            console.error('Erro ao renovar token:', error);
-            this.logout();
-        }
     }
 }
