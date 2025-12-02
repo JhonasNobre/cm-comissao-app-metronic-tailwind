@@ -18,7 +18,7 @@ export class AuthService {
     private currentUserSubject = new BehaviorSubject<any>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
 
-    private readonly TOKEN_KEY = 'auth_token';
+    private readonly TOKEN_KEY = 'access_token';
 
     constructor(
         private http: HttpClient,
@@ -128,7 +128,7 @@ export class AuthService {
     /**
      * Verifica se o token expirou
      */
-    private isTokenExpired(token: string): boolean {
+    public isTokenExpired(token: string): boolean {
         const decoded = this.decodeToken(token);
         if (!decoded || !decoded.exp) return true;
 

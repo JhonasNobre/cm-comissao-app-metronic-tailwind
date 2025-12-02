@@ -81,7 +81,7 @@ export class CompanyFormComponent implements OnInit {
 
     private loadCompany(id: string): void {
         this.loading = true;
-        this.companyService.getCompanyById(id).subscribe({
+        this.companyService.get(id).subscribe({
             next: (company) => {
                 if (company) {
                     this.form.patchValue(company);
@@ -108,7 +108,7 @@ export class CompanyFormComponent implements OnInit {
         const companyData = this.form.value;
 
         if (this.isEditMode && this.companyId) {
-            this.companyService.updateCompany(this.companyId, companyData).subscribe({
+            this.companyService.update(companyData, this.companyId).subscribe({
                 next: () => {
                     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Empresa atualizada com sucesso' });
                     setTimeout(() => this.router.navigate(['/companies']), 1000);
@@ -119,7 +119,7 @@ export class CompanyFormComponent implements OnInit {
                 }
             });
         } else {
-            this.companyService.createCompany(companyData).subscribe({
+            this.companyService.create(companyData).subscribe({
                 next: () => {
                     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Empresa criada com sucesso' });
                     setTimeout(() => this.router.navigate(['/companies']), 1000);

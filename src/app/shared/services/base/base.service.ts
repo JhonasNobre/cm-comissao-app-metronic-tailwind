@@ -2,36 +2,31 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { first, map } from 'rxjs/operators';
-import { appEnvironment } from '../../../app.environment';
-import { ApiResponse } from '../../models/common/api-response.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export abstract class BaseService<T> {
     constructor(protected http: HttpClient, private apiName: string, private modelType?: new (init?: Partial<T>) => T) { }
 
     protected get baseUrl(): string {
-        return `${appEnvironment.urlApi}${this.apiName}`;
+        return `${environment.apiUrl}${this.apiName}`;
     }
 
-    protected get baseUrlReport(): string {
-        return `${appEnvironment.urlReport}${this.apiName}`;
-    }
-
-    list(params: any): Observable<T[]> {
+    list(params?: any): Observable<T[]> {
         const httpParams = this.buildHttpParams(params);
-        return this.http.get<ApiResponse<T[]>>(`${this.baseUrl}`, { params: httpParams }).pipe(
-            map(response => {
-                const data = response.data || [];
+        return this.http.get<T[]>(`${this.baseUrl}`, { params: httpParams }).pipe(
+            map(data => {
+                // API retorna array direto (sem wrapper)
                 return this.modelType ? data.map(item => new this.modelType!(item)) : data;
             }),
             first()
         );
     }
 
-    get(id: number): Observable<T> {
-        return this.http.get<ApiResponse<T>>(`${this.baseUrl}/${id}`).pipe(
-            map(response => {
-                const data = response.data;
+    get(id: number | string): Observable<T> {
+        return this.http.get<T>(`${this.baseUrl}/${id}`).pipe(
+            map(data => {
+                // API retorna objeto direto (sem wrapper)
                 return this.modelType && data ? new this.modelType(data) : data;
             }),
             first()
@@ -39,24 +34,22 @@ export abstract class BaseService<T> {
     }
 
     create(obj: T): Observable<T> {
-        return this.http.post<ApiResponse<T>>(`${this.baseUrl}`, obj).pipe(
-            map(response => {
-                return response.data;
-            }),
+        return this.http.post<T>(`${this.baseUrl}`, obj).pipe(
+            map(data => data),
             first()
         );
     }
 
-    update(obj: T, id: number): Observable<boolean> {
-        return this.http.put<ApiResponse<any>>(`${this.baseUrl}/${id}`, obj).pipe(
-            map(response => response.success),
+    update(obj: T, id: number | string): Observable<boolean> {
+        return this.http.put<any>(`${this.baseUrl}/${id}`, obj).pipe(
+            map(() => true), // API retorna 204 NoContent em sucesso
             first()
         );
     }
 
-    delete(id: number): Observable<void> {
-        return this.http.delete<ApiResponse<null>>(`${this.baseUrl}/${id}`).pipe(
-            map(() => void 0), // Transforma a resposta em 'void'
+    delete(id: number | string): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/${id}`).pipe(
+            map(() => void 0),
             first()
         );
     }
