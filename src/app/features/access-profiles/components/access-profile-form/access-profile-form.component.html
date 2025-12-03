@@ -2,7 +2,7 @@
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">
-                {{ isEditMode ? 'Editar Perfil de Acesso' : 'Novo Perfil de Acesso' }}
+                {{ isEditMode ? 'Editar Perfil' : 'Novo Perfil' }}
             </h1>
         </div>
     </div>
@@ -29,26 +29,22 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-col">
-                            <label class="form-label fw-semibold fs-6 opacity-0">Opção</label>
-                            <div class="flex items-center h-[46px]">
-                                <p-checkbox formControlName="ehPadrao" [binary]="true"
-                                    label="Perfil Padrão"></p-checkbox>
-                            </div>
+                        <div class="flex items-center h-[46px] mt-8">
+                            <p-checkbox formControlName="ehPadrao" [binary]="true" label="Perfil Padrão"></p-checkbox>
                         </div>
 
                         <div>
                             <label class="form-label required fw-semibold fs-6">Limite Desconto Máximo (%)</label>
                             <p-inputNumber formControlName="limiteDescontoMaximo" mode="decimal" [minFractionDigits]="2"
-                                [maxFractionDigits]="2" styleClass="w-full"
-                                inputStyleClass="form-control form-control-lg form-control-solid"></p-inputNumber>
+                                [maxFractionDigits]="2" suffix="%" styleClass="w-full" [style]="{'width':'100%'}"
+                                inputStyleClass="form-control form-control-lg form-control-solid w-full"></p-inputNumber>
                         </div>
 
                         <div>
-                            <label class="form-label required fw-semibold fs-6">Qtd. Máxima Reservas</label>
+                            <label class="form-label required fw-semibold fs-6">Máximo de Reservas</label>
                             <p-inputNumber formControlName="quantidadeMaximaReservas" mode="decimal" [min]="0"
-                                styleClass="w-full"
-                                inputStyleClass="form-control form-control-lg form-control-solid"></p-inputNumber>
+                                styleClass="w-full" [style]="{'width':'100%'}"
+                                inputStyleClass="form-control form-control-lg form-control-solid w-full"></p-inputNumber>
                         </div>
                     </div>
 
@@ -56,37 +52,45 @@
 
                     <!-- Permissões -->
                     <h3 class="text-lg font-semibold mb-4 mt-4">Permissões</h3>
-                    <div formArrayName="permissoes">
-                        <div *ngFor="let perm of permissoes.controls; let i=index" [formGroupName]="i"
-                            class="flex flex-col md:flex-row gap-4 mb-3 items-end">
-                            <div class="flex-1 w-full">
-                                <label class="form-label fw-semibold fs-6" *ngIf="i===0">Recurso</label>
-                                <label class="form-label fw-semibold fs-6 md:hidden" *ngIf="i>0">Recurso</label>
-                                <p-select [options]="resources" formControlName="recursoId" optionLabel="nome"
-                                    optionValue="id" placeholder="Selecione um recurso" styleClass="w-full"
-                                    [style]="{'width':'100%'}" appendTo="body"></p-select>
-                            </div>
-                            <div class="flex-1 w-full">
-                                <label class="form-label fw-semibold fs-6" *ngIf="i===0">Ação</label>
-                                <label class="form-label fw-semibold fs-6 md:hidden" *ngIf="i>0">Ação</label>
-                                <p-select [options]="acaoOptions" formControlName="acao" optionLabel="label"
-                                    optionValue="value" styleClass="w-full" [style]="{'width':'100%'}"
-                                    appendTo="body"></p-select>
-                            </div>
-                            <div class="flex-1 w-full">
-                                <label class="form-label fw-semibold fs-6" *ngIf="i===0">Nível Acesso</label>
-                                <label class="form-label fw-semibold fs-6 md:hidden" *ngIf="i>0">Nível Acesso</label>
-                                <p-select [options]="nivelAcessoOptions" formControlName="nivelAcesso"
-                                    optionLabel="label" optionValue="value" styleClass="w-full"
-                                    [style]="{'width':'100%'}" appendTo="body"></p-select>
-                            </div>
-                            <div class="pb-1">
-                                <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-text"
-                                    (click)="removePermissao(i)" [disabled]="permissoes.length === 1"></button>
-                            </div>
-                        </div>
-                        <button pButton type="button" label="Adicionar Permissão" icon="pi pi-plus"
-                            class="p-button-text mt-2" (click)="addPermissao()"></button>
+                    <div class="mb-8">
+                        <p-table [value]="permissionRows" [tableStyle]="{ 'min-width': '50rem' }">
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th>Recurso</th>
+                                    <th class="text-center">Criar</th>
+                                    <th class="text-center">Ler</th>
+                                    <th class="text-center">Atualizar</th>
+                                    <th class="text-center">Excluir</th>
+                                    <th>Escopo</th>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="body" let-row>
+                                <tr>
+                                    <td>{{ row.recursoNome }}</td>
+                                    <td class="text-center">
+                                        <p-checkbox [(ngModel)]="row.canCreate" [binary]="true"
+                                            [ngModelOptions]="{standalone: true}"></p-checkbox>
+                                    </td>
+                                    <td class="text-center">
+                                        <p-checkbox [(ngModel)]="row.canRead" [binary]="true"
+                                            [ngModelOptions]="{standalone: true}"></p-checkbox>
+                                    </td>
+                                    <td class="text-center">
+                                        <p-checkbox [(ngModel)]="row.canUpdate" [binary]="true"
+                                            [ngModelOptions]="{standalone: true}"></p-checkbox>
+                                    </td>
+                                    <td class="text-center">
+                                        <p-checkbox [(ngModel)]="row.canDelete" [binary]="true"
+                                            [ngModelOptions]="{standalone: true}"></p-checkbox>
+                                    </td>
+                                    <td>
+                                        <p-select [options]="scopeOptions" [(ngModel)]="row.scope" optionLabel="label"
+                                            optionValue="value" [ngModelOptions]="{standalone: true}"
+                                            appendTo="body"></p-select>
+                                    </td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
                     </div>
 
                     <p-divider></p-divider>
@@ -95,8 +99,8 @@
                     <div formGroupName="restricaoHorario">
                         <h3 class="text-lg font-semibold mb-4 mt-4 flex items-center gap-2">
                             Restrição de Horário
-                            <p-checkbox [binary]="true" (onChange)="toggleRestricaoHorario($event)"
-                                label="Ativar"></p-checkbox>
+                            <p-checkbox [binary]="true" (onChange)="toggleRestricaoHorario($event)" label="Ativar"
+                                [ngModel]="hasRestricaoHorario" [ngModelOptions]="{standalone: true}"></p-checkbox>
                         </h3>
 
                         <div *ngIf="hasRestricaoHorario" class="mb-8">
@@ -156,11 +160,12 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-3 mt-8">
-                        <button type="button" pButton label="Cancelar" class="p-button-secondary"
-                            (click)="onCancel()"></button>
-                        <button type="submit" pButton label="Salvar" [loading]="loading"
-                            [disabled]="form.invalid"></button>
+                    <div class="flex justify-end gap-2.5 mt-5">
+                        <button type="button" class="kt-btn kt-btn-light" (click)="onCancel()">Cancelar</button>
+                        <button type="submit" class="kt-btn kt-btn-primary" [disabled]="loading">
+                            <span *ngIf="!loading">{{ isEditMode ? 'Salvar Alterações' : 'Criar Perfil' }}</span>
+                            <span *ngIf="loading">Aguarde...</span>
+                        </button>
                     </div>
                 </form>
             </div>

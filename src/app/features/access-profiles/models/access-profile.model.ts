@@ -5,6 +5,19 @@ import { BaseEntity } from "../../../shared/models/base-model";
  */
 export interface AccessProfile extends BaseEntity {
     id: string;
-    nome: string;      // Profile name
-    descricao?: string; // Profile description
+    nome: string;
+    limiteDescontoMaximo: number;
+    ehPadrao: boolean;
+    quantidadeMaximaReservas: number;
+    restricaoHorario?: any; // We can refine this type later if needed, or reuse the one from User
+    permissoes: PermissionDetail[];
+    criadoEm?: Date;
+    atualizadoEm?: Date;
+}
+
+export interface PermissionDetail {
+    recursoId: string;
+    recursoNome: string;
+    acao: string;
+    nivelAcesso: string;
 }

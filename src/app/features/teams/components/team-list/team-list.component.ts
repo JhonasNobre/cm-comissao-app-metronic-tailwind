@@ -42,6 +42,10 @@ export class TeamListComponent implements OnInit {
         });
     }
 
+    onNew(): void {
+        this.router.navigate(['/teams/new']);
+    }
+
     onEdit(item: TeamListDTO) {
         this.router.navigate(['/teams', item.id]);
     }

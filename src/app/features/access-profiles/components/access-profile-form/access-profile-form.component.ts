@@ -1,18 +1,20 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { InputMaskModule } from 'primeng/inputmask';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 import { DividerModule } from 'primeng/divider';
+import { TableModule } from 'primeng/table';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageService } from 'primeng/api';
 import { AccessProfileService } from '../../services/access-profile.service';
+import { PermissionDetail } from '../../models/access-profile.model';
 
 @Component({
     selector: 'app-access-profile-form',
@@ -20,16 +22,18 @@ import { AccessProfileService } from '../../services/access-profile.service';
     imports: [
         CommonModule,
         ReactiveFormsModule,
+        FormsModule,
         RouterModule,
         ButtonModule,
         InputTextModule,
-        InputNumberModule,
         CheckboxModule,
         SelectModule,
         InputMaskModule,
         CardModule,
         ToastModule,
-        DividerModule
+        DividerModule,
+        TableModule,
+        InputNumberModule
     ],
     providers: [MessageService],
     templateUrl: './access-profile-form.component.html'
@@ -48,21 +52,8 @@ export class AccessProfileFormComponent implements OnInit {
     resources: any[] = [];
     hasRestricaoHorario = false;
 
-    acaoOptions = [
-        { label: 'Nenhum', value: 0 },
-        { label: 'Criar', value: 1 },
-        { label: 'Ler', value: 2 },
-        { label: 'Atualizar', value: 3 },
-        { label: 'Excluir', value: 4 },
-        { label: 'Todos', value: 99 }
-    ];
-
-    nivelAcessoOptions = [
-        { label: 'Nenhum', value: 0 },
-        { label: 'Dados Usuário', value: 1 },
-        { label: 'Dados Equipe', value: 2 },
-        { label: 'Todos', value: 3 }
-    ];
+    // Helper for permissions UI
+    permissionRows: any[] = [];
 
     diasSemanaOptions = [
         { label: 'Domingo', value: 0 },
@@ -74,6 +65,12 @@ export class AccessProfileFormComponent implements OnInit {
         { label: 'Sábado', value: 6 }
     ];
 
+    scopeOptions = [
+        { label: 'Dados do Usuário', value: 'DADOS_USUARIO' },
+        { label: 'Dados da Equipe', value: 'DADOS_EQUIPE' },
+        { label: 'Todos', value: 'TODOS' }
+    ];
+
     ngOnInit(): void {
         this.initForm();
         this.loadResources();
@@ -82,11 +79,10 @@ export class AccessProfileFormComponent implements OnInit {
 
     private initForm(): void {
         this.form = this.fb.group({
-            nome: ['', [Validators.required]],
-            limiteDescontoMaximo: [0, [Validators.required, Validators.min(0)]],
+            nome: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+            limiteDescontoMaximo: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
             quantidadeMaximaReservas: [0, [Validators.required, Validators.min(0)]],
             ehPadrao: [false],
-            permissoes: this.fb.array([]),
             restricaoHorario: this.fb.group({
                 bloquearEmFeriadosNacionais: [false],
                 ufFeriados: [''],
@@ -94,32 +90,10 @@ export class AccessProfileFormComponent implements OnInit {
                 horarios: this.fb.array([])
             })
         });
-
-        // Adiciona uma permissão inicial
-        if (!this.isEditMode) {
-            this.addPermissao();
-        }
-    }
-
-    get permissoes(): FormArray {
-        return this.form.get('permissoes') as FormArray;
     }
 
     get horarios(): FormArray {
         return this.form.get('restricaoHorario.horarios') as FormArray;
-    }
-
-    addPermissao(): void {
-        const permGroup = this.fb.group({
-            recursoId: ['', Validators.required],
-            acao: [0, Validators.required],
-            nivelAcesso: [0, Validators.required]
-        });
-        this.permissoes.push(permGroup);
-    }
-
-    removePermissao(index: number): void {
-        this.permissoes.removeAt(index);
     }
 
     addHorario(): void {
@@ -138,7 +112,6 @@ export class AccessProfileFormComponent implements OnInit {
     toggleRestricaoHorario(event: any): void {
         this.hasRestricaoHorario = event.checked;
         if (!this.hasRestricaoHorario) {
-            // Limpar controles se desativado
             this.form.get('restricaoHorario')?.patchValue({
                 bloquearEmFeriadosNacionais: false,
                 ufFeriados: '',
@@ -154,78 +127,95 @@ export class AccessProfileFormComponent implements OnInit {
 
     private loadResources(): void {
         this.service.listResources().subscribe({
-            next: (data) => this.resources = data,
-            error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar recursos' })
+            next: (data) => {
+                this.resources = data;
+                this.initPermissionRows();
+            },
+            error: (err) => console.error('Error loading resources', err)
         });
     }
 
+    private initPermissionRows(): void {
+        // Create a row for each resource
+        this.permissionRows = this.resources.map(res => ({
+            recursoId: res.id,
+            recursoNome: res.nome,
+            canCreate: false,
+            canRead: false,
+            canUpdate: false,
+            canDelete: false,
+            scope: 'DADOS_USUARIO' // Default scope
+        }));
+    }
+
     private checkEditMode(): void {
-        this.route.params.subscribe(params => {
-            if (params['id']) {
-                this.isEditMode = true;
-                this.profileId = params['id'];
-                this.loadProfile(this.profileId!);
-            }
-        });
+        this.profileId = this.route.snapshot.paramMap.get('id');
+        if (this.profileId) {
+            this.isEditMode = true;
+            this.loadProfile(this.profileId);
+        }
     }
 
     private loadProfile(id: string): void {
         this.loading = true;
         this.service.get(id).subscribe({
             next: (profile: any) => {
-                this.form.patchValue({
-                    nome: profile.nome,
-                    limiteDescontoMaximo: profile.limiteDescontoMaximo,
-                    quantidadeMaximaReservas: profile.quantidadeMaximaReservas,
-                    ehPadrao: profile.ehPadrao
-                });
+                if (profile) {
+                    this.form.patchValue({
+                        nome: profile.nome,
+                        limiteDescontoMaximo: profile.limiteDescontoMaximo,
+                        quantidadeMaximaReservas: profile.quantidadeMaximaReservas,
+                        ehPadrao: profile.ehPadrao
+                    });
 
-                // Carregar permissões
-                while (this.permissoes.length !== 0) {
-                    this.permissoes.removeAt(0);
-                }
-                if (profile.permissoes && profile.permissoes.length > 0) {
-                    profile.permissoes.forEach((p: any) => {
-                        const permGroup = this.fb.group({
-                            recursoId: [p.recursoId, Validators.required],
-                            acao: [p.acao, Validators.required],
-                            nivelAcesso: [p.nivelAcesso, Validators.required]
+                    if (profile.restricaoHorario) {
+                        this.hasRestricaoHorario = true;
+                        this.form.get('restricaoHorario')?.patchValue({
+                            bloquearEmFeriadosNacionais: profile.restricaoHorario.bloquearEmFeriadosNacionais,
+                            ufFeriados: profile.restricaoHorario.ufFeriados,
+                            codigoIbgeMunicipio: profile.restricaoHorario.codigoIbgeMunicipio
                         });
-                        this.permissoes.push(permGroup);
-                    });
-                } else {
-                    this.addPermissao();
-                }
 
-                // Carregar restrições
-                if (profile.restricaoHorario) {
-                    this.hasRestricaoHorario = true;
-                    this.form.get('restricaoHorario')?.patchValue({
-                        bloquearEmFeriadosNacionais: profile.restricaoHorario.bloquearEmFeriadosNacionais,
-                        ufFeriados: profile.restricaoHorario.ufFeriados,
-                        codigoIbgeMunicipio: profile.restricaoHorario.codigoIbgeMunicipio
-                    });
-
-                    while (this.horarios.length !== 0) {
-                        this.horarios.removeAt(0);
-                    }
-                    if (profile.restricaoHorario.horarios) {
-                        profile.restricaoHorario.horarios.forEach((h: any) => {
-                            const horarioGroup = this.fb.group({
-                                diaSemana: [h.diaSemana, Validators.required],
-                                horaInicio: [h.horaInicio, Validators.required],
-                                horaFim: [h.horaFim, Validators.required]
+                        while (this.horarios.length !== 0) {
+                            this.horarios.removeAt(0);
+                        }
+                        if (profile.restricaoHorario.horarios) {
+                            profile.restricaoHorario.horarios.forEach((h: any) => {
+                                const horarioGroup = this.fb.group({
+                                    diaSemana: [h.diaSemana, Validators.required],
+                                    horaInicio: [h.horaInicio, Validators.required],
+                                    horaFim: [h.horaFim, Validators.required]
+                                });
+                                this.horarios.push(horarioGroup);
                             });
-                            this.horarios.push(horarioGroup);
-                        });
+                        }
+                    }
+
+                    // Map permissions to UI rows
+                    if (profile.permissoes) {
+                        this.mapPermissionsToRows(profile.permissoes);
                     }
                 }
-
                 this.loading = false;
             },
             error: () => {
                 this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar perfil' });
                 this.loading = false;
+            }
+        });
+    }
+
+    private mapPermissionsToRows(permissions: PermissionDetail[]): void {
+        // Reset rows first (or keep init state)
+        // Iterate over permissions and update rows
+        permissions.forEach(p => {
+            const row = this.permissionRows.find(r => r.recursoId === p.recursoId);
+            if (row) {
+                if (p.acao === 'CRIAR') row.canCreate = true;
+                if (p.acao === 'LER') row.canRead = true;
+                if (p.acao === 'ATUALIZAR') row.canUpdate = true;
+                if (p.acao === 'EXCLUIR') row.canDelete = true;
+                row.scope = p.nivelAcesso; // Assuming scope is same for all actions of a resource for simplicity, or taking the last one
             }
         });
     }
@@ -237,12 +227,27 @@ export class AccessProfileFormComponent implements OnInit {
         }
 
         this.loading = true;
-        const formValue = this.form.value;
+        const formValue = this.form.getRawValue();
 
-        // Ajustar objeto para envio
+        // Build permissions list
+        const permissions: any[] = [];
+        this.permissionRows.forEach(row => {
+            if (row.canCreate) permissions.push({ recursoId: row.recursoId, acao: 'CRIAR', nivelAcesso: row.scope });
+            if (row.canRead) permissions.push({ recursoId: row.recursoId, acao: 'LER', nivelAcesso: row.scope });
+            if (row.canUpdate) permissions.push({ recursoId: row.recursoId, acao: 'ATUALIZAR', nivelAcesso: row.scope });
+            if (row.canDelete) permissions.push({ recursoId: row.recursoId, acao: 'EXCLUIR', nivelAcesso: row.scope });
+        });
+
+        if (permissions.length === 0) {
+            this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Selecione ao menos uma permissão.' });
+            this.loading = false;
+            return;
+        }
+
         const payload = {
             ...formValue,
-            restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null
+            restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null,
+            permissoes: permissions
         };
 
         if (this.isEditMode && this.profileId) {
@@ -251,7 +256,10 @@ export class AccessProfileFormComponent implements OnInit {
                     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Perfil atualizado com sucesso' });
                     setTimeout(() => this.router.navigate(['/access-profiles']), 1000);
                 },
-                error: () => this.loading = false
+                error: () => {
+                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao atualizar perfil' });
+                    this.loading = false;
+                }
             });
         } else {
             this.service.create(payload).subscribe({
@@ -259,7 +267,10 @@ export class AccessProfileFormComponent implements OnInit {
                     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Perfil criado com sucesso' });
                     setTimeout(() => this.router.navigate(['/access-profiles']), 1000);
                 },
-                error: () => this.loading = false
+                error: () => {
+                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao criar perfil' });
+                    this.loading = false;
+                }
             });
         }
     }

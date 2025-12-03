@@ -6,9 +6,9 @@
             </h1>
         </div>
         <div class="flex items-center gap-2.5">
-            <button class="kt-btn kt-btn-primary" routerLink="/teams/new">
+            <button class="kt-btn kt-btn-primary" (click)="onNew()">
                 <i class="ki-filled ki-plus"></i>
-                Adicionar Equipe
+                Nova Equipe
             </button>
         </div>
     </div>
@@ -17,8 +17,8 @@
 <div class="kt-container-fluid">
     <div class="grid gap-5 lg:gap-7.5">
         <app-generic-p-table tableName="team-list" [tableData]="teams" [columnDefinition]="columns" [rows]="10"
-            [displayCreateAction]="true" [displayEditAction]="true" [displayDeleteAction]="true" (edit)="onEdit($event)"
-            (delete)="onDelete($event)">
+            [displayCreateAction]="false" [displayEditAction]="true" [displayDeleteAction]="true"
+            (edit)="onEdit($event)" (delete)="onDelete($event)">
         </app-generic-p-table>
     </div>
 </div>
