@@ -10,7 +10,12 @@ Sistema web para gestão de comissões de corretores de imóveis com:
 - ✅ Autenticação centralizada via **Keycloak** (OIDC/PKCE)
 - ✅ **Multitenancy** (isolamento por imobiliária)
 - ✅ **RBAC** (controle de acesso baseado em roles)
-- ✅ CRUD completo: Usuários, Equipes, Perfis, Comissões, Produtos
+- ✅ **CRUDs Completos**:
+    - **Usuários**: Gestão completa com restrição de horário e perfis.
+    - **Equipes**: Agrupamento de usuários com herança de permissões.
+    - **Perfis de Acesso**: Gestão granular de permissões e alçadas.
+    - **Empresas**: Gestão de imobiliárias e configurações.
+- ✅ **Padrões Modernos**: Componentes genéricos, Services tipados e Reactive Forms.
 
 ---
 
@@ -176,6 +181,8 @@ npm run e2e
 
 ## 📚 Documentação Adicional
 
+- **[Especificações Funcionais](docs/FUNCTIONAL_SPECS.md)** - Regras de negócio dos CRUDs (Sprints 01 e 02)
+- **[Padrões de Frontend](docs/FRONTEND_PATTERNS.md)** - Guia de componentes genéricos e arquitetura
 - **[Guia de Migração](docs/MIGRATION_NOTES.md)** - Diferenças Bootstrap → Tailwind
 - **[Configuração Keycloak](docs/setup/KEYCLOAK_SETUP.md)** - Setup completo do Keycloak
 - **[Referência da API](../cm-comissao-api/docs/START_HERE.md)** - Documentação do backend

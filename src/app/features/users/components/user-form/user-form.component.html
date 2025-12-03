@@ -100,6 +100,24 @@
 
                     <p-divider></p-divider>
 
+                    <div>
+                        <label class="form-label fw-semibold fs-6">Equipes</label>
+
+                        <!-- Select simples (1 equipe) para usuários regulares -->
+                        <p-select *ngIf="!isManager" [options]="teams" formControlName="equipeIds" optionLabel="nome"
+                            optionValue="id" placeholder="Selecione uma equipe" styleClass="w-full"
+                            [style]="{'width':'100%'}" appendTo="body" [showClear]="true">
+                        </p-select>
+
+                        <!-- MultiSelect (N equipes) para gestores/admins -->
+                        <p-multiSelect *ngIf="isManager" [options]="teams" formControlName="equipeIds"
+                            optionLabel="nome" optionValue="id" placeholder="Selecione as equipes" styleClass="w-full"
+                            [style]="{'width':'100%'}" appendTo="body" [showClear]="true">
+                        </p-multiSelect>
+                    </div>
+
+                    <p-divider></p-divider>
+
                     <!-- Restrição de Horário -->
                     <div formGroupName="restricaoHorario">
                         <h3 class="text-lg font-semibold mb-4 mt-4 flex items-center gap-2">

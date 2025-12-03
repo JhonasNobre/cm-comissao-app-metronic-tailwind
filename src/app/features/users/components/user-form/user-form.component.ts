@@ -6,6 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
+import { MultiSelect, MultiSelectModule } from 'primeng/multiselect';
 import { InputMaskModule } from 'primeng/inputmask';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
@@ -14,6 +15,8 @@ import { PasswordModule } from 'primeng/password';
 import { MessageService } from 'primeng/api';
 import { UserService } from '../../services/user.service';
 import { AccessProfileService } from '../../../access-profiles/services/access-profile.service';
+import { TeamService } from '../../../teams/services/team.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { UserRole } from '../../models/user.model';
 
 @Component({
@@ -28,6 +31,7 @@ import { UserRole } from '../../models/user.model';
         InputTextModule,
         CheckboxModule,
         SelectModule,
+        MultiSelectModule,
         InputMaskModule,
         CardModule,
         ToastModule,
@@ -41,6 +45,8 @@ export class UserFormComponent implements OnInit {
     private fb = inject(FormBuilder);
     private service = inject(UserService);
     private profileService = inject(AccessProfileService);
+    private teamService = inject(TeamService);
+    private authService = inject(AuthService);
     private router = inject(Router);
     private route = inject(ActivatedRoute);
     private messageService = inject(MessageService);
@@ -50,7 +56,12 @@ export class UserFormComponent implements OnInit {
     userId: string | null = null;
     loading = false;
     accessProfiles: any[] = [];
+    teams: any[] = [];
     hasRestricaoHorario = false;
+
+    get isManager(): boolean {
+        return this.authService.hasRole('Gestor') || this.authService.hasRole('Admin');
+    }
 
     userRoleOptions = [
         { label: 'Colaborador', value: UserRole.COLABORADOR },
@@ -71,6 +82,7 @@ export class UserFormComponent implements OnInit {
     ngOnInit(): void {
         this.initForm();
         this.loadAccessProfiles();
+        this.loadTeams();
         this.checkEditMode();
     }
 
@@ -85,6 +97,7 @@ export class UserFormComponent implements OnInit {
             perfilAcessoId: [null],
             tipoUsuario: [UserRole.COLABORADOR, [Validators.required]],
             idEmpresa: ['3fa85f64-5717-4562-b3fc-2c963f66afa6'], // TODO: Get from context
+            equipeIds: [[]],
             restricaoHorario: this.fb.group({
                 bloquearEmFeriadosNacionais: [false],
                 ufFeriados: [''],
@@ -134,6 +147,13 @@ export class UserFormComponent implements OnInit {
         });
     }
 
+    private loadTeams(): void {
+        this.teamService.list().subscribe({
+            next: (data) => this.teams = data,
+            error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar equipes' })
+        });
+    }
+
     private checkEditMode(): void {
         this.route.params.subscribe(params => {
             if (params['id']) {
@@ -157,12 +177,13 @@ export class UserFormComponent implements OnInit {
             next: (user: any) => {
                 this.form.patchValue({
                     nomeCompleto: user.nomeCompleto,
-                    cpf: user.cpf, // Assuming API returns CPF
+                    cpf: user.cpf,
                     email: user.email,
-                    telefone: user.telefone, // Assuming API returns phone
+                    telefone: user.telefone,
                     tipoUsuario: user.tipoUsuario,
-                    role: user.role, // Assuming API returns role
-                    perfilAcessoId: user.perfilAcessoId
+                    role: user.role,
+                    perfilAcessoId: user.perfilAcessoId,
+                    equipeIds: user.equipeIds || []
                 });
 
                 if (user.restricaoHorario) {

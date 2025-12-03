@@ -5,6 +5,7 @@ export interface User {
     inativo: boolean;
     tipoUsuario: UserRole;
     restricaoHorario?: any; // Define specific type if needed later
+    equipeIds?: string[];
     criadoEm: Date;
 }
 
@@ -27,6 +28,7 @@ export interface UserCreateDTO {
     role: string; // Keycloak role
     tipoUsuario: UserRole;
     restricaoHorario?: any;
+    equipeIds?: string[];
 }
 
 export interface UserUpdateDTO {
@@ -37,6 +39,7 @@ export interface UserUpdateDTO {
     perfilAcessoId?: string;
     tipoUsuario: UserRole;
     restricaoHorario?: any;
+    equipeIds?: string[];
 }
 
 export enum UserRole {
