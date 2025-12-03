@@ -1,3 +1,5 @@
+<p-confirmDialog></p-confirmDialog>
+
 <div class="kt-container-fluid">
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
@@ -18,7 +20,8 @@
 <div class="kt-container-fluid">
     <div class="grid gap-5 lg:gap-7.5">
         <app-generic-p-table tableName="company-list" [tableData]="companies" [columnDefinition]="columns" [rows]="10"
-            [displayEditAction]="true" [displayDeleteAction]="true" (edit)="onEdit($event)" (delete)="onDelete($event)">
+            [displayCreateAction]="true" (add)="onAdd()" [displayEditAction]="true" (edit)="onEdit($event)"
+            [displayDeleteAction]="true" (delete)="onDelete($event)">
         </app-generic-p-table>
     </div>
 </div>

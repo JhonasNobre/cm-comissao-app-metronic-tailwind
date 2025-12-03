@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { User } from '../../models/user.model';
+import { User, UserRole } from '../../models/user.model';
 import { UserService } from '../../services/user.service';
 
 @Component({
@@ -37,8 +37,8 @@ export class UserProfileComponent implements OnInit {
 
     private loadUser(id: string): void {
         this.loading = true;
-        this.userService.getUserById(id).subscribe({
-            next: (user: User | undefined) => {
+        this.userService.get(id).subscribe({
+            next: (user: User) => {
                 this.user = user || null;
                 this.loading = false;
             },
@@ -54,22 +54,16 @@ export class UserProfileComponent implements OnInit {
         this.router.navigate(['/users']);
     }
 
-    getRoleBadgeClass(role: string): string {
+    getRoleBadgeClass(role: UserRole): string {
         switch (role) {
-            case 'Admin': return 'kt-badge-danger';
-            case 'Gestor': return 'kt-badge-primary';
-            case 'Vendedor': return 'kt-badge-info';
+            case UserRole.ADMINISTRADOR: return 'kt-badge-danger';
+            case UserRole.COLABORADOR: return 'kt-badge-info';
+            case UserRole.CLIENTE: return 'kt-badge-success';
             default: return 'kt-badge-secondary';
         }
     }
 
-    getStatusBadgeClass(status: string): string {
-        switch (status) {
-            case 'Active': return 'kt-badge-success';
-            case 'Inactive': return 'kt-badge-secondary';
-            case 'Pending': return 'kt-badge-warning';
-            case 'Locked': return 'kt-badge-danger';
-            default: return 'kt-badge-secondary';
-        }
+    getStatusBadgeClass(inativo: boolean): string {
+        return inativo ? 'kt-badge-danger' : 'kt-badge-success';
     }
 }

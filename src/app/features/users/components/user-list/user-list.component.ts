@@ -1,10 +1,10 @@
-import { Component, OnInit, inject, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
-import { UserListDTO, UserRole, UserStatus } from '../../models/user.model';
-import { Observable } from 'rxjs';
-import { TableModule } from 'primeng/table';
+import { UserListDTO } from '../../models/user.model';
+import { GenericPTableComponent } from '../../../../shared/components/ui/generic-p-table/generic-p-table.component';
+import { ColumnHeader } from '../../../../shared/models/column-header.model';
 
 @Component({
     selector: 'app-user-list',
@@ -12,69 +12,63 @@ import { TableModule } from 'primeng/table';
     imports: [
         CommonModule,
         RouterModule,
-        TableModule
+        GenericPTableComponent
     ],
-    templateUrl: './user-list.component.html',
-    encapsulation: ViewEncapsulation.None,
-    styles: [`        
-        /* Table Header Background */
-        .kt-table thead {
-            background-color: #F9FAFB;
-        }
-        
-        /* Table Body Cell Padding */
-        .kt-table tbody td {
-            border-right: 1px solid #EFF2F5 !important;
-        }
-        
-        /* Remove vertical border from last body cell */
-        .kt-table tbody td:last-child {
-            border-right: none !important;
-        }
-        
-        /* Force padding on first column */
-        .kt-table th:first-child,
-        .kt-table td:first-child {
-            padding-left: 1.25rem !important;
-        }
-       
-        /* Current Page Report (Showing X to Y of Z) */
-        .p-datatable .p-paginator .p-paginator-current,
-        .p-paginator .p-paginator-current {
-            font-size: 0.875rem !important;
-            margin-right: auto !important;
-            order: -1 !important;
-        }      
-        
-    `]
+    templateUrl: './user-list.component.html'
 })
 export class UserListComponent implements OnInit {
     private userService = inject(UserService);
+    private router = inject(Router);
 
-    users$: Observable<UserListDTO[]> = this.userService.getUsers();
+    users: UserListDTO[] = [];
+    loading: boolean = true;
+    columns: ColumnHeader<UserListDTO>[] = [];
 
     ngOnInit(): void {
-        // Initial load handled by async pipe
-        console.log('UserListComponent initialized - PrimeNG Native Pagination');
+        this.initializeColumns();
+        this.loadUsers();
     }
 
-    getStatusBadgeClass(status: UserStatus): string {
-        switch (status) {
-            case UserStatus.ACTIVE: return 'badge-light-success';
-            case UserStatus.INACTIVE: return 'badge-light-danger';
-            case UserStatus.PENDING: return 'badge-light-warning';
-            case UserStatus.LOCKED: return 'badge-light-dark';
-            default: return 'badge-light-primary';
-        }
+    private initializeColumns(): void {
+        this.columns = [
+            { field: 'nome', header: 'Nome' },
+            { field: 'email', header: 'Email' },
+            { field: 'perfil', header: 'Perfil' },
+            { field: 'ativo', header: 'Status' }
+        ];
     }
 
-    getStatusDotClass(status: UserStatus): string {
-        switch (status) {
-            case UserStatus.ACTIVE: return 'dot-success';
-            case UserStatus.INACTIVE: return 'dot-danger';
-            case UserStatus.PENDING: return 'dot-warning';
-            case UserStatus.LOCKED: return 'dot-dark';
-            default: return 'dot-primary';
+    private loadUsers(): void {
+        this.loading = true;
+        this.userService.list().subscribe({
+            next: (data) => {
+                this.users = data;
+                this.loading = false;
+            },
+            error: (err) => {
+                console.error('Error loading users', err);
+                this.loading = false;
+            }
+        });
+    }
+
+    onNew(): void {
+        this.router.navigate(['/users/new']);
+    }
+
+    onEdit(user: UserListDTO): void {
+        this.router.navigate(['/users', user.id]);
+    }
+
+    onDelete(user: UserListDTO): void {
+        // TODO: Use a proper confirmation dialog service
+        if (confirm(`Deseja realmente excluir o usuário "${user.nome}"?`)) {
+            this.userService.delete(user.id).subscribe({
+                next: () => {
+                    this.users = this.users.filter(u => u.id !== user.id);
+                },
+                error: (err) => console.error('Error deleting user', err)
+            });
         }
     }
 }

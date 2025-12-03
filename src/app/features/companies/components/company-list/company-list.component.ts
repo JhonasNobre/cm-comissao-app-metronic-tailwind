@@ -1,10 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { CompanyService } from '../../services/company.service';
 import { Company } from '../../models/company.model';
 import { GenericPTableComponent } from '../../../../shared/components/ui/generic-p-table/generic-p-table.component';
 import { ColumnHeader } from '../../../../shared/models/column-header.model';
+import { ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
     selector: 'app-company-list',
@@ -12,12 +14,16 @@ import { ColumnHeader } from '../../../../shared/models/column-header.model';
     imports: [
         CommonModule,
         RouterModule,
-        GenericPTableComponent
+        GenericPTableComponent,
+        ConfirmDialogModule
     ],
+    providers: [ConfirmationService],
     templateUrl: './company-list.component.html'
 })
 export class CompanyListComponent implements OnInit {
     private companyService = inject(CompanyService);
+    private router = inject(Router);
+    private confirmationService = inject(ConfirmationService);
 
     companies: Company[] = [];
     loading: boolean = true;
@@ -30,20 +36,8 @@ export class CompanyListComponent implements OnInit {
 
     private initializeColumns(): void {
         this.columns = [
-            { field: 'name', header: 'Razão Social' },
-            { field: 'tradeName', header: 'Nome Fantasia' },
-            { field: 'cnpj', header: 'CNPJ' },
-            {
-                field: 'status',
-                header: 'Status',
-                displayAs: 'badge',
-                badgeSeverityMap: {
-                    'ACTIVE': 'success',
-                    'INACTIVE': 'danger',
-                    'PENDING': 'warn',
-                    'BLOCKED': 'secondary'
-                }
-            }
+            { field: 'nome', header: 'Razão Social' },
+            { field: 'cnpj', header: 'CNPJ' }
         ];
     }
 
@@ -54,11 +48,29 @@ export class CompanyListComponent implements OnInit {
         });
     }
 
+    onAdd(): void {
+        this.router.navigate(['/companies/new']);
+    }
+
     onEdit(company: Company): void {
-        console.log('Edit company:', company);
+        this.router.navigate(['/companies', company.id]);
     }
 
     onDelete(company: Company): void {
-        console.log('Delete company:', company);
+        this.confirmationService.confirm({
+            message: `Deseja realmente excluir a empresa "${company.name}"?`,
+            header: 'Confirmar Exclusão',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Sim, excluir',
+            rejectLabel: 'Cancelar',
+            accept: () => {
+                this.companyService.delete(company.id).subscribe({
+                    next: () => {
+                        this.companies = this.companies.filter(c => c.id !== company.id);
+                    },
+                    error: (err) => console.error('Error deleting company', err)
+                });
+            }
+        });
     }
 }

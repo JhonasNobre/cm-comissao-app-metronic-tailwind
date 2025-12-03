@@ -1,0 +1,178 @@
+<div class="kt-container-fluid">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">
+                {{ isEditMode ? 'Editar Usuário' : 'Novo Usuário' }}
+            </h1>
+        </div>
+    </div>
+</div>
+
+<div class="kt-container-fluid">
+    <div class="grid gap-5 lg:gap-7.5">
+        <div class="kt-card">
+            <div class="kt-card-body">
+                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <p-toast></p-toast>
+
+                    <!-- Dados Básicos -->
+                    <h3 class="text-lg font-semibold mb-4">Dados Básicos</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                        <div>
+                            <label class="form-label required fw-semibold fs-6">Nome Completo</label>
+                            <input type="text" pInputText formControlName="nomeCompleto"
+                                class="form-control form-control-lg form-control-solid w-full"
+                                placeholder="Nome Completo" />
+                            <div *ngIf="form.get('nomeCompleto')?.invalid && form.get('nomeCompleto')?.touched"
+                                class="text-danger mt-1">
+                                Nome é obrigatório.
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label required fw-semibold fs-6">CPF</label>
+                            <p-inputMask mask="999.999.999-99" formControlName="cpf" placeholder="000.000.000-00"
+                                styleClass="w-full" [style]="{'width':'100%'}"></p-inputMask>
+                            <div *ngIf="form.get('cpf')?.invalid && form.get('cpf')?.touched" class="text-danger mt-1">
+                                CPF é obrigatório.
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label required fw-semibold fs-6">Email</label>
+                            <input type="email" pInputText formControlName="email"
+                                class="form-control form-control-lg form-control-solid w-full"
+                                placeholder="email@exemplo.com" />
+                            <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched"
+                                class="text-danger mt-1">
+                                Email inválido ou obrigatório.
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label required fw-semibold fs-6">Telefone</label>
+                            <p-inputMask mask="(99) 99999-9999" formControlName="telefone" placeholder="(00) 00000-0000"
+                                styleClass="w-full" [style]="{'width':'100%'}"></p-inputMask>
+                            <div *ngIf="form.get('telefone')?.invalid && form.get('telefone')?.touched"
+                                class="text-danger mt-1">
+                                Telefone é obrigatório.
+                            </div>
+                        </div>
+
+                        <div *ngIf="!isEditMode">
+                            <label class="form-label required fw-semibold fs-6">Senha</label>
+                            <p-password formControlName="senha" [toggleMask]="true" [feedback]="true"
+                                styleClass="w-full" [style]="{'width':'100%'}"
+                                inputStyleClass="form-control form-control-lg form-control-solid w-full"></p-password>
+                            <div *ngIf="form.get('senha')?.invalid && form.get('senha')?.touched"
+                                class="text-danger mt-1">
+                                Senha deve ter no mínimo 8 caracteres.
+                            </div>
+                        </div>
+                    </div>
+
+                    <p-divider></p-divider>
+
+                    <!-- Permissões e Acesso -->
+                    <h3 class="text-lg font-semibold mb-4 mt-4">Permissões e Acesso</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+                        <div>
+                            <label class="form-label required fw-semibold fs-6">Tipo de Usuário</label>
+                            <p-select [options]="userRoleOptions" formControlName="tipoUsuario" optionLabel="label"
+                                optionValue="value" styleClass="w-full" [style]="{'width':'100%'}"
+                                appendTo="body"></p-select>
+                        </div>
+
+                        <div>
+                            <label class="form-label required fw-semibold fs-6">Role (Keycloak)</label>
+                            <input type="text" pInputText formControlName="role"
+                                class="form-control form-control-lg form-control-solid w-full"
+                                placeholder="Ex: admin, user" />
+                        </div>
+
+                        <div>
+                            <label class="form-label fw-semibold fs-6">Perfil de Acesso</label>
+                            <p-select [options]="accessProfiles" formControlName="perfilAcessoId" optionLabel="nome"
+                                optionValue="id" placeholder="Selecione um perfil" styleClass="w-full"
+                                [style]="{'width':'100%'}" appendTo="body" [showClear]="true"></p-select>
+                        </div>
+                    </div>
+
+                    <p-divider></p-divider>
+
+                    <!-- Restrição de Horário -->
+                    <div formGroupName="restricaoHorario">
+                        <h3 class="text-lg font-semibold mb-4 mt-4 flex items-center gap-2">
+                            Restrição de Horário
+                            <p-checkbox [binary]="true" (onChange)="toggleRestricaoHorario($event)" label="Ativar"
+                                [ngModel]="hasRestricaoHorario" [ngModelOptions]="{standalone: true}"></p-checkbox>
+                        </h3>
+
+                        <div *ngIf="hasRestricaoHorario" class="mb-8">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-4">
+                                <div class="flex flex-col">
+                                    <label class="form-label fw-semibold fs-6 opacity-0">Opção</label>
+                                    <div class="flex items-center h-[46px]">
+                                        <p-checkbox formControlName="bloquearEmFeriadosNacionais" [binary]="true"
+                                            label="Bloquear em Feriados Nacionais"></p-checkbox>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label fw-semibold fs-6">UF Feriados</label>
+                                    <input type="text" pInputText formControlName="ufFeriados"
+                                        class="form-control form-control-lg form-control-solid w-full" maxlength="2" />
+                                </div>
+                                <div>
+                                    <label class="form-label fw-semibold fs-6">Cód. IBGE Município</label>
+                                    <input type="text" pInputText formControlName="codigoIbgeMunicipio"
+                                        class="form-control form-control-lg form-control-solid w-full" />
+                                </div>
+                            </div>
+
+                            <h4 class="font-medium mb-2">Horários Permitidos</h4>
+                            <div formArrayName="horarios">
+                                <div *ngFor="let horario of horarios.controls; let i=index" [formGroupName]="i"
+                                    class="flex flex-col md:flex-row gap-4 mb-3 items-end">
+                                    <div class="flex-1 w-full">
+                                        <label class="form-label fw-semibold fs-6" *ngIf="i===0">Dia da Semana</label>
+                                        <label class="form-label fw-semibold fs-6 md:hidden" *ngIf="i>0">Dia da
+                                            Semana</label>
+                                        <p-select [options]="diasSemanaOptions" formControlName="diaSemana"
+                                            optionLabel="label" optionValue="value" styleClass="w-full"
+                                            [style]="{'width':'100%'}" appendTo="body">
+                                        </p-select>
+                                    </div>
+                                    <div class="flex-1 w-full">
+                                        <label class="form-label fw-semibold fs-6" *ngIf="i===0">Início</label>
+                                        <label class="form-label fw-semibold fs-6 md:hidden" *ngIf="i>0">Início</label>
+                                        <p-inputMask mask="99:99" formControlName="horaInicio" placeholder="08:00"
+                                            styleClass="w-full" [style]="{'width':'100%'}"></p-inputMask>
+                                    </div>
+                                    <div class="flex-1 w-full">
+                                        <label class="form-label fw-semibold fs-6" *ngIf="i===0">Fim</label>
+                                        <label class="form-label fw-semibold fs-6 md:hidden" *ngIf="i>0">Fim</label>
+                                        <p-inputMask mask="99:99" formControlName="horaFim" placeholder="18:00"
+                                            styleClass="w-full" [style]="{'width':'100%'}"></p-inputMask>
+                                    </div>
+                                    <div class="pb-1">
+                                        <button pButton type="button" icon="pi pi-trash"
+                                            class="p-button-danger p-button-text" (click)="removeHorario(i)"></button>
+                                    </div>
+                                </div>
+                                <button pButton type="button" label="Adicionar Horário" icon="pi pi-plus"
+                                    class="p-button-text mt-2" (click)="addHorario()"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-8">
+                        <button type="button" pButton label="Cancelar" class="p-button-secondary"
+                            (click)="onCancel()"></button>
+                        <button type="submit" pButton label="Salvar" [loading]="loading"
+                            [disabled]="form.invalid"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

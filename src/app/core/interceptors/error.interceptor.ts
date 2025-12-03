@@ -16,7 +16,31 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
                 errorMessage = error.error.message;
             } else {
                 // Erro do lado do servidor
-                if (error.status === 401) {
+                if (error.status === 400 && error.error && error.error.errors) {
+                    // Erros de validação do FluentValidation
+                    const errors = error.error.errors;
+                    if (Array.isArray(errors)) {
+                        // Array de erros - mostrar cada um
+                        errors.forEach((err: any) => {
+                            messageService.add({
+                                severity: 'error',
+                                summary: 'Erro de Validação',
+                                detail: err.message || err,
+                                life: 5000
+                            });
+                        });
+                        return throwError(() => error);
+                    } else {
+                        // Objeto com erros por campo
+                        const allMessages: string[] = [];
+                        Object.keys(errors).forEach(key => {
+                            const messages = Array.isArray(errors[key]) ? errors[key] : [errors[key]];
+                            allMessages.push(...messages);
+                        });
+                        errorSummary = 'Erro de Validação';
+                        errorMessage = allMessages.join('; ');
+                    }
+                } else if (error.status === 401) {
                     errorSummary = 'Não autorizado';
                     errorMessage = 'Sua sessão expirou ou você não tem permissão.';
                 } else if (error.status === 403) {

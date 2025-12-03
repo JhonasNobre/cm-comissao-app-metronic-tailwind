@@ -1,51 +1,51 @@
 export interface User {
     id: string;
-    name: string;
+    nomeCompleto: string;
     email: string;
-    role: UserRole;
-    status: UserStatus;
-    avatar?: string;
-    lastLogin?: Date;
-    joinedDate: Date;
-    phoneNumber?: string;
-    teams?: string[]; // IDs or Names of teams
+    inativo: boolean;
+    tipoUsuario: UserRole;
+    restricaoHorario?: any; // Define specific type if needed later
+    criadoEm: Date;
 }
 
 export interface UserListDTO {
     id: string;
-    name: string;
+    nome: string;
     email: string;
-    role: UserRole;
-    status: UserStatus;
-    avatar?: string;
-    joinedDate: Date;
+    ativo: boolean;
+    perfil?: string;
+    equipes: string[];
 }
 
 export interface UserCreateDTO {
-    name: string;
+    nomeCompleto: string;
+    cpf: string;
     email: string;
-    role: UserRole;
-    password?: string; // Optional if using invite flow
+    telefone: string;
+    senha: string;
+    idEmpresa: string;
+    role: string; // Keycloak role
+    tipoUsuario: UserRole;
+    restricaoHorario?: any;
 }
 
 export interface UserUpdateDTO {
-    name?: string;
-    email?: string;
-    role?: UserRole;
-    status?: UserStatus;
-    phoneNumber?: string;
+    id: string;
+    nomeCompleto: string;
+    telefone: string;
+    role: string;
+    perfilAcessoId?: string;
+    tipoUsuario: UserRole;
+    restricaoHorario?: any;
 }
 
 export enum UserRole {
-    ADMIN = 'Admin',
-    GESTOR = 'Gestor',
-    VENDEDOR = 'Vendedor',
-    USER = 'User'
+    COLABORADOR = 'Colaborador',
+    CLIENTE = 'Cliente',
+    ADMINISTRADOR = 'Administrador'
 }
 
-export enum UserStatus {
-    ACTIVE = 'Active',
-    INACTIVE = 'Inactive',
-    PENDING = 'Pending',
-    LOCKED = 'Locked'
-}
+export const UserStatusLabel: Record<string, string> = {
+    true: 'Ativo',
+    false: 'Inativo'
+};

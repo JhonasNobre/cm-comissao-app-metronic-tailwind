@@ -35,29 +35,29 @@
         <div class="kt-card kt-card-grid">
             <div class="kt-card-content p-8">
                 <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
-                    <!-- Avatar -->
+                    <!-- Avatar (Initials) -->
                     <div class="kt-avatar size-24 shrink-0">
-                        <img *ngIf="user.avatar" [src]="user.avatar" [alt]="user.name" class="rounded-full" />
-                        <div *ngIf="!user.avatar"
+                        <div
                             class="rounded-full bg-primary text-white flex items-center justify-center text-3xl font-bold">
-                            {{ user.name.charAt(0).toUpperCase() }}
+                            {{ user.nomeCompleto.charAt(0).toUpperCase() }}
                         </div>
                     </div>
 
                     <!-- User Info -->
                     <div class="flex-1 text-center md:text-left">
-                        <h2 class="text-2xl font-semibold mb-2">{{ user.name }}</h2>
+                        <h2 class="text-2xl font-semibold mb-2">{{ user.nomeCompleto }}</h2>
                         <p class="text-lg text-secondary-foreground mb-4">{{ user.email }}</p>
 
                         <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-                            <span [class]="'kt-badge kt-badge-outline rounded-[30px] ' + getRoleBadgeClass(user.role)">
+                            <span
+                                [class]="'kt-badge kt-badge-outline rounded-[30px] ' + getRoleBadgeClass(user.tipoUsuario)">
                                 <span class="kt-badge-dot size-1.5"></span>
-                                {{ user.role }}
+                                {{ user.tipoUsuario }}
                             </span>
                             <span
-                                [class]="'kt-badge kt-badge-outline rounded-[30px] ' + getStatusBadgeClass(user.status)">
+                                [class]="'kt-badge kt-badge-outline rounded-[30px] ' + getStatusBadgeClass(user.inativo)">
                                 <span class="kt-badge-dot size-1.5"></span>
-                                {{ user.status }}
+                                {{ user.inativo ? 'Inativo' : 'Ativo' }}
                             </span>
                         </div>
                     </div>
@@ -76,7 +76,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-secondary-foreground">Role</p>
-                            <p class="text-lg font-semibold">{{ user.role }}</p>
+                            <p class="text-lg font-semibold">{{ user.tipoUsuario }}</p>
                         </div>
                     </div>
                 </div>
@@ -91,7 +91,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-secondary-foreground">Status</p>
-                            <p class="text-lg font-semibold">{{ user.status }}</p>
+                            <p class="text-lg font-semibold">{{ user.inativo ? 'Inativo' : 'Ativo' }}</p>
                         </div>
                     </div>
                 </div>
@@ -106,37 +106,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-secondary-foreground">Joined Date</p>
-                            <p class="text-lg font-semibold">{{ user.joinedDate | date: 'dd/MM/yyyy' }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Phone Card (if available) -->
-            <div *ngIf="user.phoneNumber" class="kt-card">
-                <div class="kt-card-content">
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center justify-center size-12 rounded-lg bg-warning/10">
-                            <i class="ki-filled ki-phone text-warning text-2xl"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm text-secondary-foreground">Phone</p>
-                            <p class="text-lg font-semibold">{{ user.phoneNumber }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Last Login Card (if available) -->
-            <div *ngIf="user.lastLogin" class="kt-card">
-                <div class="kt-card-content">
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center justify-center size-12 rounded-lg bg-secondary/10">
-                            <i class="ki-filled ki-time text-secondary text-2xl"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm text-secondary-foreground">Last Login</p>
-                            <p class="text-lg font-semibold">{{ user.lastLogin | date: 'dd/MM/yyyy HH:mm' }}</p>
+                            <p class="text-lg font-semibold">{{ user.criadoEm | date: 'dd/MM/yyyy' }}</p>
                         </div>
                     </div>
                 </div>

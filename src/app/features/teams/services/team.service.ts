@@ -2,31 +2,31 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { BaseService } from '../../../shared/services/base/base.service';
-import { Company } from '../models/company.model';
+import { Team, TeamListDTO, TeamCreateDTO, TeamUpdateDTO } from '../models/team.model';
 
 @Injectable({
     providedIn: 'root'
 })
-export class CompanyService extends BaseService {
+export class TeamService extends BaseService {
 
     constructor(http: HttpClient) {
-        super(http, '/v1/empresas');
+        super(http, '/v1/equipes');
     }
 
-    list(params?: any): Observable<Company[]> {
+    list(params?: any): Observable<TeamListDTO[]> {
         const httpParams = this.buildHttpParams(params);
-        return this.http.get<Company[]>(`${this.baseUrl}`, { params: httpParams });
+        return this.http.get<TeamListDTO[]>(`${this.baseUrl}`, { params: httpParams });
     }
 
-    get(id: string): Observable<Company> {
-        return this.http.get<Company>(`${this.baseUrl}/${id}`);
+    get(id: string): Observable<Team> {
+        return this.http.get<Team>(`${this.baseUrl}/${id}`);
     }
 
-    create(obj: Company): Observable<Company> {
-        return this.http.post<Company>(`${this.baseUrl}`, obj);
+    create(obj: any): Observable<any> {
+        return this.http.post<any>(`${this.baseUrl}`, obj);
     }
 
-    update(obj: Company, id: string): Observable<boolean> {
+    update(obj: any, id: string): Observable<boolean> {
         return this.http.put<void>(`${this.baseUrl}/${id}`, obj).pipe(map(() => true));
     }
 

@@ -2,7 +2,7 @@
     <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
         <div class="flex flex-col justify-center gap-2">
             <h1 class="text-xl font-medium leading-none text-mono">
-                {{ isEditMode ? 'Editar Empresa' : 'Nova Empresa' }}
+                {{ isEditMode ? 'Editar Equipe' : 'Nova Equipe' }}
             </h1>
         </div>
     </div>
@@ -19,29 +19,30 @@
                         <div>
                             <label class="form-label required fw-semibold fs-6">Nome</label>
                             <input type="text" pInputText formControlName="nome"
-                                class="form-control form-control-lg form-control-solid" placeholder="Nome da Empresa" />
+                                class="form-control form-control-lg form-control-solid" placeholder="Nome da Equipe" />
                             <div *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched"
                                 class="text-danger mt-1">
-                                Nome é obrigatório (mínimo 3 caracteres).
+                                Nome é obrigatório (mínimo 3 caracteres, máximo 100).
                             </div>
                         </div>
 
                         <div>
-                            <label class="form-label required fw-semibold fs-6">CNPJ</label>
-                            <p-inputMask mask="99.999.999/9999-99" formControlName="cnpj"
-                                styleClass="form-control form-control-lg form-control-solid"
-                                placeholder="00.000.000/0000-00"></p-inputMask>
-                            <div *ngIf="form.get('cnpj')?.invalid && form.get('cnpj')?.touched"
-                                class="text-danger mt-1">
-                                CNPJ é obrigatório (14 dígitos).
-                            </div>
+                            <label class="form-label fw-semibold fs-6">Perfil de Acesso</label>
+                            <select formControlName="perfilAcessoId"
+                                class="form-control form-control-lg form-control-solid">
+                                <option [value]="null">Selecione um perfil (opcional)</option>
+                                <option *ngFor="let profile of accessProfiles" [value]="profile.id">
+                                    {{ profile.nome }}
+                                </option>
+                            </select>
+                            <small class="text-muted">Equipe herdará permissões do perfil selecionado</small>
                         </div>
                     </div>
 
                     <div class="flex justify-end gap-2.5 mt-5">
                         <button type="button" class="kt-btn kt-btn-light" (click)="onCancel()">Cancelar</button>
                         <button type="submit" class="kt-btn kt-btn-primary" [disabled]="loading">
-                            <span *ngIf="!loading">{{ isEditMode ? 'Salvar Alterações' : 'Criar Empresa' }}</span>
+                            <span *ngIf="!loading">{{ isEditMode ? 'Salvar Alterações' : 'Criar Equipe' }}</span>
                             <span *ngIf="loading">Aguarde...</span>
                         </button>
                     </div>

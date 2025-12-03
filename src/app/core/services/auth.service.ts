@@ -19,6 +19,8 @@ export class AuthService {
     public currentUser$ = this.currentUserSubject.asObservable();
 
     private readonly TOKEN_KEY = 'access_token';
+    private readonly REFRESH_TOKEN_KEY = 'refresh_token';
+    private tokenRefreshTimer: any = null;
 
     constructor(
         private http: HttpClient,
@@ -50,7 +52,7 @@ export class AuthService {
             .pipe(
                 tap(response => {
                     if (response && response.access_token) {
-                        this.setSession(response.access_token);
+                        this.setSession(response.access_token, response.refresh_token);
                     }
                 })
             );
@@ -59,10 +61,14 @@ export class AuthService {
     /**
      * Salva o token e atualiza o estado
      */
-    private setSession(token: string): void {
+    private setSession(token: string, refreshToken?: string): void {
         localStorage.setItem(this.TOKEN_KEY, token);
+        if (refreshToken) {
+            localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
+        }
         this.isAuthenticatedSubject.next(true);
         this.updateCurrentUser(token);
+        this.scheduleTokenRefresh(token);
     }
 
     /**
@@ -82,8 +88,10 @@ export class AuthService {
      */
     logout(): void {
         localStorage.removeItem(this.TOKEN_KEY);
+        localStorage.removeItem(this.REFRESH_TOKEN_KEY);
         this.isAuthenticatedSubject.next(false);
         this.currentUserSubject.next(null);
+        this.cancelTokenRefresh();
         this.router.navigate(['/auth/login']);
     }
 
@@ -212,5 +220,64 @@ export class AuthService {
     */
     isVendedor(): boolean {
         return this.hasRole('Vendedor') || this.hasRole('corretor');
+    }
+
+    /**
+     * Agenda a renovação automática do token
+     */
+    private scheduleTokenRefresh(token: string): void {
+        this.cancelTokenRefresh();
+
+        const decoded = this.decodeToken(token);
+        if (!decoded || !decoded.exp) return;
+
+        const expiresAt = decoded.exp * 1000;
+        const now = new Date().getTime();
+        const timeUntilExpiry = expiresAt - now;
+
+        // Renovar 2 minutos antes de expirar (ou quando faltar 20% do tempo)
+        const refreshBuffer = Math.min(2 * 60 * 1000, timeUntilExpiry * 0.2);
+        const refreshTime = timeUntilExpiry - refreshBuffer;
+
+        if (refreshTime > 0) {
+            this.tokenRefreshTimer = setTimeout(() => {
+                this.refreshToken();
+            }, refreshTime);
+        }
+    }
+
+    /**
+     * Cancela o timer de renovação
+     */
+    private cancelTokenRefresh(): void {
+        if (this.tokenRefreshTimer) {
+            clearTimeout(this.tokenRefreshTimer);
+            this.tokenRefreshTimer = null;
+        }
+    }
+
+    /**
+     * Renova o access token usando o refresh token
+     */
+    private refreshToken(): void {
+        const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+        if (!refreshToken) {
+            this.logout();
+            return;
+        }
+
+        this.http.post<LoginResponse>(`${environment.apiUrl}/authentication/refresh`, { refresh_token: refreshToken })
+            .pipe(
+                catchError(error => {
+                    console.error('Failed to refresh token', error);
+                    this.logout();
+                    return of(null);
+                })
+            )
+            .subscribe(response => {
+                if (response && response.access_token) {
+                    this.setSession(response.access_token, response.refresh_token);
+                }
+            });
     }
 }

@@ -9,7 +9,6 @@ import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { CompanyService } from '../../services/company.service';
-import { Company, CompanyStatus } from '../../models/company.model';
 
 @Component({
     selector: 'app-company-form',
@@ -39,13 +38,6 @@ export class CompanyFormComponent implements OnInit {
     companyId: string | null = null;
     loading = false;
 
-    statusOptions = [
-        { label: 'Ativo', value: CompanyStatus.ACTIVE },
-        { label: 'Inativo', value: CompanyStatus.INACTIVE },
-        { label: 'Pendente', value: CompanyStatus.PENDING },
-        { label: 'Bloqueado', value: CompanyStatus.BLOCKED }
-    ];
-
     ngOnInit(): void {
         this.initForm();
         this.checkEditMode();
@@ -53,21 +45,8 @@ export class CompanyFormComponent implements OnInit {
 
     private initForm(): void {
         this.form = this.fb.group({
-            name: ['', [Validators.required, Validators.minLength(3)]],
-            tradeName: ['', [Validators.required]],
-            cnpj: ['', [Validators.required]],
-            email: ['', [Validators.required, Validators.email]],
-            phone: [''],
-            status: [CompanyStatus.ACTIVE, [Validators.required]],
-            address: this.fb.group({
-                street: [''],
-                number: [''],
-                complement: [''],
-                neighborhood: [''],
-                city: [''],
-                state: [''],
-                zipCode: ['']
-            })
+            nome: ['', [Validators.required, Validators.minLength(3)]],
+            cnpj: ['', [Validators.required]]
         });
     }
 
