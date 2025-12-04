@@ -50,9 +50,27 @@ export class TeamListComponent extends BaseListComponent<TeamListDTO> {
     }
 
     override openDialog(object?: TeamListDTO) {
+        if (object?.id) {
+            // Edit mode - load full team data with restrictions
+            this.teamService.get(object.id).subscribe({
+                next: (fullTeam) => {
+                    this.showDialog(fullTeam);
+                },
+                error: (err) => {
+                    console.error('Error loading team', err);
+                    this.showError('Erro ao carregar equipe');
+                }
+            });
+        } else {
+            // Create mode
+            this.showDialog();
+        }
+    }
+
+    private showDialog(teamData?: any) {
         const ref = this.dialogService.open(TeamFormDialogComponent, {
-            data: object ? { ...object } : {},
-            header: object?.id ? this.translate.translate('teams.list.edit_team') : this.translate.translate('teams.list.new_team'),
+            data: teamData || {},
+            header: teamData?.id ? this.translate.translate('teams.list.edit_team') : this.translate.translate('teams.list.new_team'),
             closable: true,
             modal: true,
             draggable: true,
@@ -68,7 +86,7 @@ export class TeamListComponent extends BaseListComponent<TeamListDTO> {
         if (ref) {
             ref.onClose.subscribe((result: TeamCreateDTO | TeamUpdateDTO) => {
                 if (result) {
-                    this.handleSave(result as unknown as TeamListDTO, object?.id);
+                    this.handleSave(result as unknown as TeamListDTO, teamData?.id);
                 }
             });
         }

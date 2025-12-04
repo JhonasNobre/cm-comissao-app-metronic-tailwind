@@ -40,19 +40,18 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
 
     protected override onInitDialog(data: any): void {
         this.diasSemanaOptions = [
-            { label: this.translate.translate('general.days.sunday'), value: 0 },
-            { label: this.translate.translate('general.days.monday'), value: 1 },
-            { label: this.translate.translate('general.days.tuesday'), value: 2 },
-            { label: this.translate.translate('general.days.wednesday'), value: 3 },
-            { label: this.translate.translate('general.days.thursday'), value: 4 },
-            { label: this.translate.translate('general.days.friday'), value: 5 },
-            { label: this.translate.translate('general.days.saturday'), value: 6 }
+            { label: this.translate.translate('general.days.sunday'), value: 'Domingo' },
+            { label: this.translate.translate('general.days.monday'), value: 'Segunda' },
+            { label: this.translate.translate('general.days.tuesday'), value: 'Terca' },
+            { label: this.translate.translate('general.days.wednesday'), value: 'Quarta' },
+            { label: this.translate.translate('general.days.thursday'), value: 'Quinta' },
+            { label: this.translate.translate('general.days.friday'), value: 'Sexta' },
+            { label: this.translate.translate('general.days.saturday'), value: 'Sabado' }
         ];
 
         this.loadAccessProfiles();
 
         if (data && data.id) {
-            // Edit mode
             this.form.patchValue({
                 id: data.id,
                 nome: data.nome,
@@ -67,12 +66,15 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
                     codigoIbgeMunicipio: data.restricaoHorario.codigoIbgeMunicipio
                 });
 
-                this.clearHorarios();
-                if (data.restricaoHorario.horarios) {
+                if (data.restricaoHorario?.horarios) {
+                    this.clearHorarios();
                     data.restricaoHorario.horarios.forEach((h: any) => {
                         this.addHorario(h);
                     });
+                    this.sortHorarios();
                 }
+            } else {
+                this.hasRestricaoHorario = false;
             }
         }
     }
@@ -112,11 +114,12 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
 
     addHorario(data?: any): void {
         const horarioGroup = this.formBuilder.group({
-            diaSemana: [data?.diaSemana ?? 1, Validators.required],
+            diaSemana: [data?.diaSemana ?? 'Segunda', Validators.required],
             horaInicio: [data?.horaInicio ?? '08:00', Validators.required],
             horaFim: [data?.horaFim ?? '18:00', Validators.required]
         });
         this.horarios.push(horarioGroup);
+        this.sortHorarios();
     }
 
     removeHorario(index: number): void {
@@ -127,6 +130,40 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
         while (this.horarios.length !== 0) {
             this.horarios.removeAt(0);
         }
+    }
+
+    sortHorarios(): void {
+        const daysOrder: { [key: string]: number } = {
+            'Domingo': 0,
+            'Segunda': 1,
+            'Terca': 2,
+            'Quarta': 3,
+            'Quinta': 4,
+            'Sexta': 5,
+            'Sabado': 6
+        };
+
+        const horariosArray = this.horarios.controls.map((control, index) => ({
+            control,
+            index,
+            value: control.value
+        }));
+
+        horariosArray.sort((a, b) => {
+            const dayA = daysOrder[a.value.diaSemana] ?? 0;
+            const dayB = daysOrder[b.value.diaSemana] ?? 0;
+
+            if (dayA !== dayB) {
+                return dayA - dayB;
+            }
+
+            return a.value.horaInicio.localeCompare(b.value.horaInicio);
+        });
+
+        this.clearHorarios();
+        horariosArray.forEach(item => {
+            this.horarios.push(item.control);
+        });
     }
 
     toggleRestricaoHorario(event: any): void {

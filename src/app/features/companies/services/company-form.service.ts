@@ -15,18 +15,11 @@ export class CompanyFormService {
                 order: 1
             }),
             new FormItemTextbox({
-                key: 'tradeName',
-                label: 'Nome Fantasia',
-                value: company?.tradeName,
-                required: true,
-                order: 2
-            }),
-            new FormItemTextbox({
                 key: 'cnpj',
                 label: 'CNPJ',
                 value: company?.cnpj,
                 required: true,
-                order: 3
+                order: 2
             })
         ];
     }

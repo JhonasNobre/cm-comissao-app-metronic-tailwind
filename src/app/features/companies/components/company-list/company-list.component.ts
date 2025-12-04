@@ -37,19 +37,7 @@ export class CompanyListComponent extends BaseListComponent<Company> implements 
     private initializeColumns(): void {
         this.columns = [
             { field: 'name', header: 'Razão Social' },
-            { field: 'tradeName', header: 'Nome Fantasia' },
-            { field: 'cnpj', header: 'CNPJ' },
-            {
-                field: 'status',
-                header: 'Status',
-                displayAs: 'badge',
-                badgeSeverityMap: {
-                    'ACTIVE': 'success',
-                    'INACTIVE': 'danger',
-                    'PENDING': 'warn',
-                    'BLOCKED': 'secondary'
-                }
-            }
+            { field: 'cnpj', header: 'CNPJ' }
         ];
     }
 

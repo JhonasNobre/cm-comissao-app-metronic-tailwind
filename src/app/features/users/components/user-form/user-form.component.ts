@@ -123,15 +123,52 @@ export class UserFormComponent implements OnInit {
 
     addHorario(): void {
         const horarioGroup = this.fb.group({
-            diaSemana: [1, Validators.required],
+            diaSemana: ['Segunda', Validators.required],
             horaInicio: ['08:00', Validators.required],
             horaFim: ['18:00', Validators.required]
         });
         this.horarios.push(horarioGroup);
+        this.sortHorarios();
     }
 
     removeHorario(index: number): void {
         this.horarios.removeAt(index);
+    }
+
+    sortHorarios(): void {
+        const daysOrder: { [key: string]: number } = {
+            'Domingo': 0,
+            'Segunda': 1,
+            'Terca': 2,
+            'Quarta': 3,
+            'Quinta': 4,
+            'Sexta': 5,
+            'Sabado': 6
+        };
+
+        const horariosArray = this.horarios.controls.map((control, index) => ({
+            control,
+            index,
+            value: control.value
+        }));
+
+        horariosArray.sort((a, b) => {
+            const dayA = daysOrder[a.value.diaSemana] ?? 0;
+            const dayB = daysOrder[b.value.diaSemana] ?? 0;
+
+            if (dayA !== dayB) {
+                return dayA - dayB;
+            }
+
+            return a.value.horaInicio.localeCompare(b.value.horaInicio);
+        });
+
+        while (this.horarios.length !== 0) {
+            this.horarios.removeAt(0);
+        }
+        horariosArray.forEach(item => {
+            this.horarios.push(item.control);
+        });
     }
 
     toggleRestricaoHorario(event: any): void {
@@ -227,6 +264,7 @@ export class UserFormComponent implements OnInit {
                             });
                             this.horarios.push(horarioGroup);
                         });
+                        this.sortHorarios();
                     }
                 }
                 this.loading = false;
