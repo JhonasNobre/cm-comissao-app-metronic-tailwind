@@ -1,174 +1,143 @@
-<div class="kt-container-fluid">
-    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
-        <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">
-                {{ isEditMode ? 'Editar Perfil' : 'Novo Perfil' }}
-            </h1>
+<div class="card">
+    <div class="flex flex-col gap-4">
+        <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold">{{ isEditMode ? ('access_profile.list.edit' | transloco) :
+                ('access_profile.list.new' | transloco) }}</h2>
         </div>
-    </div>
-</div>
 
-<div class="kt-container-fluid">
-    <div class="grid gap-5 lg:gap-7.5">
-        <div class="kt-card">
-            <div class="kt-card-body">
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                    <p-toast></p-toast>
-
-                    <!-- Dados Básicos -->
-                    <h3 class="text-lg font-semibold mb-4">Dados Básicos</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-                        <div>
-                            <label class="form-label required fw-semibold fs-6">Nome</label>
-                            <input type="text" pInputText formControlName="nome"
-                                class="form-control form-control-lg form-control-solid w-full"
-                                placeholder="Nome do Perfil" />
-                            <div *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched"
-                                class="text-danger mt-1">
-                                Nome é obrigatório.
-                            </div>
-                        </div>
-
-                        <div class="flex items-center h-[46px] mt-8">
-                            <p-checkbox formControlName="ehPadrao" [binary]="true" label="Perfil Padrão"></p-checkbox>
-                        </div>
-
-                        <div>
-                            <label class="form-label required fw-semibold fs-6">Limite Desconto Máximo (%)</label>
-                            <p-inputNumber formControlName="limiteDescontoMaximo" mode="decimal" [minFractionDigits]="2"
-                                [maxFractionDigits]="2" suffix="%" styleClass="w-full" [style]="{'width':'100%'}"
-                                inputStyleClass="form-control form-control-lg form-control-solid w-full"></p-inputNumber>
-                        </div>
-
-                        <div>
-                            <label class="form-label required fw-semibold fs-6">Máximo de Reservas</label>
-                            <p-inputNumber formControlName="quantidadeMaximaReservas" mode="decimal" [min]="0"
-                                styleClass="w-full" [style]="{'width':'100%'}"
-                                inputStyleClass="form-control form-control-lg form-control-solid w-full"></p-inputNumber>
-                        </div>
-                    </div>
-
-                    <p-divider></p-divider>
-
-                    <!-- Permissões -->
-                    <h3 class="text-lg font-semibold mb-4 mt-4">Permissões</h3>
-                    <div class="mb-8">
-                        <p-table [value]="permissionRows" [tableStyle]="{ 'min-width': '50rem' }">
-                            <ng-template pTemplate="header">
-                                <tr>
-                                    <th>Recurso</th>
-                                    <th class="text-center">Criar</th>
-                                    <th class="text-center">Ler</th>
-                                    <th class="text-center">Atualizar</th>
-                                    <th class="text-center">Excluir</th>
-                                    <th>Escopo</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="body" let-row>
-                                <tr>
-                                    <td>{{ row.recursoNome }}</td>
-                                    <td class="text-center">
-                                        <p-checkbox [(ngModel)]="row.canCreate" [binary]="true"
-                                            [ngModelOptions]="{standalone: true}"></p-checkbox>
-                                    </td>
-                                    <td class="text-center">
-                                        <p-checkbox [(ngModel)]="row.canRead" [binary]="true"
-                                            [ngModelOptions]="{standalone: true}"></p-checkbox>
-                                    </td>
-                                    <td class="text-center">
-                                        <p-checkbox [(ngModel)]="row.canUpdate" [binary]="true"
-                                            [ngModelOptions]="{standalone: true}"></p-checkbox>
-                                    </td>
-                                    <td class="text-center">
-                                        <p-checkbox [(ngModel)]="row.canDelete" [binary]="true"
-                                            [ngModelOptions]="{standalone: true}"></p-checkbox>
-                                    </td>
-                                    <td>
-                                        <p-select [options]="scopeOptions" [(ngModel)]="row.scope" optionLabel="label"
-                                            optionValue="value" [ngModelOptions]="{standalone: true}"
-                                            appendTo="body"></p-select>
-                                    </td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </div>
-
-                    <p-divider></p-divider>
-
-                    <!-- Restrição de Horário -->
-                    <div formGroupName="restricaoHorario">
-                        <h3 class="text-lg font-semibold mb-4 mt-4 flex items-center gap-2">
-                            Restrição de Horário
-                            <p-checkbox [binary]="true" (onChange)="toggleRestricaoHorario($event)" label="Ativar"
-                                [ngModel]="hasRestricaoHorario" [ngModelOptions]="{standalone: true}"></p-checkbox>
-                        </h3>
-
-                        <div *ngIf="hasRestricaoHorario" class="mb-8">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-4">
-                                <div class="flex flex-col">
-                                    <label class="form-label fw-semibold fs-6 opacity-0">Opção</label>
-                                    <div class="flex items-center h-[46px]">
-                                        <p-checkbox formControlName="bloquearEmFeriadosNacionais" [binary]="true"
-                                            label="Bloquear em Feriados Nacionais"></p-checkbox>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="form-label fw-semibold fs-6">UF Feriados</label>
-                                    <input type="text" pInputText formControlName="ufFeriados"
-                                        class="form-control form-control-lg form-control-solid w-full" maxlength="2" />
-                                </div>
-                                <div>
-                                    <label class="form-label fw-semibold fs-6">Cód. IBGE Município</label>
-                                    <input type="text" pInputText formControlName="codigoIbgeMunicipio"
-                                        class="form-control form-control-lg form-control-solid w-full" />
-                                </div>
-                            </div>
-
-                            <h4 class="font-medium mb-2">Horários Permitidos</h4>
-                            <div formArrayName="horarios">
-                                <div *ngFor="let horario of horarios.controls; let i=index" [formGroupName]="i"
-                                    class="flex flex-col md:flex-row gap-4 mb-3 items-end">
-                                    <div class="flex-1 w-full">
-                                        <label class="form-label fw-semibold fs-6" *ngIf="i===0">Dia da Semana</label>
-                                        <label class="form-label fw-semibold fs-6 md:hidden" *ngIf="i>0">Dia da
-                                            Semana</label>
-                                        <p-select [options]="diasSemanaOptions" formControlName="diaSemana"
-                                            optionLabel="label" optionValue="value" styleClass="w-full"
-                                            [style]="{'width':'100%'}" appendTo="body">
-                                        </p-select>
-                                    </div>
-                                    <div class="flex-1 w-full">
-                                        <label class="form-label fw-semibold fs-6" *ngIf="i===0">Início</label>
-                                        <label class="form-label fw-semibold fs-6 md:hidden" *ngIf="i>0">Início</label>
-                                        <p-inputMask mask="99:99" formControlName="horaInicio" placeholder="08:00"
-                                            styleClass="w-full" [style]="{'width':'100%'}"></p-inputMask>
-                                    </div>
-                                    <div class="flex-1 w-full">
-                                        <label class="form-label fw-semibold fs-6" *ngIf="i===0">Fim</label>
-                                        <label class="form-label fw-semibold fs-6 md:hidden" *ngIf="i>0">Fim</label>
-                                        <p-inputMask mask="99:99" formControlName="horaFim" placeholder="18:00"
-                                            styleClass="w-full" [style]="{'width':'100%'}"></p-inputMask>
-                                    </div>
-                                    <div class="pb-1">
-                                        <button pButton type="button" icon="pi pi-trash"
-                                            class="p-button-danger p-button-text" (click)="removeHorario(i)"></button>
-                                    </div>
-                                </div>
-                                <button pButton type="button" label="Adicionar Horário" icon="pi pi-plus"
-                                    class="p-button-text mt-2" (click)="addHorario()"></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end gap-2.5 mt-5">
-                        <button type="button" class="kt-btn kt-btn-light" (click)="onCancel()">Cancelar</button>
-                        <button type="submit" class="kt-btn kt-btn-primary" [disabled]="loading">
-                            <span *ngIf="!loading">{{ isEditMode ? 'Salvar Alterações' : 'Criar Perfil' }}</span>
-                            <span *ngIf="loading">Aguarde...</span>
-                        </button>
-                    </div>
-                </form>
+        <form [formGroup]="form" class="flex flex-col gap-4">
+            <div class="flex flex-col gap-2">
+                <label for="nome" class="font-semibold">{{ 'general.singular.name' | transloco }}</label>
+                <input pInputText id="nome" formControlName="nome" placeholder="Nome do perfil" />
+                <small *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched" class="text-red-500">
+                    {{ 'general.validation.required' | transloco }}
+                </small>
             </div>
-        </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-2">
+                    <label for="limite" class="font-semibold">Limite Desconto (%)</label>
+                    <p-inputNumber id="limite" formControlName="limiteDescontoMaximo" suffix="%" [min]="0"
+                        [max]="100"></p-inputNumber>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label for="reservas" class="font-semibold">Max. Reservas</label>
+                    <p-inputNumber id="reservas" formControlName="quantidadeMaximaReservas" [min]="0"></p-inputNumber>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <p-checkbox formControlName="ehPadrao" [binary]="true" inputId="padrao"></p-checkbox>
+                <label for="padrao">Perfil Padrão</label>
+            </div>
+
+            <p-divider></p-divider>
+
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold">Permissões</label>
+                <p-table [value]="permissionRows" [tableStyle]="{ 'min-width': '50rem' }" styleClass="p-datatable-sm">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th>Recurso</th>
+                            <th class="text-center">Criar</th>
+                            <th class="text-center">Ler</th>
+                            <th class="text-center">Atualizar</th>
+                            <th class="text-center">Excluir</th>
+                            <th>Escopo</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-row>
+                        <tr>
+                            <td>{{ row.recursoNome }}</td>
+                            <td class="text-center">
+                                <p-checkbox [(ngModel)]="row.canCreate" [binary]="true"
+                                    [ngModelOptions]="{standalone: true}"></p-checkbox>
+                            </td>
+                            <td class="text-center">
+                                <p-checkbox [(ngModel)]="row.canRead" [binary]="true"
+                                    [ngModelOptions]="{standalone: true}"></p-checkbox>
+                            </td>
+                            <td class="text-center">
+                                <p-checkbox [(ngModel)]="row.canUpdate" [binary]="true"
+                                    [ngModelOptions]="{standalone: true}"></p-checkbox>
+                            </td>
+                            <td class="text-center">
+                                <p-checkbox [(ngModel)]="row.canDelete" [binary]="true"
+                                    [ngModelOptions]="{standalone: true}"></p-checkbox>
+                            </td>
+                            <td>
+                                <p-select [options]="scopeOptions" [(ngModel)]="row.scope" optionLabel="label"
+                                    optionValue="value" [ngModelOptions]="{standalone: true}"
+                                    [style]="{'width':'100%'}"></p-select>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+
+            <p-divider></p-divider>
+
+            <div class="flex items-center gap-2">
+                <p-checkbox [binary]="true" inputId="restricao" [ngModel]="hasRestricaoHorario"
+                    (onChange)="toggleRestricaoHorario($event)" [ngModelOptions]="{standalone: true}"></p-checkbox>
+                <label for="restricao" class="font-semibold cursor-pointer"
+                    (click)="hasRestricaoHorario = !hasRestricaoHorario; toggleRestricaoHorario({checked: hasRestricaoHorario})">
+                    {{ 'teams.form.time_restriction' | transloco }}
+                </label>
+            </div>
+
+            <div *ngIf="hasRestricaoHorario" formGroupName="restricaoHorario"
+                class="flex flex-col gap-4 p-4 border rounded bg-gray-50">
+                <div class="flex items-center gap-2">
+                    <p-checkbox formControlName="bloquearEmFeriadosNacionais" [binary]="true"
+                        inputId="feriados"></p-checkbox>
+                    <label for="feriados">{{ 'teams.form.block_holidays' | transloco }}</label>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label for="uf">{{ 'teams.form.holidays_uf' | transloco }}</label>
+                        <input pInputText id="uf" formControlName="ufFeriados" placeholder="Ex: SP" maxlength="2" />
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label for="ibge">{{ 'teams.form.ibge_code' | transloco }}</label>
+                        <input pInputText id="ibge" formControlName="codigoIbgeMunicipio" placeholder="Ex: 3550308" />
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="font-semibold">{{ 'teams.form.allowed_times' | transloco }}</label>
+                    <div formArrayName="horarios" class="flex flex-col gap-2">
+                        <div *ngFor="let item of horarios.controls; let i = index" [formGroupName]="i"
+                            class="flex gap-2 items-end">
+                            <div class="flex-1">
+                                <label class="text-xs">{{ 'teams.form.day' | transloco }}</label>
+                                <p-select [options]="diasSemanaOptions" formControlName="diaSemana" optionLabel="label"
+                                    optionValue="value" [style]="{'width':'100%'}"></p-select>
+                            </div>
+                            <div class="w-24">
+                                <label class="text-xs">{{ 'teams.form.start' | transloco }}</label>
+                                <p-inputMask mask="99:99" formControlName="horaInicio"
+                                    placeholder="00:00"></p-inputMask>
+                            </div>
+                            <div class="w-24">
+                                <label class="text-xs">{{ 'teams.form.end' | transloco }}</label>
+                                <p-inputMask mask="99:99" formControlName="horaFim" placeholder="00:00"></p-inputMask>
+                            </div>
+                            <button pButton icon="pi pi-trash" class="p-button-danger p-button-text"
+                                (click)="removeHorario(i)"></button>
+                        </div>
+                        <button pButton label="{{ 'teams.form.add_time' | transloco }}" icon="pi pi-plus"
+                            class="p-button-sm p-button-outlined mt-2" (click)="addHorario()"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4 mt-4">
+                <button pButton type="button" label="{{ 'SHARED.COMMON.CANCEL' | transloco }}"
+                    class="p-button-secondary" (click)="onCancel()"></button>
+                <button pButton label="{{ 'general.singular.save' | transloco }}" (click)="onSubmit()"></button>
+            </div>
+        </form>
     </div>
 </div>

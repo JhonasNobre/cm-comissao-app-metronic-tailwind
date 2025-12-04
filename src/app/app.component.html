@@ -1,4 +1,4 @@
 <p-toast position="top-right"></p-toast>
 <app-confirm-dialog></app-confirm-dialog>
-<app-loading-overlay [isLoading]="(loadingService.isLoading$ | async) ?? false"></app-loading-overlay>
+<app-loading-overlay [isLoading]="(loadingService.isLoading$ | async) === true"></app-loading-overlay>
 <router-outlet></router-outlet>

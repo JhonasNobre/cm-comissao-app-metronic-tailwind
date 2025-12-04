@@ -8,7 +8,6 @@ export enum CompanyStatus {
 }
 
 export interface Company extends BaseEntity {
-    id: string;
     name: string;
     tradeName: string; // Nome Fantasia
     cnpj: string;

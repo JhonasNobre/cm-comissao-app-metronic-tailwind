@@ -1,0 +1,103 @@
+{
+    "general": {
+        "singular": {
+            "new": "New",
+            "edit": "Edit",
+            "exclude": "Delete",
+            "cancel": "Cancel",
+            "save": "Save"
+        },
+        "validation": {
+            "required": "Field required"
+        },
+        "phrase": {
+            "sure_delete_item": "Are you sure you want to delete {{item}}?",
+            "delete_confirmation_header": "Confirm Delete"
+        },
+        "days": {
+            "sunday": "Sunday",
+            "monday": "Monday",
+            "tuesday": "Tuesday",
+            "wednesday": "Wednesday",
+            "thursday": "Thursday",
+            "friday": "Friday",
+            "saturday": "Saturday"
+        }
+    },
+    "base-components": {
+        "base-list": {
+            "default-item-name": "Item",
+            "sure-delete-item": "Are you sure you want to delete {{item}}?",
+            "operation-success": "Operation successful",
+            "error-remove-item": "Error removing item",
+            "delete-not-supported": "Delete not supported",
+            "add-not-supported": "Add not supported",
+            "edit-not-supported": "Edit not supported"
+        },
+        "base-forms": {
+            "validation-warning": "Please check invalid fields",
+            "save-success": "Saved successfully",
+            "reload-error": "Error reloading: {{error}}"
+        }
+    },
+    "SHARED": {
+        "COMMON": {
+            "CANCEL": "Cancel",
+            "BASE_LIST": {
+                "OPERATION_SUCCESS": "Operation successful",
+                "OPERATION_ERROR": "Operation error"
+            }
+        },
+        "COMPONENTS": {
+            "FORMS": {
+                "FORM_UPDATE": {
+                    "DATE_OF_LAST_CHANGE": "Last change on:"
+                }
+            }
+        }
+    },
+    "error": {
+        "error_load_data": "Error loading data"
+    },
+    "teams": {
+        "list": {
+            "header": "Teams List",
+            "new_team": "New Team",
+            "edit_team": "Edit Team"
+        },
+        "form": {
+            "name": "Team Name",
+            "access_profile": "Access Profile",
+            "select_profile": "Select a profile",
+            "time_restriction": "Time Restriction",
+            "block_holidays": "Block on National Holidays",
+            "holidays_uf": "Holidays State (UF)",
+            "ibge_code": "IBGE Code",
+            "allowed_times": "Allowed Times",
+            "day": "Day",
+            "start": "Start",
+            "end": "End",
+            "add_time": "Add Time"
+        }
+    },
+    "access_profile": {
+        "list": {
+            "header": "Access Profiles",
+            "new": "New Profile",
+            "edit": "Edit Profile"
+        },
+        "form": {
+            "name": "Profile Name",
+            "discount_limit": "Discount Limit (%)",
+            "max_reserves": "Max. Reserves",
+            "is_default": "Default Profile",
+            "permissions": "Permissions",
+            "resource": "Resource",
+            "create": "Create",
+            "read": "Read",
+            "update": "Update",
+            "delete": "Delete",
+            "scope": "Scope"
+        }
+    }
+}

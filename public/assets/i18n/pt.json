@@ -1,0 +1,103 @@
+{
+    "general": {
+        "singular": {
+            "new": "Novo",
+            "edit": "Editar",
+            "exclude": "Excluir",
+            "cancel": "Cancelar",
+            "save": "Salvar"
+        },
+        "validation": {
+            "required": "Campo obrigatório"
+        },
+        "phrase": {
+            "sure_delete_item": "Tem certeza que deseja excluir {{item}}?",
+            "delete_confirmation_header": "Confirmar Exclusão"
+        },
+        "days": {
+            "sunday": "Domingo",
+            "monday": "Segunda",
+            "tuesday": "Terça",
+            "wednesday": "Quarta",
+            "thursday": "Quinta",
+            "friday": "Sexta",
+            "saturday": "Sábado"
+        }
+    },
+    "base-components": {
+        "base-list": {
+            "default-item-name": "Item",
+            "sure-delete-item": "Tem certeza que deseja excluir {{item}}?",
+            "operation-success": "Operação realizada com sucesso",
+            "error-remove-item": "Erro ao remover item",
+            "delete-not-supported": "Exclusão não suportada",
+            "add-not-supported": "Adição não suportada",
+            "edit-not-supported": "Edição não suportada"
+        },
+        "base-forms": {
+            "validation-warning": "Por favor, verifique os campos inválidos",
+            "save-success": "Salvo com sucesso",
+            "reload-error": "Erro ao recarregar: {{error}}"
+        }
+    },
+    "SHARED": {
+        "COMMON": {
+            "CANCEL": "Cancelar",
+            "BASE_LIST": {
+                "OPERATION_SUCCESS": "Operação realizada com sucesso",
+                "OPERATION_ERROR": "Erro na operação"
+            }
+        },
+        "COMPONENTS": {
+            "FORMS": {
+                "FORM_UPDATE": {
+                    "DATE_OF_LAST_CHANGE": "Última alteração em:"
+                }
+            }
+        }
+    },
+    "error": {
+        "error_load_data": "Erro ao carregar dados"
+    },
+    "teams": {
+        "list": {
+            "header": "Lista de Equipes",
+            "new_team": "Nova Equipe",
+            "edit_team": "Editar Equipe"
+        },
+        "form": {
+            "name": "Nome da Equipe",
+            "access_profile": "Perfil de Acesso",
+            "select_profile": "Selecione um perfil",
+            "time_restriction": "Restrição de Horário",
+            "block_holidays": "Bloquear em Feriados Nacionais",
+            "holidays_uf": "UF Feriados",
+            "ibge_code": "Código IBGE",
+            "allowed_times": "Horários Permitidos",
+            "day": "Dia",
+            "start": "Início",
+            "end": "Fim",
+            "add_time": "Adicionar Horário"
+        }
+    },
+    "access_profile": {
+        "list": {
+            "header": "Perfis de Acesso",
+            "new": "Novo Perfil",
+            "edit": "Editar Perfil"
+        },
+        "form": {
+            "name": "Nome do Perfil",
+            "discount_limit": "Limite Desconto (%)",
+            "max_reserves": "Max. Reservas",
+            "is_default": "Perfil Padrão",
+            "permissions": "Permissões",
+            "resource": "Recurso",
+            "create": "Criar",
+            "read": "Ler",
+            "update": "Atualizar",
+            "delete": "Excluir",
+            "scope": "Escopo"
+        }
+    }
+}

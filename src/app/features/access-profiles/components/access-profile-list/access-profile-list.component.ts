@@ -1,10 +1,13 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { Observable } from 'rxjs';
 import { AccessProfileService } from '../../services/access-profile.service';
 import { AccessProfile } from '../../models/access-profile.model';
 import { GenericPTableComponent } from '../../../../shared/components/ui/generic-p-table/generic-p-table.component';
 import { ColumnHeader } from '../../../../shared/models/column-header.model';
+import { BaseListComponent } from '../../../../shared/components/base/base-list/base-list.component';
+import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
     selector: 'app-access-profile-list',
@@ -12,15 +15,17 @@ import { ColumnHeader } from '../../../../shared/models/column-header.model';
     imports: [
         CommonModule,
         RouterModule,
-        GenericPTableComponent
+        GenericPTableComponent,
+        TranslocoModule
     ],
     templateUrl: './access-profile-list.component.html'
 })
-export class AccessProfileListComponent implements OnInit {
+export class AccessProfileListComponent extends BaseListComponent<AccessProfile> {
     private service = inject(AccessProfileService);
-    private router = inject(Router);
+    private route = inject(ActivatedRoute);
 
-    profiles: AccessProfile[] = [];
+    protected storageKey = 'access-profile-list';
+
     columns: ColumnHeader<AccessProfile>[] = [
         { field: 'nome', header: 'Nome' },
         { field: 'limiteDescontoMaximo', header: 'Limite Desconto (%)' },
@@ -28,35 +33,30 @@ export class AccessProfileListComponent implements OnInit {
         { field: 'ehPadrao', header: 'Padrão', displayAs: 'yesNo' }
     ];
 
-    ngOnInit(): void {
-        this.loadProfiles();
+    protected loadData(params: any): Observable<AccessProfile[]> {
+        return this.service.list(params);
     }
 
-    loadProfiles() {
-        this.service.list().subscribe({
-            next: (data) => {
-                this.profiles = data;
-            },
-            error: (err) => console.error('Error loading profiles', err)
-        });
+    protected override onDelete(id: string): Observable<void> {
+        return this.service.delete(id);
     }
 
-    onNew(): void {
-        this.router.navigate(['/access-profiles/new']);
+    protected override onAdd(object: AccessProfile): Observable<any> {
+        // Not used for routing based add, but required by abstract
+        return new Observable();
     }
 
-    onEdit(item: AccessProfile) {
-        this.router.navigate(['/access-profiles', item.id]);
+    protected override onEdit(object: AccessProfile, id: string): Observable<any> {
+        // Not used for routing based edit, but required by abstract
+        return new Observable();
     }
 
-    onDelete(item: AccessProfile) {
-        if (confirm(`Deseja realmente excluir o perfil "${item.nome}"?`)) {
-            this.service.delete(item.id).subscribe({
-                next: () => {
-                    this.profiles = this.profiles.filter(p => p.id !== item.id);
-                },
-                error: (err) => console.error('Error deleting profile', err)
-            });
+    // Override openDialog to navigate instead
+    override openDialog(object?: AccessProfile) {
+        if (object?.id) {
+            this.router.navigate([object.id], { relativeTo: this.route });
+        } else {
+            this.router.navigate(['new'], { relativeTo: this.route });
         }
     }
 }

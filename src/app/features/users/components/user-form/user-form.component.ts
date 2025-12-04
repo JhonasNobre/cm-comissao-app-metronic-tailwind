@@ -16,7 +16,9 @@ import { MessageService } from 'primeng/api';
 import { UserService } from '../../services/user.service';
 import { AccessProfileService } from '../../../access-profiles/services/access-profile.service';
 import { TeamService } from '../../../teams/services/team.service';
+import { CompanyService } from '../../../companies/services/company.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { SystemService } from '../../../../core/services/system.service';
 import { UserRole } from '../../models/user.model';
 
 @Component({
@@ -46,10 +48,12 @@ export class UserFormComponent implements OnInit {
     private service = inject(UserService);
     private profileService = inject(AccessProfileService);
     private teamService = inject(TeamService);
+    private companyService = inject(CompanyService);
     private authService = inject(AuthService);
     private router = inject(Router);
     private route = inject(ActivatedRoute);
     private messageService = inject(MessageService);
+    private systemService = inject(SystemService);
 
     form!: FormGroup;
     isEditMode = false;
@@ -57,33 +61,30 @@ export class UserFormComponent implements OnInit {
     loading = false;
     accessProfiles: any[] = [];
     teams: any[] = [];
+    companies: any[] = [];
     hasRestricaoHorario = false;
 
     get isManager(): boolean {
         return this.authService.hasRole('Gestor') || this.authService.hasRole('Admin');
     }
 
-    userRoleOptions = [
-        { label: 'Colaborador', value: UserRole.COLABORADOR },
-        { label: 'Cliente', value: UserRole.CLIENTE },
-        { label: 'Administrador', value: UserRole.ADMINISTRADOR }
-    ];
-
-    diasSemanaOptions = [
-        { label: 'Domingo', value: 0 },
-        { label: 'Segunda', value: 1 },
-        { label: 'Terça', value: 2 },
-        { label: 'Quarta', value: 3 },
-        { label: 'Quinta', value: 4 },
-        { label: 'Sexta', value: 5 },
-        { label: 'Sábado', value: 6 }
-    ];
+    userRoleOptions: any[] = [];
+    keycloakRoleOptions: any[] = [];
+    diasSemanaOptions: any[] = [];
 
     ngOnInit(): void {
         this.initForm();
         this.loadAccessProfiles();
         this.loadTeams();
+        this.loadCompanies();
+        this.loadSystemOptions();
         this.checkEditMode();
+    }
+
+    private loadSystemOptions(): void {
+        this.systemService.getRoles().subscribe(data => this.keycloakRoleOptions = data);
+        this.systemService.getUserTypes().subscribe(data => this.userRoleOptions = data);
+        this.systemService.getDaysOfWeek().subscribe(data => this.diasSemanaOptions = data);
     }
 
     private initForm(): void {
@@ -95,8 +96,8 @@ export class UserFormComponent implements OnInit {
             senha: ['', [Validators.required, Validators.minLength(8)]],
             role: ['', [Validators.required]], // Keycloak Role
             perfilAcessoId: [null],
-            tipoUsuario: [UserRole.COLABORADOR, [Validators.required]],
-            idEmpresa: ['3fa85f64-5717-4562-b3fc-2c963f66afa6'], // TODO: Get from context
+            tipoUsuario: [null, [Validators.required]],
+            idEmpresa: [null, [Validators.required]],
             equipeIds: [[]],
             restricaoHorario: this.fb.group({
                 bloquearEmFeriadosNacionais: [false],
@@ -154,6 +155,13 @@ export class UserFormComponent implements OnInit {
         });
     }
 
+    private loadCompanies(): void {
+        this.companyService.list().subscribe({
+            next: (data) => this.companies = data,
+            error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar imobiliárias' })
+        });
+    }
+
     private checkEditMode(): void {
         this.route.params.subscribe(params => {
             if (params['id']) {
@@ -183,6 +191,7 @@ export class UserFormComponent implements OnInit {
                     tipoUsuario: user.tipoUsuario,
                     role: user.role,
                     perfilAcessoId: user.perfilAcessoId,
+                    idEmpresa: user.idEmpresa,
                     equipeIds: user.equipeIds || []
                 });
 

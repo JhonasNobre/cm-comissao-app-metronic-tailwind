@@ -11,8 +11,6 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 
-import { Session } from '../../../models/common/session.model';
-import { SessionService } from '../../../services/session.service';
 import { FormFieldErrorComponent } from '../../forms/form-field-error/form-field-error.component';
 import { FormItemBase } from './models/form-item-base';
 
@@ -28,7 +26,7 @@ export class DynamicFormQuestionComponent implements OnInit {
     @Input() form!: FormGroup;
     @Output() checkEvent = new EventEmitter<boolean>();
 
-    session: Session | undefined;
+    // session: Session | undefined;
     optCurrency = { prefix: '', thousands: '.', decimal: ',' };
     currencyCode = 'BRL';
 
@@ -50,18 +48,18 @@ export class DynamicFormQuestionComponent implements OnInit {
         'USD': 'USD',   // EUA
     };
 
-    constructor(private sessionService: SessionService, private cdr: ChangeDetectorRef) {}
+    constructor(private cdr: ChangeDetectorRef) { }
 
     async ngOnInit(): Promise<void> {
-        this.session = await this.sessionService.getSession();
-        let rawCurrency = this.session?.countryCustom?.currencyCode;
-        // Se vier símbolo, converte para código ISO
-        this.currencyCode = DynamicFormQuestionComponent.currencyMap[rawCurrency ?? ''] || rawCurrency || 'BRL';
-        if (this.session?.countryCustom?.currencyCode) {
-            this.optCurrency.prefix = `${this.session.countryCustom.currencyCode} `;
-        } else {
-            this.optCurrency.prefix = '';
-        }
+        // this.session = await this.sessionService.getSession();
+        // let rawCurrency = this.session?.countryCustom?.currencyCode;
+        // // Se vier símbolo, converte para código ISO
+        // this.currencyCode = DynamicFormQuestionComponent.currencyMap[rawCurrency ?? ''] || rawCurrency || 'BRL';
+        // if (this.session?.countryCustom?.currencyCode) {
+        //     this.optCurrency.prefix = `${this.session.countryCustom.currencyCode} `;
+        // } else {
+        //     this.optCurrency.prefix = '';
+        // }
         this.cdr.detectChanges();
     }
 

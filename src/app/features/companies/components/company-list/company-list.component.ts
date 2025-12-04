@@ -1,12 +1,15 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { CompanyService } from '../../services/company.service';
 import { Company } from '../../models/company.model';
 import { GenericPTableComponent } from '../../../../shared/components/ui/generic-p-table/generic-p-table.component';
 import { ColumnHeader } from '../../../../shared/models/column-header.model';
-import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { BaseListComponent } from '../../../../shared/components/base/base-list/base-list.component';
+import { CompanyFormService } from '../../services/company-form.service';
+import { FormItemBase } from '../../../../shared/components/ui/dynamic-form/models/form-item-base';
+import { Observable } from 'rxjs';
 
 @Component({
     selector: 'app-company-list',
@@ -17,60 +20,73 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
         GenericPTableComponent,
         ConfirmDialogModule
     ],
-    providers: [ConfirmationService],
     templateUrl: './company-list.component.html'
 })
-export class CompanyListComponent implements OnInit {
+export class CompanyListComponent extends BaseListComponent<Company> implements OnInit {
     private companyService = inject(CompanyService);
-    private router = inject(Router);
-    private confirmationService = inject(ConfirmationService);
+    private companyFormService = inject(CompanyFormService);
 
-    companies: Company[] = [];
-    loading: boolean = true;
+    protected storageKey = 'company-list-search';
     columns: ColumnHeader<Company>[] = [];
 
-    ngOnInit(): void {
+    override ngOnInit(): void {
+        super.ngOnInit();
         this.initializeColumns();
-        this.loadCompanies();
     }
 
     private initializeColumns(): void {
         this.columns = [
-            { field: 'nome', header: 'Razão Social' },
-            { field: 'cnpj', header: 'CNPJ' }
+            { field: 'name', header: 'Razão Social' },
+            { field: 'tradeName', header: 'Nome Fantasia' },
+            { field: 'cnpj', header: 'CNPJ' },
+            {
+                field: 'status',
+                header: 'Status',
+                displayAs: 'badge',
+                badgeSeverityMap: {
+                    'ACTIVE': 'success',
+                    'INACTIVE': 'danger',
+                    'PENDING': 'warn',
+                    'BLOCKED': 'secondary'
+                }
+            }
         ];
     }
 
-    private loadCompanies(): void {
-        this.companyService.list().subscribe((data) => {
-            this.companies = data;
-            this.loading = false;
-        });
+    protected loadData(params: any): Observable<Company[]> {
+        return this.companyService.list(params);
     }
 
-    onAdd(): void {
-        this.router.navigate(['/companies/new']);
+    protected override getFormItems(object?: Company): FormItemBase[] {
+        return this.companyFormService.getFormFields(object);
     }
 
-    onEdit(company: Company): void {
-        this.router.navigate(['/companies', company.id]);
+    protected override getObjectName(object?: Company): string | undefined {
+        return object?.name || 'Empresa';
     }
 
-    onDelete(company: Company): void {
-        this.confirmationService.confirm({
-            message: `Deseja realmente excluir a empresa "${company.name}"?`,
-            header: 'Confirmar Exclusão',
-            icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Sim, excluir',
-            rejectLabel: 'Cancelar',
-            accept: () => {
-                this.companyService.delete(company.id).subscribe({
-                    next: () => {
-                        this.companies = this.companies.filter(c => c.id !== company.id);
-                    },
-                    error: (err) => console.error('Error deleting company', err)
-                });
-            }
-        });
+    protected override onAdd(object: Company): Observable<any> {
+        return this.companyService.create(object);
+    }
+
+    protected override onEdit(object: Company, id: string | number): Observable<any> {
+        return this.companyService.update(object, id.toString());
+    }
+
+    protected override onDelete(id: string | number): Observable<void> {
+        return this.companyService.delete(id.toString());
+    }
+
+    // Métodos chamados pelo template
+    onAddClick(): void {
+        this.openDialog();
+    }
+
+    onEditClick(company: Company): void {
+        this.openDialog(company);
+    }
+
+    onDeleteClick(company: Company): void {
+        this.onRemover(company);
     }
 }

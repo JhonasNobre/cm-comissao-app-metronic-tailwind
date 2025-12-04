@@ -266,7 +266,7 @@ export class AuthService {
             return;
         }
 
-        this.http.post<LoginResponse>(`${environment.apiUrl}/authentication/refresh`, { refresh_token: refreshToken })
+        this.http.post<LoginResponse>(`${environment.apiUrl}/authentication/refresh`, { RefreshToken: refreshToken })
             .pipe(
                 catchError(error => {
                     console.error('Failed to refresh token', error);

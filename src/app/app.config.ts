@@ -12,6 +12,8 @@ import { DialogService } from 'primeng/dynamicdialog';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { provideTransloco } from '@jsverse/transloco';
+import { TranslocoHttpLoader } from './transloco-loader';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -36,6 +38,16 @@ export const appConfig: ApplicationConfig = {
     }),
     MessageService,
     ConfirmationService,
-    DialogService
+    DialogService,
+    provideTransloco({
+      config: {
+        availableLangs: ['pt', 'en'],
+        defaultLang: 'pt',
+        // Remove this option if your application doesn't support changing language in runtime.
+        reRenderOnLangChange: true,
+        prodMode: false,
+      },
+      loader: TranslocoHttpLoader
+    })
   ]
 };
