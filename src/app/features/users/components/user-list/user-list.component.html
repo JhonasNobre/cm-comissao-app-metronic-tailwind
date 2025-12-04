@@ -6,10 +6,7 @@
             </h1>
         </div>
         <div class="flex items-center gap-2.5">
-            <button class="kt-btn kt-btn-primary" (click)="onNew()">
-                <i class="ki-filled ki-plus"></i>
-                Novo Usuário
-            </button>
+            <!-- Botão Novo Usuário removido -->
         </div>
     </div>
 </div>
@@ -17,7 +14,7 @@
 <div class="kt-container-fluid">
     <div class="grid gap-5 lg:gap-7.5">
         <app-generic-p-table tableName="user-list" [tableData]="users" [columnDefinition]="columns" [rows]="10"
-            [displayEditAction]="true" [displayDeleteAction]="true" (edit)="onEdit($event)" (delete)="onDelete($event)">
+            [displayEditAction]="true" [displayDeleteAction]="false" (edit)="onEdit($event)">
         </app-generic-p-table>
     </div>
 </div>

@@ -97,14 +97,10 @@
                             </div>
 
                             <div class="flex flex-col gap-2">
-                                <label class="font-semibold text-gray-700 required">Role (Keycloak)</label>
-                                <p-select [options]="keycloakRoleOptions" formControlName="role" optionLabel="label"
-                                    optionValue="value" placeholder="Selecione uma role" styleClass="w-full"
-                                    [style]="{'width':'100%'}" appendTo="body"></p-select>
-                                <small *ngIf="form.get('role')?.invalid && form.get('role')?.touched"
-                                    class="text-red-500">
-                                    Role é obrigatória.
-                                </small>
+                                <label class="font-semibold text-gray-700">Role (Keycloak)</label>
+                                <div class="p-3 bg-gray-100 rounded border border-gray-300 text-gray-600">
+                                    {{ getRoleLabel(form.get('role')?.value) || 'Sem role definida' }}
+                                </div>
                             </div>
 
                             <div class="flex flex-col gap-2">
@@ -132,8 +128,8 @@
                             <!-- MultiSelect (N equipes) para gestores/admins -->
                             <p-multiSelect *ngIf="isManager" [options]="teams" formControlName="equipeIds"
                                 optionLabel="nome" optionValue="id" placeholder="Selecione as equipes"
-                                styleClass="w-full" [style]="{'width':'100%'}" appendTo="body"
-                                [showClear]="true"></p-multiSelect>
+                                styleClass="w-full" [style]="{'width':'100%'}" appendTo="body" [showClear]="true"
+                                display="chip"></p-multiSelect>
                         </div>
                     </div>
 
@@ -231,6 +227,18 @@
 
                     <!-- Ações -->
                     <div class="flex justify-end gap-3 pt-5 mt-4 border-t border-gray-200">
+                        <button *ngIf="isEditMode && !isInactive && !isProtected" type="button"
+                            class="kt-btn kt-btn-danger mr-auto" (click)="onInactivate()">
+                            <i class="ki-filled ki-cross-circle"></i>
+                            Inativar Usuário
+                        </button>
+
+                        <button *ngIf="isEditMode && isInactive" type="button" class="kt-btn kt-btn-success mr-auto"
+                            (click)="onReactivate()">
+                            <i class="ki-filled ki-check-circle"></i>
+                            Habilitar Usuário
+                        </button>
+
                         <button type="button" class="kt-btn kt-btn-light" (click)="onCancel()">
                             Cancelar
                         </button>

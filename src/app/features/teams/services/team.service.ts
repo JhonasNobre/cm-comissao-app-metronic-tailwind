@@ -33,4 +33,8 @@ export class TeamService extends BaseService {
     delete(id: string): Observable<void> {
         return this.http.delete<void>(`${this.baseUrl}/${id}`);
     }
+
+    addMember(teamId: string, userId: string): Observable<void> {
+        return this.http.post<void>(`${this.baseUrl}/${teamId}/membros/${userId}`, {});
+    }
 }

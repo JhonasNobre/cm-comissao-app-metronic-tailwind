@@ -20,6 +20,7 @@ import { CompanyService } from '../../../companies/services/company.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SystemService } from '../../../../core/services/system.service';
 import { UserRole } from '../../models/user.model';
+import { AppConfirmationService } from '../../../../shared/services/confirmation.service';
 
 @Component({
     selector: 'app-user-form',
@@ -54,6 +55,7 @@ export class UserFormComponent implements OnInit {
     private route = inject(ActivatedRoute);
     private messageService = inject(MessageService);
     private systemService = inject(SystemService);
+    private confirmationService = inject(AppConfirmationService);
 
     form!: FormGroup;
     isEditMode = false;
@@ -63,6 +65,8 @@ export class UserFormComponent implements OnInit {
     teams: any[] = [];
     companies: any[] = [];
     hasRestricaoHorario = false;
+    isProtected = false;
+    isInactive = false;
 
     get isManager(): boolean {
         return this.authService.hasRole('Gestor') || this.authService.hasRole('Admin');
@@ -71,6 +75,11 @@ export class UserFormComponent implements OnInit {
     userRoleOptions: any[] = [];
     keycloakRoleOptions: any[] = [];
     diasSemanaOptions: any[] = [];
+
+    getRoleLabel(value: string): string {
+        const role = this.keycloakRoleOptions.find(r => r.value === value);
+        return role ? role.label : value;
+    }
 
     ngOnInit(): void {
         this.initForm();
@@ -195,6 +204,9 @@ export class UserFormComponent implements OnInit {
                     equipeIds: user.equipeIds || []
                 });
 
+                this.isProtected = user.isProtected;
+                this.isInactive = user.inativo;
+
                 if (user.restricaoHorario) {
                     this.hasRestricaoHorario = true;
                     this.form.get('restricaoHorario')?.patchValue({
@@ -271,5 +283,55 @@ export class UserFormComponent implements OnInit {
 
     onCancel(): void {
         this.router.navigate(['/users']);
+    }
+
+    onInactivate(): void {
+        if (!this.userId) return;
+
+        this.confirmationService.confirm({
+            header: 'Confirmar Inativação',
+            message: 'Tem certeza que deseja inativar este usuário? Ele perderá o acesso ao sistema.',
+            acceptLabel: 'Inativar',
+            acceptButtonStyleClass: 'p-button-danger',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.loading = true;
+                this.service.inativar([this.userId!]).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Usuário inativado com sucesso' });
+                        this.loadUser(this.userId!); // Reload to update status
+                    },
+                    error: () => {
+                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao inativar usuário' });
+                        this.loading = false;
+                    }
+                });
+            }
+        });
+    }
+
+    onReactivate(): void {
+        if (!this.userId) return;
+
+        this.confirmationService.confirm({
+            header: 'Confirmar Reativação',
+            message: 'Deseja reativar este usuário? Ele voltará a ter acesso ao sistema.',
+            acceptLabel: 'Habilitar Usuário',
+            acceptButtonStyleClass: 'p-button-success',
+            icon: 'pi pi-check-circle',
+            accept: () => {
+                this.loading = true;
+                this.service.reativar([this.userId!]).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Usuário reativado com sucesso' });
+                        this.loadUser(this.userId!); // Reload to update status
+                    },
+                    error: () => {
+                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao reativar usuário' });
+                        this.loading = false;
+                    }
+                });
+            }
+        });
     }
 }
