@@ -1,0 +1,39 @@
+<p-confirmDialog></p-confirmDialog>
+
+<div class="kt-container-fluid">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">
+                Gerenciamento de Feriados
+            </h1>
+            <span class="text-sm text-gray-600">
+                Cadastre e gerencie os feriados do sistema
+            </span>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <!-- Filtro de Ano -->
+            <select [(ngModel)]="selectedYear" (change)="onFilterChange()" class="kt-select kt-select-sm min-w-24">
+                <option [ngValue]="null">Todos os anos</option>
+                <option *ngFor="let year of years" [ngValue]="year">{{ year }}</option>
+            </select>
+
+            <!-- Filtro de Tipo -->
+            <select [(ngModel)]="selectedType" (change)="onFilterChange()" class="kt-select kt-select-sm min-w-28">
+                <option *ngFor="let type of types" [ngValue]="type.value">{{ type.label }}</option>
+            </select>
+
+            <!-- Filtro de UF -->
+            <input type="text" [(ngModel)]="selectedState" (blur)="onFilterChange()" placeholder="UF" maxlength="2"
+                class="kt-input kt-input-sm w-16 uppercase">
+        </div>
+    </div>
+</div>
+
+<div class="kt-container-fluid">
+    <div class="grid gap-5 lg:gap-7.5">
+        <app-generic-p-table tableName="holiday-list" [tableData]="itens" [columnDefinition]="columns" [rows]="10"
+            [displayCreateAction]="true" (add)="onAddClick()" [displayEditAction]="true" (edit)="onEditClick($event)"
+            [displayDeleteAction]="true" (delete)="onDeleteClick($event)">
+        </app-generic-p-table>
+    </div>
+</div>

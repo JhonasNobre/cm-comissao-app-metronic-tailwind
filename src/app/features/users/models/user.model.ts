@@ -24,7 +24,7 @@ export interface UserCreateDTO {
     email: string;
     telefone: string;
     senha: string;
-    idEmpresa: string;
+    empresaIds: string[];
     role: string; // Keycloak role
     tipoUsuario: UserRole;
     restricaoHorario?: any;
@@ -40,6 +40,7 @@ export interface UserUpdateDTO {
     tipoUsuario: UserRole;
     restricaoHorario?: any;
     equipeIds?: string[];
+    empresaIds?: string[];
 }
 
 export enum UserRole {

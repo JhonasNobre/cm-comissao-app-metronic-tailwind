@@ -69,7 +69,7 @@ export class UserFormComponent implements OnInit {
     isInactive = false;
 
     get isManager(): boolean {
-        return this.authService.hasRole('Gestor') || this.authService.hasRole('Admin');
+        return this.authService.isGestor() || this.authService.isAdmin();
     }
 
     userRoleOptions: any[] = [];
@@ -106,7 +106,7 @@ export class UserFormComponent implements OnInit {
             role: ['', [Validators.required]], // Keycloak Role
             perfilAcessoId: [null],
             tipoUsuario: [null, [Validators.required]],
-            idEmpresa: [null, [Validators.required]],
+            empresaIds: [[], [Validators.required]],
             equipeIds: [[]],
             restricaoHorario: this.fb.group({
                 bloquearEmFeriadosNacionais: [false],
@@ -237,7 +237,7 @@ export class UserFormComponent implements OnInit {
                     tipoUsuario: user.tipoUsuario,
                     role: user.role,
                     perfilAcessoId: user.perfilAcessoId,
-                    idEmpresa: user.idEmpresa,
+                    empresaIds: user.empresaIds || [],
                     equipeIds: user.equipeIds || []
                 });
 
@@ -292,7 +292,7 @@ export class UserFormComponent implements OnInit {
 
         if (this.isEditMode && this.userId) {
             // Remove fields that shouldn't be sent on update
-            const { cpf, email, senha, idEmpresa, ...updatePayload } = payload;
+            const { cpf, email, senha, empresaIds, ...updatePayload } = payload;
             updatePayload.id = this.userId;
 
             this.service.update(updatePayload, this.userId).subscribe({

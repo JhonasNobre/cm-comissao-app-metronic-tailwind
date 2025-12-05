@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginRequest, LoginResponse } from '../models/auth.model';
+import { EmpresaSelectorService, EmpresaInfo } from './empresa-selector.service';
 
 /**
  * Serviço de autenticação usando API Backend (JWT)
@@ -24,7 +25,8 @@ export class AuthService {
 
     constructor(
         private http: HttpClient,
-        private router: Router
+        private router: Router,
+        private empresaSelectorService: EmpresaSelectorService
     ) {
         this.checkToken();
     }
@@ -68,6 +70,7 @@ export class AuthService {
         }
         this.isAuthenticatedSubject.next(true);
         this.updateCurrentUser(token);
+        this.updateEmpresaSelector();
         this.scheduleTokenRefresh(token);
     }
 
@@ -92,6 +95,7 @@ export class AuthService {
         this.isAuthenticatedSubject.next(false);
         this.currentUserSubject.next(null);
         this.cancelTokenRefresh();
+        this.empresaSelectorService.clear();
         this.router.navigate(['/auth/login']);
     }
 
@@ -170,6 +174,44 @@ export class AuthService {
         // Extrair UUID do formato: /empresa_{UUID} ou empresa_{UUID}
         const match = empresaGroup.match(/empresa_([a-f0-9-]+)/i);
         return match ? match[1] : null;
+    }
+
+    /**
+     * Obtém todas as empresas do usuário (para multiselect)
+     * Extrai do claim 'groups' no formato: /empresa_{UUID}
+     */
+    getEmpresas(): EmpresaInfo[] {
+        const claims = this.getUserInfo();
+
+        if (!claims || !claims.groups) {
+            return [];
+        }
+
+        // Groups pode ser array ou string
+        const groups = Array.isArray(claims.groups) ? claims.groups : [claims.groups];
+
+        // Filtrar grupos de empresa e extrair UUIDs
+        return groups
+            .filter((g: string) => g.includes('empresa_'))
+            .map((g: string) => {
+                const match = g.match(/empresa_([a-f0-9-]+)/i);
+                if (match) {
+                    return {
+                        id: match[1],
+                        nome: `Empresa ${match[1].substring(0, 8)}...` // Nome temporário
+                    };
+                }
+                return null;
+            })
+            .filter((e: EmpresaInfo | null): e is EmpresaInfo => e !== null);
+    }
+
+    /**
+     * Atualiza o EmpresaSelectorService com as empresas do usuário
+     */
+    private updateEmpresaSelector(): void {
+        const empresas = this.getEmpresas();
+        this.empresaSelectorService.setUserEmpresas(empresas);
     }
 
     /**

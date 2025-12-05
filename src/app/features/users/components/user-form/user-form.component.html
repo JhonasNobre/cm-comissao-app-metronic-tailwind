@@ -78,14 +78,14 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                             <div class="flex flex-col gap-2">
-                                <label class="font-semibold text-gray-700 required">Imobiliária</label>
-                                <p-select formControlName="idEmpresa" [options]="companies" optionLabel="nome"
-                                    optionValue="id" placeholder="Selecione uma imobiliária" [style]="{'width':'100%'}"
-                                    appendTo="body" [filter]="true" filterBy="nome" [showClear]="true">
-                                </p-select>
+                                <label class="font-semibold text-gray-700 required">Imobiliárias</label>
+                                <p-multiSelect formControlName="empresaIds" [options]="companies" optionLabel="nome"
+                                    optionValue="id" placeholder="Selecione as imobiliárias" [style]="{'width':'100%'}"
+                                    appendTo="body" [filter]="true" filterBy="nome" [showClear]="true" display="chip">
+                                </p-multiSelect>
                                 <small class="text-red-500"
-                                    *ngIf="form.get('idEmpresa')?.invalid && form.get('idEmpresa')?.touched">
-                                    A imobiliária é obrigatória
+                                    *ngIf="form.get('empresaIds')?.invalid && form.get('empresaIds')?.touched">
+                                    Selecione ao menos uma imobiliária
                                 </small>
                             </div>
 
