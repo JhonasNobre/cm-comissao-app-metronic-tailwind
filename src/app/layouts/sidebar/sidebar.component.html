@@ -24,6 +24,7 @@
 		<div class="kt-menu flex flex-col grow gap-1" data-kt-menu="true" data-kt-menu-accordion-expand-all="false"
 			id="sidebar_menu">
 
+
 			<!-- Dashboards Menu Item -->
 			<div class="kt-menu-item" data-kt-menu-item-toggle="accordion" data-kt-menu-item-trigger="click">
 				<div class="kt-menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
@@ -36,12 +37,8 @@
 						Dashboards
 					</span>
 					<span class="kt-menu-arrow text-muted-foreground w-[20px] shrink-0 justify-end ms-1 me-[-10px]">
-						<span class="inline-flex kt-menu-item-show:hidden">
-							<i class="ki-filled ki-plus text-[11px]"></i>
-						</span>
-						<span class="hidden kt-menu-item-show:inline-flex">
-							<i class="ki-filled ki-minus text-[11px]"></i>
-						</span>
+						<i class="ki-filled ki-plus text-[11px] kt-menu-item-show:hidden"></i>
+						<i class="ki-filled ki-minus text-[11px] hidden kt-menu-item-show:inline-flex"></i>
 					</span>
 				</div>
 				<div
@@ -54,92 +51,192 @@
 							</span>
 							<span
 								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
-								Light Sidebar
-							</span>
-						</a>
-					</div>
-					<div class="kt-menu-item">
-						<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
-							routerLink="/" tabindex="0">
-							<span
-								class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary">
-							</span>
-							<span
-								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
-								Dark Sidebar
+								Principal
 							</span>
 						</a>
 					</div>
 				</div>
 			</div>
-			<!-- Users Menu Item -->
-			<div class="kt-menu-item">
-				<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[6px]"
-					routerLink="/users" tabindex="0">
+
+			<!-- Separator -->
+			<div class="kt-menu-separator border-b border-border my-2"></div>
+
+			<!-- Cadastros Group -->
+			<div class="kt-menu-item" data-kt-menu-item-toggle="accordion" data-kt-menu-item-trigger="click">
+				<div class="kt-menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
+					tabindex="0">
 					<span class="kt-menu-icon items-start text-muted-foreground w-[20px]">
-						<i class="ki-filled ki-users text-lg"></i>
+						<i class="ki-filled ki-data text-lg"></i>
 					</span>
 					<span
 						class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">
-						Usuários
+						Cadastros
 					</span>
-				</a>
+					<span class="kt-menu-arrow text-muted-foreground w-[20px] shrink-0 justify-end ms-1 me-[-10px]">
+						<i class="ki-filled ki-plus text-[11px] kt-menu-item-show:hidden"></i>
+						<i class="ki-filled ki-minus text-[11px] hidden kt-menu-item-show:inline-flex"></i>
+					</span>
+				</div>
+				<div
+					class="kt-menu-accordion gap-1 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-border">
+					<!-- Users -->
+					<div class="kt-menu-item">
+						<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+							routerLink="/users" tabindex="0">
+							<span
+								class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+							<span
+								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+								Usuários
+							</span>
+						</a>
+					</div>
+					<!-- Companies -->
+					<div class="kt-menu-item">
+						<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+							routerLink="/companies" tabindex="0">
+							<span
+								class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+							<span
+								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+								Empresas
+							</span>
+						</a>
+					</div>
+					<!-- Teams -->
+					<div class="kt-menu-item">
+						<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+							routerLink="/teams" tabindex="0">
+							<span
+								class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+							<span
+								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+								Equipes
+							</span>
+						</a>
+					</div>
+					<!-- Profiles -->
+					<div class="kt-menu-item">
+						<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+							routerLink="/access-profiles" tabindex="0">
+							<span
+								class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+							<span
+								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+								Perfis de Acesso
+							</span>
+						</a>
+					</div>
+				</div>
 			</div>
 
-			<!-- Companies Menu Item -->
-			<div class="kt-menu-item">
-				<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[6px]"
-					routerLink="/companies" tabindex="0">
+			<!-- Comissões Group -->
+			<div class="kt-menu-item" data-kt-menu-item-toggle="accordion" data-kt-menu-item-trigger="click">
+				<div class="kt-menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
+					tabindex="0">
 					<span class="kt-menu-icon items-start text-muted-foreground w-[20px]">
-						<i class="ki-filled ki-briefcase text-lg"></i>
+						<i class="ki-filled ki-dollar text-lg"></i>
 					</span>
 					<span
 						class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">
-						Empresas
+						Comissões
 					</span>
-				</a>
+					<span class="kt-menu-arrow text-muted-foreground w-[20px] shrink-0 justify-end ms-1 me-[-10px]">
+						<i class="ki-filled ki-plus text-[11px] kt-menu-item-show:hidden"></i>
+						<i class="ki-filled ki-minus text-[11px] hidden kt-menu-item-show:inline-flex"></i>
+					</span>
+				</div>
+				<div
+					class="kt-menu-accordion gap-1 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-border">
+					<!-- Estruturas -->
+					<div class="kt-menu-item">
+						<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+							routerLink="/comissoes/estruturas" tabindex="0">
+							<span
+								class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+							<span
+								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+								Estruturas
+							</span>
+						</a>
+					</div>
+					<!-- Regras (Em Breve) -->
+					<div class="kt-menu-item">
+						<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+							routerLink="/comissoes/regras" tabindex="0">
+							<span
+								class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+							<span
+								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+								Regras (Em Breve)
+							</span>
+						</a>
+					</div>
+					<!-- Cálculo (Em Breve) -->
+					<div class="kt-menu-item">
+						<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+							routerLink="/comissoes/calculo" tabindex="0">
+							<span
+								class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+							<span
+								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+								Cálculo e Fechamento
+							</span>
+						</a>
+					</div>
+				</div>
 			</div>
-			<!-- Teams Menu Item -->
-			<div class="kt-menu-item">
-				<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[6px]"
-					routerLink="/teams" tabindex="0">
+
+			<!-- Configurações Group -->
+			<div class="kt-menu-item" data-kt-menu-item-toggle="accordion" data-kt-menu-item-trigger="click">
+				<div class="kt-menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
+					tabindex="0">
 					<span class="kt-menu-icon items-start text-muted-foreground w-[20px]">
-						<i class="ki-filled ki-people text-lg"></i>
+						<i class="ki-filled ki-gear text-lg"></i>
 					</span>
 					<span
 						class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">
-						Equipes
+						Configurações
 					</span>
-				</a>
+					<span class="kt-menu-arrow text-muted-foreground w-[20px] shrink-0 justify-end ms-1 me-[-10px]">
+						<i class="ki-filled ki-plus text-[11px] kt-menu-item-show:hidden"></i>
+						<i class="ki-filled ki-minus text-[11px] hidden kt-menu-item-show:inline-flex"></i>
+					</span>
+				</div>
+				<div
+					class="kt-menu-accordion gap-1 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-border">
+					<!-- Feriados -->
+					<div class="kt-menu-item">
+						<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+							routerLink="/holidays" tabindex="0">
+							<span
+								class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+							<span
+								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+								Feriados
+							</span>
+						</a>
+					</div>
+					<!-- Integrações (Em Breve) -->
+					<div class="kt-menu-item">
+						<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+							routerLink="/config/integracoes" tabindex="0">
+							<span
+								class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+							<span
+								class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+								Integrações
+							</span>
+						</a>
+					</div>
+				</div>
 			</div>
-			<!-- Access Profiles Menu Item -->
-			<div class="kt-menu-item">
-				<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[6px]"
-					routerLink="/access-profiles" tabindex="0">
-					<span class="kt-menu-icon items-start text-muted-foreground w-[20px]">
-						<i class="ki-filled ki-shield-tick text-lg"></i>
-					</span>
-					<span
-						class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">
-						Perfis de Acesso
-					</span>
-				</a>
-			</div>
-			<!-- Holidays Menu Item -->
-			<div class="kt-menu-item">
-				<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[6px]"
-					routerLink="/holidays" tabindex="0">
-					<span class="kt-menu-icon items-start text-muted-foreground w-[20px]">
-						<i class="ki-filled ki-calendar text-lg"></i>
-					</span>
-					<span
-						class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">
-						Feriados
-					</span>
-				</a>
-			</div>
-			<!-- Test Page Menu Item -->
-			<div class="kt-menu-item">
+
+			<!-- Separator -->
+			<div class="kt-menu-separator border-b border-border my-2"></div>
+
+			<!-- Test Page Menu Item (Opcional/Dev) -->
+			<!-- <div class="kt-menu-item">
 				<a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[10px] ps-[10px] pe-[10px] py-[6px]"
 					routerLink="/test" tabindex="0">
 					<span class="kt-menu-icon items-start text-muted-foreground w-[20px]">
@@ -150,9 +247,7 @@
 						Test Page
 					</span>
 				</a>
-			</div>
-
+			</div> -->
+			<!-- End of Sidebar Menu -->
 		</div>
-		<!-- End of Sidebar Menu -->
 	</div>
-</div>

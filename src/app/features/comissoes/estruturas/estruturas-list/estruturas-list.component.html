@@ -1,0 +1,25 @@
+<div class="kt-container-fluid">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">
+                Estruturas de Comissão
+            </h1>
+        </div>
+        <div class="flex items-center gap-2.5">
+        </div>
+    </div>
+</div>
+
+<div class="kt-container-fluid">
+    <div class="grid gap-5 lg:gap-7.5">
+        <app-generic-p-table tableName="estruturas-list" [tableData]="estruturas" [totalRecords]="totalRecords"
+            [rows]="filtros.tamanhoPagina || 10" [serverSidePagination]="true" [columnDefinition]="columns"
+            [optionsColumns]="columns" [displayCreateAction]="true" titleBtnCreate="Nova Estrutura"
+            [displayEditAction]="true" [displayDeleteAction]="true" (add)="onAdd()" (edit)="onEdit($event)"
+            (delete)="onDelete($event)" (lazyLoad)="onLazyLoad($event)">
+        </app-generic-p-table>
+    </div>
+</div>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

@@ -7,4 +7,8 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [RouterLink]
 })
-export class SidebarComponent { }
+export class SidebarComponent {
+  constructor() {
+    console.log('Sidebar loaded');
+  }
+}

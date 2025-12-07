@@ -1,0 +1,220 @@
+<div class="kt-container-fluid">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">
+                @if (isEditMode()) {
+                Editar Estrutura de Comissão
+                } @else {
+                Nova Estrutura de Comissão
+                }
+            </h1>
+        </div>
+    </div>
+</div>
+
+<div class="kt-container-fluid">
+    <div class="grid gap-5 lg:gap-7.5">
+        <div class="kt-card">
+            <div class="kt-card-body">
+                @if (loading()) {
+                <div class="flex justify-center items-center py-10">
+                    <span class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></span>
+                </div>
+                } @else {
+                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+
+                    <!-- Dados Básicos -->
+                    <div class="flex flex-col gap-4">
+                        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Dados Básicos</h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="flex flex-col gap-2">
+                                <label class="font-semibold text-gray-700 required">Empresa</label>
+                                <p-select formControlName="idEmpresa" [options]="empresas" optionLabel="label"
+                                    optionValue="value" placeholder="Selecione a empresa" styleClass="w-full"
+                                    [disabled]="empresas.length === 1 || isEditMode()" />
+                                @if (form.get('idEmpresa')?.invalid && form.get('idEmpresa')?.touched) {
+                                <small class="text-red-500">Empresa é obrigatória</small>
+                                }
+                            </div>
+
+                            <div class="flex flex-col gap-2">
+                                <label class="font-semibold text-gray-700 required">Nome</label>
+                                <input type="text" pInputText formControlName="nome" class="w-full"
+                                    placeholder="Ex: Comissão Padrão" />
+                                @if (form.get('nome')?.invalid && form.get('nome')?.touched) {
+                                <small class="text-red-500">Nome é obrigatório</small>
+                                }
+                            </div>
+
+                            <div class="flex flex-col gap-2 md:col-span-2">
+                                <label class="font-semibold text-gray-700">Descrição</label>
+                                <textarea pInputTextarea formControlName="descricao" class="w-full" rows="3"
+                                    placeholder="Descrição opcional..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuração de Cálculo -->
+                    <div class="flex flex-col gap-4 mt-2">
+                        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Configuração de Cálculo</h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div class="flex flex-col gap-2">
+                                <label class="font-semibold text-gray-700 required">Tipo de Comissão</label>
+                                <p-select formControlName="tipoComissao" [options]="tipoComissaoOptions"
+                                    placeholder="Selecione" styleClass="w-full" />
+                            </div>
+
+                            @if (form.get('tipoComissao')?.value === TipoComissao.Percentual ||
+                            form.get('tipoComissao')?.value === TipoComissao.Misto) {
+                            <div class="flex flex-col gap-2">
+                                <label class="font-semibold text-gray-700 required">Percentual (%)</label>
+                                <p-inputNumber formControlName="valorPercentual" [min]="0" [max]="100"
+                                    [minFractionDigits]="2" [maxFractionDigits]="2" suffix="%" styleClass="w-full"
+                                    inputStyleClass="w-full" />
+                            </div>
+                            }
+
+                            @if (form.get('tipoComissao')?.value === TipoComissao.ValorFixo ||
+                            form.get('tipoComissao')?.value === TipoComissao.Misto) {
+                            <div class="flex flex-col gap-2">
+                                <label class="font-semibold text-gray-700 required">Valor Fixo</label>
+                                <p-inputNumber formControlName="valorFixoInicial" mode="currency" currency="BRL"
+                                    locale="pt-BR" [min]="0" styleClass="w-full" inputStyleClass="w-full" />
+                            </div>
+                            }
+
+                            <div class="flex flex-col gap-2">
+                                <label class="font-semibold text-gray-700 required">Tipo de Rateio</label>
+                                <p-select formControlName="tipoRateio" [options]="tipoRateioOptions"
+                                    placeholder="Selecione" styleClass="w-full" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regras de Liberação -->
+                    <div class="flex flex-col gap-4 mt-2">
+                        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Regras de Liberação</h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div class="flex flex-col gap-2">
+                                <label class="font-semibold text-gray-700 required">Regra de Liberação</label>
+                                <p-select formControlName="regraLiberacao" [options]="regraLiberacaoOptions"
+                                    placeholder="Selecione" styleClass="w-full" />
+                            </div>
+
+                            @if (form.get('regraLiberacao')?.value === RegraLiberacao.PercentualPago) {
+                            <div class="flex flex-col gap-2">
+                                <label class="font-semibold text-gray-700 required">Percentual Pago (%)</label>
+                                <p-inputNumber formControlName="percentualLiberacao" [min]="0" [max]="100" suffix="%"
+                                    styleClass="w-full" inputStyleClass="w-full" />
+                            </div>
+                            }
+
+                            @if (form.get('regraLiberacao')?.value === RegraLiberacao.ParcelasPagas) {
+                            <div class="flex flex-col gap-2">
+                                <label class="font-semibold text-gray-700 required">Parcela de Liberação</label>
+                                <p-inputNumber formControlName="parcelaLiberacao" [min]="1" styleClass="w-full"
+                                    inputStyleClass="w-full" />
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Níveis de Comissão -->
+                    <div class="flex flex-col gap-4 mt-2">
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <h3 class="text-lg font-semibold text-gray-800">Níveis de Comissão</h3>
+                            <button type="button" class="kt-btn kt-btn-sm kt-btn-light-primary" (click)="addNivel()">
+                                <i class="ki-filled ki-plus"></i>
+                                Adicionar Nível
+                            </button>
+                        </div>
+
+                        @if (niveis.length === 0) {
+                        <div class="flex items-center p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50"
+                            role="alert">
+                            <i class="ki-filled ki-information-2 text-xl mr-2"></i>
+                            <span class="font-medium">Atenção!</span> Adicione pelo menos um nível de comissão.
+                        </div>
+                        }
+
+                        <div class="flex flex-col gap-4">
+                            @for (nivel of niveis.controls; track $index) {
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200" [formGroup]="$any(nivel)">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h5 class="text-sm font-bold text-gray-600 uppercase tracking-wider">Nível {{ $index
+                                        + 1 }}</h5>
+                                    <button type="button" class="btn btn-icon btn-sm btn-light-danger"
+                                        (click)="removeNivel($index)" [disabled]="niveis.length === 1">
+                                        <i class="ki-filled ki-trash"></i>
+                                    </button>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div class="flex flex-col gap-2 md:col-span-1">
+                                        <label class="font-semibold text-gray-700 text-sm required">Nome do
+                                            Nível</label>
+                                        <input type="text" pInputText formControlName="nomeNivel"
+                                            class="w-full p-inputtext-sm" placeholder="Ex: Vendedor" />
+                                    </div>
+
+                                    <div class="flex flex-col gap-2 md:col-span-1">
+                                        <label class="font-semibold text-gray-700 text-sm required">Prioridade</label>
+                                        <p-inputNumber formControlName="prioridade" [min]="1" styleClass="w-full"
+                                            inputStyleClass="w-full p-inputtext-sm" />
+                                    </div>
+
+                                    <div class="flex flex-col gap-2 md:col-span-1">
+                                        <label class="font-semibold text-gray-700 text-sm required">Tipo</label>
+                                        <p-select formControlName="tipoValor" [options]="tipoValorOptions"
+                                            styleClass="w-full p-inputtext-sm" />
+                                    </div>
+
+                                    @if ($any(nivel).get('tipoValor')?.value === TipoValor.Percentual) {
+                                    <div class="flex flex-col gap-2 md:col-span-1">
+                                        <label class="font-semibold text-gray-700 text-sm required">Percentual</label>
+                                        <p-inputNumber formControlName="percentual" [min]="0" [max]="100" suffix="%"
+                                            styleClass="w-full" inputStyleClass="w-full p-inputtext-sm" />
+                                    </div>
+                                    }
+
+                                    @if ($any(nivel).get('tipoValor')?.value === TipoValor.Fixo) {
+                                    <div class="flex flex-col gap-2 md:col-span-1">
+                                        <label class="font-semibold text-gray-700 text-sm required">Valor Fixo</label>
+                                        <p-inputNumber formControlName="valorFixo" mode="currency" currency="BRL"
+                                            locale="pt-BR" [min]="0" styleClass="w-full"
+                                            inputStyleClass="w-full p-inputtext-sm" />
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Ações -->
+                    <div class="flex justify-end gap-3 pt-5 mt-4 border-t border-gray-200">
+                        <button type="button" class="kt-btn kt-btn-light" (click)="cancel()" [disabled]="saving()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="kt-btn kt-btn-primary" [disabled]="saving() || loading()">
+                            @if (saving()) {
+                            <span
+                                class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                            }
+                            @if (!saving()) {
+                            <i class="ki-filled ki-check"></i>
+                            }
+                            {{ isEditMode() ? 'Atualizar' : 'Salvar' }}
+                        </button>
+                    </div>
+                </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<p-toast />

@@ -21,13 +21,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return next(req);
     }
 
-    debugger;
     // Clonar requisição e adicionar headers
     const token = authService.getAccessToken();
     const selectedEmpresaIds = empresaSelectorService.getSelectedEmpresaIds();
-
-    console.log('🔍 [AUTH INTERCEPTOR] Token:', token ? 'EXISTS' : 'NULL');
-    console.log('🔍 [AUTH INTERCEPTOR] Selected Empresa IDs:', selectedEmpresaIds);
 
     let headers: { [key: string]: string } = {};
 
@@ -38,20 +34,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     // Adicionar header X-Empresa-Ids se houver empresas selecionadas
     if (selectedEmpresaIds.length > 0) {
         headers['X-Empresa-Ids'] = selectedEmpresaIds.join(',');
-        console.log('✅ [AUTH INTERCEPTOR] X-Empresa-Ids header added:', headers['X-Empresa-Ids']);
-    } else {
-        console.log('⚠️ [AUTH INTERCEPTOR] No empresas selected, X-Empresa-Ids NOT added');
     }
 
-    console.log('🔍 [AUTH INTERCEPTOR] Headers object:', headers);
-    console.log('🔍 [AUTH INTERCEPTOR] Headers count:', Object.keys(headers).length);
-
     if (Object.keys(headers).length > 0) {
-        console.log('✅ [AUTH INTERCEPTOR] Cloning request with headers:', headers);
         req = req.clone({ setHeaders: headers });
-        console.log('✅ [AUTH INTERCEPTOR] Request cloned successfully');
-    } else {
-        console.log('⚠️ [AUTH INTERCEPTOR] No headers to add, skipping clone');
     }
 
     // Processar requisição e tratar erros
