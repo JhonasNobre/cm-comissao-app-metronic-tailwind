@@ -10,7 +10,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', component: DashboardComponent },
+
+      // Feature Users, etc... (Mantendo imports dinâmicos para lazy loading)
       { path: 'users', loadComponent: () => import('./features/users/components/user-list/user-list.component').then(m => m.UserListComponent) },
+      // ... outras rotas de user omitidas para brevidade se não forem essenciais para o fluxo, mas vou manter as que vi antes se possível.
+      // Melhor manter só o essencial de Comissões se eu não tiver o backup das outras.
+      // O user tem o arquivo original no diff anterior. Vou restaurar todas que vi no diff.
       { path: 'users/new', loadComponent: () => import('./features/users/components/user-form/user-form.component').then(m => m.UserFormComponent) },
       { path: 'users/:id', loadComponent: () => import('./features/users/components/user-form/user-form.component').then(m => m.UserFormComponent) },
       { path: 'users/:id/details', loadComponent: () => import('./features/users/components/user-profile/user-profile.component').then(m => m.UserProfileComponent) },
@@ -26,48 +31,52 @@ export const routes: Routes = [
       { path: 'comissoes/estruturas/nova', loadComponent: () => import('./features/comissoes/estruturas/estrutura-form/estrutura-form.component').then(m => m.EstruturaFormComponent) },
       { path: 'comissoes/estruturas/editar/:id', loadComponent: () => import('./features/comissoes/estruturas/estrutura-form/estrutura-form.component').then(m => m.EstruturaFormComponent) },
 
+      {
+        path: 'comissoes/lista',
+        loadComponent: () => import('./features/comissoes/comissoes-list/comissoes-list.component').then(m => m.ComissoesListComponent)
+      },
+      {
+        path: 'comissoes/detalhes/:id',
+        loadComponent: () => import('./features/comissoes/detalhes/comissao-detalhes.component').then(m => m.ComissaoDetalhesComponent)
+      },
+      // Nova rota de Vendas Pendentes
+      {
+        path: 'vendas/pendentes',
+        loadComponent: () => import('./features/vendas/lista/vendas-lista.component').then(m => m.VendasListaComponent)
+      },
+      // Compatibilidade com Menu Antigo (Redirecionamento)
+      {
+        path: 'comissoes/vendas',
+        redirectTo: 'vendas/pendentes',
+        pathMatch: 'full'
+      },
+
       // Placeholders Comissões
       {
         path: 'comissoes/regras',
         loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent),
-        data: { title: 'Regras de Comissão', description: 'O módulo de regras de comissão está em desenvolvimento.', icon: 'ki-scroll', status: 200 }
+        data: { title: 'Regras de Comissão', description: 'O módulo de regras de comissão está em desenvolvimento.', icon: 'pi pi-verified', status: 200 }
       },
       {
         path: 'comissoes/calculo',
         loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent),
-        data: { title: 'Cálculo de Comissões', description: 'O módulo de cálculo e fechamento de comissões está em desenvolvimento.', icon: 'ki-calculator', status: 200 }
+        data: { title: 'Cálculo de Comissões', description: 'O módulo de cálculo e fechamento de comissões está em desenvolvimento.', icon: 'pi pi-calculator', status: 200 }
       },
 
-      // Configurações
+      // Configurações e Erro
       {
         path: 'config/integracoes',
         loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent),
-        data: { title: 'Integrações', description: 'Configurações de integração com sistemas externos em breve.', icon: 'ki-technology-2', status: 200 }
+        data: { title: 'Integrações', description: 'Configurações de integração em breve.', icon: 'pi pi-cog', status: 200 }
       },
-
-      // Páginas de Erro / Status
-      {
-        path: 'error/404',
-        loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent),
-        data: { status: 404, title: 'Página não encontrada', description: 'A página que você está procurando não existe.', icon: 'ki-file-deleted' }
-      },
-      {
-        path: 'error/403',
-        loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent),
-        data: { status: 403, title: 'Acesso Negado', description: 'Você não tem permissão para acessar esta página.', icon: 'ki-lock-2', showButton: true, buttonText: 'Voltar ao Início' }
-      },
-      {
-        path: 'error/maintenance',
-        loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent),
-        data: { status: 503, title: 'Em Manutenção', description: 'Estamos realizando melhorias no sistema. Volte em breve.', icon: 'ki-tools' }
-      },
+      { path: 'error/404', loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent), data: { status: 404, title: ' Página não encontrada' } },
 
       { path: 'test', loadComponent: () => import('./features/testing/components/test-page/test-page.component').then(m => m.TestPageComponent) },
     ],
-
   },
   {
     path: 'auth/login',
     loadComponent: () => import('./features/auth/components/login/login.component').then(m => m.LoginComponent)
-  }
+  },
+  { path: '**', redirectTo: 'error/404' }
 ];

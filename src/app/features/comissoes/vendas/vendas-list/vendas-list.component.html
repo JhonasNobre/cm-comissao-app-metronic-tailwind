@@ -1,0 +1,33 @@
+<div class="kt-container-fluid">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">
+                Vendas Pendentes de Comissão
+            </h1>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <!-- Botões de ação globais podem vir aqui -->
+        </div>
+    </div>
+</div>
+
+<div class="kt-container-fluid">
+    <div class="card-body pt-0">
+        <app-generic-p-table [tableData]="vendas" [columnDefinition]="columns" [totalRecords]="totalRecords"
+            [serverSidePagination]="true" [rows]="10" [displayCreateAction]="false" (lazyLoad)="onLazyLoad($event)"
+            (detail)="onRowSelect($event)">
+
+            <ng-template #customActions let-item>
+                <button pButton pRipple icon="pi pi-dollar" class="p-button-rounded p-button-success p-button-text mr-2"
+                    pTooltip="Gerar Comissão" tooltipPosition="top"
+                    (click)="$event.stopPropagation(); openGerarComissao(item)">
+                </button>
+            </ng-template>
+
+        </app-generic-p-table>
+    </div>
+</div>
+<p-toast></p-toast>
+
+<app-gerar-comissao-modal [(visible)]="modalVisible" [venda]="selectedVenda" (onGerada)="onComissaoGerada()">
+</app-gerar-comissao-modal>

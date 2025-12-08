@@ -1,0 +1,57 @@
+<div class="kt-container-fluid">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">
+                Comissões Geradas
+            </h1>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <!-- Botões globais se necessário -->
+        </div>
+    </div>
+</div>
+
+<div class="kt-container-fluid">
+    <div class="card-body pt-0">
+        <app-generic-p-table [tableData]="comissoes" [columnDefinition]="columns" [totalRecords]="totalRecords"
+            [serverSidePagination]="true" [rows]="10" [displayCreateAction]="false" [displayDetailAction]="true"
+            (lazyLoad)="onLazyLoad($event)" (detail)="onRowSelect($event)">
+
+            <ng-template #customActions let-item>
+                <div class="flex gap-2" *ngIf="isPendente(item)">
+                    <button pButton pRipple icon="pi pi-check"
+                        class="p-button-rounded p-button-success p-button-text p-button-sm" pTooltip="Aprovar"
+                        tooltipPosition="top" (click)="$event.stopPropagation(); onAprovar(item)">
+                    </button>
+                    <button pButton pRipple icon="pi pi-times"
+                        class="p-button-rounded p-button-danger p-button-text p-button-sm" pTooltip="Rejeitar"
+                        tooltipPosition="top" (click)="$event.stopPropagation(); onRejeitar(item)">
+                    </button>
+                </div>
+            </ng-template>
+
+        </app-generic-p-table>
+    </div>
+</div>
+
+<p-confirmDialog [style]="{width: '450px'}" rejectButtonStyleClass="p-button-text"></p-confirmDialog>
+<p-toast></p-toast>
+
+<p-dialog header="Rejeitar Comissão" [(visible)]="rejeicaoVisible" [modal]="true" [style]="{width: '450px'}"
+    [draggable]="false" [resizable]="false">
+
+    <div class="flex flex-col gap-2 pt-2">
+        <label class="font-medium required">Motivo da Rejeição</label>
+        <textarea pTextarea [(ngModel)]="motivoRejeicao" rows="3" class="w-full" placeholder="Informe o motivo...">
+        </textarea>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text"
+            (click)="rejeicaoVisible = false">
+        </button>
+        <button pButton pRipple label="Confirmar Rejeição" icon="pi pi-check" class="p-button-danger"
+            (click)="confirmarRejeicao()" [loading]="saving" [disabled]="!motivoRejeicao">
+        </button>
+    </ng-template>
+</p-dialog>

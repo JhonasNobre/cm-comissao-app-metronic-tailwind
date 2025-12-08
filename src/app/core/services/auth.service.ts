@@ -19,6 +19,10 @@ export class AuthService {
     private currentUserSubject = new BehaviorSubject<any>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
 
+    public get currentUserValue(): any {
+        return this.currentUserSubject.value;
+    }
+
     private readonly TOKEN_KEY = 'access_token';
     private readonly REFRESH_TOKEN_KEY = 'refresh_token';
     private tokenRefreshTimer: any = null;

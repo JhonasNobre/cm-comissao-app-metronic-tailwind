@@ -1,0 +1,142 @@
+<div class="kt-container-fluid" *ngIf="comissao">
+    <!-- Header e Ações -->
+    <div class="flex flex-wrap items-center justify-between gap-5 pb-5">
+        <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-3">
+                <button pButton pRipple icon="pi pi-arrow-left" class="p-button-text p-button-rounded"
+                    (click)="voltar()"></button>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-0">
+                    Detalhes da Comissão
+                </h1>
+                <p-tag [value]="getStatusLabel(comissao.status)"
+                    [severity]="getStatusSeverity(comissao.status)"></p-tag>
+            </div>
+            <span class="text-gray-500 ml-12">ID: {{comissao.id}}</span>
+        </div>
+
+        <div class="flex gap-2" *ngIf="comissao.status === EStatusComissao.Pendente">
+            <!-- Botões de Ação -->
+            <button pButton pRipple label="Aprovar" icon="pi pi-check" class="p-button-success"
+                (click)="aprovar()"></button>
+            <button pButton pRipple label="Rejeitar" icon="pi pi-times" class="p-button-danger p-button-outlined"
+                (click)="rejeitar()"></button>
+        </div>
+    </div>
+
+    <!-- Informações Principais -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+            <p class="text-sm text-gray-500 mb-1">Estrutura</p>
+            <p class="font-bold text-lg">{{comissao.nomeEstrutura}}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+            <p class="text-sm text-gray-500 mb-1">Base de Cálculo</p>
+            <p class="font-bold text-lg">{{comissao.valorBase | currency:'BRL'}}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+            <p class="text-sm text-gray-500 mb-1">Comissão Total</p>
+            <p class="font-bold text-lg text-green-600">{{comissao.valorTotalComissao | currency:'BRL'}}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+            <p class="text-sm text-gray-500 mb-1">Data Competência</p>
+            <p class="font-bold text-lg">{{comissao.dataCompetencia | date:'dd/MM/yyyy'}}</p>
+        </div>
+    </div>
+
+    <div *ngIf="comissao.motivoRejeicao" class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 text-red-700">
+        <p class="font-bold">Motivo da Rejeição:</p>
+        <p>{{comissao.motivoRejeicao}}</p>
+    </div>
+
+    <!-- Itens da Comissão -->
+    <p-card header="Itens Calculados" styleClass="mb-4">
+        <p-table [value]="comissao.itens || []" [tableStyle]="{ 'min-width': '50rem' }">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Nível</th>
+                    <th>Base Cálculo</th>
+                    <th>Regra</th>
+                    <th>Valor Calculado</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item>
+                <tr>
+                    <td>{{ item.nomeNivel }}</td>
+                    <td>{{ item.baseCalculoItem | currency:'BRL' }}</td>
+                    <td>
+                        <span *ngIf="item.percentualAplicado">{{ item.percentualAplicado }}%</span>
+                        <span *ngIf="item.valorFixoAplicado">{{ item.valorFixoAplicado | currency:'BRL' }} (Fixo)</span>
+                    </td>
+                    <td class="font-bold">{{ item.valorFinal | currency:'BRL' }}</td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="4">Nenhum item calculado.</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </p-card>
+
+    <!-- Parcelas -->
+    <p-card header="Parcelas de Pagamento">
+        <p-table [value]="comissao.parcelas || []" [tableStyle]="{ 'min-width': '50rem' }">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Parcela</th>
+                    <th>Vencimento</th>
+                    <th>Status</th>
+                    <th>Valor</th>
+                    <th style="width: 5rem">Ações</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-parcela>
+                <tr>
+                    <td>{{ parcela.numeroParcela }}</td>
+                    <td>{{ parcela.dataVencimento | date:'dd/MM/yyyy' }}</td>
+                    <td>
+                        <!-- Badge simples para status parcela -->
+                        <p-tag *ngIf="parcela.status === 1" severity="warn" value="Pendente"></p-tag>
+                        <p-tag *ngIf="parcela.status === 2" severity="success" value="Liberada"></p-tag>
+                        <p-tag *ngIf="parcela.status === 3" severity="info" value="Paga"></p-tag>
+                        <p-tag *ngIf="parcela.status === 4" severity="danger" value="Cancelada"></p-tag>
+                    </td>
+                    <td class="font-bold">{{ parcela.valorParcela | currency:'BRL' }}</td>
+                    <td>
+                        <button *ngIf="parcela.status === 1" pButton pRipple icon="pi pi-check"
+                            class="p-button-rounded p-button-success p-button-text p-button-sm"
+                            pTooltip="Liberar Parcela" tooltipPosition="top" (click)="liberarParcela(parcela)">
+                        </button>
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="5">Nenhuma parcela gerada.</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </p-card>
+</div>
+
+<p-confirmDialog [style]="{width: '450px'}" rejectButtonStyleClass="p-button-text"></p-confirmDialog>
+<p-toast></p-toast>
+
+<p-dialog header="Rejeitar Comissão" [(visible)]="rejeicaoVisible" [modal]="true" [style]="{width: '450px'}"
+    [draggable]="false" [resizable]="false">
+
+    <div class="flex flex-col gap-2 pt-2">
+        <label class="font-medium required">Motivo da Rejeição</label>
+        <textarea pTextarea [(ngModel)]="motivoRejeicao" rows="3" class="w-full" placeholder="Informe o motivo...">
+        </textarea>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text"
+            (click)="rejeicaoVisible = false">
+        </button>
+        <button pButton pRipple label="Confirmar Rejeição" icon="pi pi-check" class="p-button-danger"
+            (click)="confirmarRejeicao()" [loading]="saving" [disabled]="!motivoRejeicao">
+        </button>
+    </ng-template>
+</p-dialog>

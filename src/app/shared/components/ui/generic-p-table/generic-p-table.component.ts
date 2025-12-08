@@ -192,6 +192,7 @@ export class GenericPTableComponent<T extends BaseEntity> implements OnInit, OnC
 
     public get displayActionsColumn(): boolean {
         return (
+            !!this.customActionsTemplate ||
             !!this.displayDetailAction ||
             this.displayEditAction ||
             this.displayDeleteAction

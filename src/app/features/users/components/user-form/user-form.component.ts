@@ -291,8 +291,8 @@ export class UserFormComponent implements OnInit {
         };
 
         if (this.isEditMode && this.userId) {
-            // Remove fields that shouldn't be sent on update
-            const { cpf, email, senha, empresaIds, ...updatePayload } = payload;
+            // Remove fields that shouldn't be sent on update (email/cpf are generally immutable here)
+            const { cpf, email, senha, ...updatePayload } = payload;
             updatePayload.id = this.userId;
 
             this.service.update(updatePayload, this.userId).subscribe({

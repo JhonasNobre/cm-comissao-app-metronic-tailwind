@@ -1,5 +1,55 @@
-<!-- Container -->
-<div class="kt-container-fixed">
-	Page content
+<div class="p-4">
+	<h1 class="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">Visão Geral de Comissões</h1>
+
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" *ngIf="stats">
+		<!-- Card Total -->
+		<p-card styleClass="h-full border-l-4 border-blue-500 shadow-sm hover:shadow-lg transition-shadow">
+			<div class="flex flex-col">
+				<span class="text-gray-500 text-sm font-medium">Total Gerado</span>
+				<span class="text-2xl font-bold text-gray-800">{{ stats.valorTotalGeral | currency:'BRL' }}</span>
+				<span class="text-xs text-blue-500 mt-2">{{ stats.quantidadeTotal }} comissões</span>
+			</div>
+		</p-card>
+
+		<!-- Card Pendente -->
+		<p-card styleClass="h-full border-l-4 border-yellow-500 shadow-sm hover:shadow-lg transition-shadow">
+			<div class="flex flex-col">
+				<span class="text-gray-500 text-sm font-medium">Pendente de Aprovação</span>
+				<span class="text-2xl font-bold text-gray-800">{{ stats.valorPendente | currency:'BRL' }}</span>
+				<span class="text-xs text-yellow-500 mt-2">{{ stats.quantidadePendente }} aguardando</span>
+			</div>
+		</p-card>
+
+		<!-- Card Aprovado -->
+		<p-card styleClass="h-full border-l-4 border-green-500 shadow-sm hover:shadow-lg transition-shadow">
+			<div class="flex flex-col">
+				<span class="text-gray-500 text-sm font-medium">Comissões Aprovadas</span>
+				<span class="text-2xl font-bold text-green-600">{{ stats.valorAprovado | currency:'BRL' }}</span>
+				<span class="text-xs text-green-500 mt-2">{{ stats.quantidadeAprovada }} aprovadas</span>
+			</div>
+		</p-card>
+
+		<!-- Card Pago -->
+		<p-card styleClass="h-full border-l-4 border-indigo-500 shadow-sm hover:shadow-lg transition-shadow">
+			<div class="flex flex-col">
+				<span class="text-gray-500 text-sm font-medium">Total Pago</span>
+				<span class="text-2xl font-bold text-indigo-600">{{ stats.valorPago | currency:'BRL' }}</span>
+				<span class="text-xs text-indigo-500 mt-2">{{ stats.quantidadePaga }} finalizadas</span>
+			</div>
+		</p-card>
+
+		<!-- Card Rejeitado -->
+		<p-card styleClass="h-full border-l-4 border-red-500 shadow-sm hover:shadow-lg transition-shadow">
+			<div class="flex flex-col">
+				<span class="text-gray-500 text-sm font-medium">Rejeitadas</span>
+				<span class="text-2xl font-bold text-red-600">{{ stats.valorRejeitado | currency:'BRL' }}</span>
+				<span class="text-xs text-red-500 mt-2">{{ stats.quantidadeRejeitada }} rejeitadas</span>
+			</div>
+		</p-card>
+	</div>
+
+	<!-- Empty State / Loading -->
+	<div *ngIf="loading" class="flex justify-center items-center py-10">
+		<i class="pi pi-spin pi-spinner text-4xl text-blue-500"></i>
+	</div>
 </div>
-<!-- End of Container -->

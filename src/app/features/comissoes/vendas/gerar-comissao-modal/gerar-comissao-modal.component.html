@@ -1,0 +1,30 @@
+<p-dialog header="Gerar Comissão" [(visible)]="visible" [modal]="true" [style]="{width: '450px'}" [draggable]="false"
+    [resizable]="false" (onHide)="close()">
+
+    <div class="flex flex-col gap-4" *ngIf="venda">
+        <div class="p-3 bg-gray-50 rounded border border-gray-100">
+            <p class="text-sm text-gray-500 mb-1">Venda Selecionada</p>
+            <p class="font-medium text-gray-900">{{ venda.nomeCliente || 'Cliente N/A' }}</p>
+            <div class="flex justify-between mt-2">
+                <span class="text-xs text-gray-500">Código: {{ venda.idVendaLegado }}</span>
+                <span class="font-bold text-primary">R$ {{ venda.valorTotalVenda | number:'1.2-2' }}</span>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="font-medium required">Estrutura de Comissão</label>
+            <p-select [options]="estruturas" [(ngModel)]="selectedEstrutura" placeholder="Selecione uma estrutura"
+                [filter]="true" filterBy="label" [showClear]="true" styleClass="w-full" appendTo="body">
+            </p-select>
+            <small class="text-gray-500">Selecione a regra de comissão a ser aplicada.</small>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="close()">
+        </button>
+        <button pButton pRipple label="Gerar Comissão" icon="pi pi-check" class="p-button-primary" (click)="confirmar()"
+            [loading]="saving" [disabled]="!selectedEstrutura">
+        </button>
+    </ng-template>
+</p-dialog>
