@@ -2,25 +2,27 @@ import { Routes } from '@angular/router';
 import { LayoutComponent } from './layouts/layout.component';
 import { IndexComponent as DashboardComponent } from './pages/dashboard/index.component';
 import { authGuard } from './core/guards/auth.guard';
+import { empresaSelectedGuard } from './core/guards/empresa-selected.guard';
 
 export const routes: Routes = [
   {
     path: '',
     component: LayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, empresaSelectedGuard], // Protege com Auth e Seleção de Empresa
     children: [
       { path: '', component: DashboardComponent },
 
-      // Feature Users, etc... (Mantendo imports dinâmicos para lazy loading)
+      // Feature Users
       { path: 'users', loadComponent: () => import('./features/users/components/user-list/user-list.component').then(m => m.UserListComponent) },
-      // ... outras rotas de user omitidas para brevidade se não forem essenciais para o fluxo, mas vou manter as que vi antes se possível.
-      // Melhor manter só o essencial de Comissões se eu não tiver o backup das outras.
-      // O user tem o arquivo original no diff anterior. Vou restaurar todas que vi no diff.
       { path: 'users/new', loadComponent: () => import('./features/users/components/user-form/user-form.component').then(m => m.UserFormComponent) },
       { path: 'users/:id', loadComponent: () => import('./features/users/components/user-form/user-form.component').then(m => m.UserFormComponent) },
       { path: 'users/:id/details', loadComponent: () => import('./features/users/components/user-profile/user-profile.component').then(m => m.UserProfileComponent) },
+
+      // Cadastros Base
       { path: 'companies', loadComponent: () => import('./features/companies/components/company-list/company-list.component').then(m => m.CompanyListComponent) },
       { path: 'teams', loadComponent: () => import('./features/teams/components/team-list/team-list.component').then(m => m.TeamListComponent) },
+
+      // Access Profiles & Holidays
       { path: 'access-profiles', loadComponent: () => import('./features/access-profiles/components/access-profile-list/access-profile-list.component').then(m => m.AccessProfileListComponent) },
       { path: 'access-profiles/new', loadComponent: () => import('./features/access-profiles/components/access-profile-form/access-profile-form.component').then(m => m.AccessProfileFormComponent) },
       { path: 'access-profiles/:id', loadComponent: () => import('./features/access-profiles/components/access-profile-form/access-profile-form.component').then(m => m.AccessProfileFormComponent) },
@@ -39,12 +41,12 @@ export const routes: Routes = [
         path: 'comissoes/detalhes/:id',
         loadComponent: () => import('./features/comissoes/detalhes/comissao-detalhes.component').then(m => m.ComissaoDetalhesComponent)
       },
-      // Nova rota de Vendas Pendentes
+      // Vendas Pendentes
       {
         path: 'vendas/pendentes',
         loadComponent: () => import('./features/vendas/lista/vendas-lista.component').then(m => m.VendasListaComponent)
       },
-      // Compatibilidade com Menu Antigo (Redirecionamento)
+      // Compatibilidade
       {
         path: 'comissoes/vendas',
         redirectTo: 'vendas/pendentes',
@@ -63,7 +65,7 @@ export const routes: Routes = [
         data: { title: 'Cálculo de Comissões', description: 'O módulo de cálculo e fechamento de comissões está em desenvolvimento.', icon: 'pi pi-calculator', status: 200 }
       },
 
-      // Configurações e Erro
+      // Configurações e Erro (Interno)
       {
         path: 'config/integracoes',
         loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent),
@@ -74,9 +76,18 @@ export const routes: Routes = [
       { path: 'test', loadComponent: () => import('./features/testing/components/test-page/test-page.component').then(m => m.TestPageComponent) },
     ],
   },
+
+  // Auth Routes
   {
     path: 'auth/login',
     loadComponent: () => import('./features/auth/components/login/login.component').then(m => m.LoginComponent)
   },
+  {
+    path: 'auth/selecionar-empresa',
+    canActivate: [authGuard], // Autenticado mas sem contexto ainda
+    loadComponent: () => import('./features/auth/components/selecao-empresa/selecao-empresa.component').then(m => m.SelecaoEmpresaComponent)
+  },
+
   { path: '**', redirectTo: 'error/404' }
 ];
+

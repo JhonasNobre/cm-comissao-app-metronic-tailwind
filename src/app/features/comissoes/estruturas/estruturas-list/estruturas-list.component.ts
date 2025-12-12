@@ -55,9 +55,9 @@ export class EstruturasListComponent implements OnInit {
         this.initializeColumns();
 
         // Observar mudanças na empresa selecionada
-        this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
-            if (ids.length > 0) {
-                this.filtros.idEmpresa = ids[0];
+        this.empresaSelectorService.currentEmpresa$.subscribe(empresa => {
+            if (empresa) {
+                this.filtros.idEmpresa = empresa.id;
                 this.loadEstruturas();
             } else {
                 this.estruturas = [];

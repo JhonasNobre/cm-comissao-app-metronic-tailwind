@@ -63,9 +63,9 @@ export class ComissoesListComponent implements OnInit {
     ngOnInit() {
         this.initializeColumns();
 
-        this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
-            if (ids.length > 0) {
-                this.filtros.idEmpresa = ids[0];
+        this.empresaSelectorService.currentEmpresa$.subscribe(empresa => {
+            if (empresa) {
+                this.filtros.idEmpresa = empresa.id;
                 this.loadComissoes();
             } else {
                 this.comissoes = [];

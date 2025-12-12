@@ -1,114 +1,103 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, map } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface EmpresaInfo {
     id: string;
     nome: string;
+    logoUrl?: string;
+    cargo?: string; // Para exibir no card visual
 }
 
 /**
- * Serviço para gerenciar as empresas selecionadas pelo usuário.
- * Automaticamente seleciona a primeira empresa se o usuário tem apenas 1.
- * Usado pelo interceptor para adicionar o header X-Empresa-Ids nas requisições.
+ * Serviço para gerenciar o contexto da empresa selecionada (Single Tenant Session)
+ * Armazena ID em SessionStorage para isolamento por aba do navegador.
+ * Valida a troca de contexto no backend via endpoint /auth/selecionar-empresa.
  */
 @Injectable({
     providedIn: 'root'
 })
 export class EmpresaSelectorService {
-    private readonly STORAGE_KEY = 'selected_empresas';
+    private readonly STORAGE_KEY = 'current_empresa_id'; // Key singular
+    private readonly API_URL = `${environment.apiUrl}/authentication/selecionar-empresa`;
+
+    private http = inject(HttpClient);
 
     private userEmpresasSubject = new BehaviorSubject<EmpresaInfo[]>([]);
     public userEmpresas$ = this.userEmpresasSubject.asObservable();
 
-    private selectedEmpresaIdsSubject = new BehaviorSubject<string[]>([]);
-    public selectedEmpresaIds$ = this.selectedEmpresaIdsSubject.asObservable();
+    private currentEmpresaSubject = new BehaviorSubject<EmpresaInfo | null>(null);
+    public currentEmpresa$ = this.currentEmpresaSubject.asObservable();
 
     constructor() {
         this.loadFromStorage();
     }
 
     /**
-     * Define as empresas do usuário logado (chamado pelo AuthService após login)
+     * Define as empresas disponíveis p/ usuário (chamado no login)
      */
     setUserEmpresas(empresas: EmpresaInfo[]): void {
+        console.log('Empresas load:', empresas);
         this.userEmpresasSubject.next(empresas);
 
-        // Auto-seleciona se o usuário tem apenas 1 empresa
-        if (empresas.length === 1) {
-            this.setSelectedEmpresas([empresas[0].id]);
-        } else if (empresas.length > 0) {
-            // Se tem mais de 1, verifica se já tinha seleção salva
-            const savedIds = this.getFromStorage();
-            const validIds = savedIds.filter(id => empresas.some(e => e.id === id));
-
-            if (validIds.length > 0) {
-                this.setSelectedEmpresas(validIds);
-            } else {
-                // Se não tinha seleção válida, seleciona a primeira
-                this.setSelectedEmpresas([empresas[0].id]);
-            }
-        }
+        // Se já tem empresa na sessão, reidrata o objeto completo
+        this.rehydrateCurrentEmpresa(empresas);
     }
 
     /**
-     * Define as empresas selecionadas
+     * Seleciona uma empresa, valida no backend e atualiza a sessão
      */
-    setSelectedEmpresas(ids: string[]): void {
-        this.selectedEmpresaIdsSubject.next(ids);
-        this.saveToStorage(ids);
+    selecionarEmpresa(empresa: EmpresaInfo): Observable<any> {
+        return this.http.post(this.API_URL, { empresaId: empresa.id }).pipe(
+            tap(() => {
+                this.setCurrentEmpresaState(empresa);
+            })
+        );
     }
 
     /**
-     * Obtém os IDs das empresas selecionadas (para uso síncrono)
+     * Obtém o ID da empresa atual para o Interceptor
      */
-    getSelectedEmpresaIds(): string[] {
-        return this.selectedEmpresaIdsSubject.value;
+    getCurrentEmpresaId(): string | null {
+        return this.currentEmpresaSubject.value?.id || null;
     }
 
     /**
-     * Verifica se o usuário tem empresas
-     */
-    hasEmpresas(): boolean {
-        return this.userEmpresasSubject.value.length > 0;
-    }
-
-    /**
-     * Obtém a empresa selecionada atual (primeira da lista)
-     */
-    getEmpresaAtual(): EmpresaInfo | null {
-        const ids = this.getSelectedEmpresaIds();
-        if (ids.length === 0) return null;
-
-        const empresas = this.userEmpresasSubject.value;
-        return empresas.find(e => e.id === ids[0]) || null;
-    }
-
-    /**
-     * Limpa a seleção (usado no logout)
+     * Limpa o contexto (logout)
      */
     clear(): void {
         this.userEmpresasSubject.next([]);
-        this.selectedEmpresaIdsSubject.next([]);
-        localStorage.removeItem(this.STORAGE_KEY);
+        this.currentEmpresaSubject.next(null);
+        sessionStorage.removeItem(this.STORAGE_KEY);
+    }
+
+    // --- Private Helpers ---
+
+    private setCurrentEmpresaState(empresa: EmpresaInfo): void {
+        this.currentEmpresaSubject.next(empresa);
+        sessionStorage.setItem(this.STORAGE_KEY, empresa.id);
     }
 
     private loadFromStorage(): void {
-        const saved = this.getFromStorage();
-        if (saved.length > 0) {
-            this.selectedEmpresaIdsSubject.next(saved);
+        const savedId = sessionStorage.getItem(this.STORAGE_KEY);
+        if (savedId) {
+            // Apenas ID está salvo, precisamos do objeto completo da lista de empresas
+            // Isso será resolvido quando setUserEmpresas for chamado
+            console.log('Session restored:', savedId);
         }
     }
 
-    private getFromStorage(): string[] {
-        try {
-            const saved = localStorage.getItem(this.STORAGE_KEY);
-            return saved ? JSON.parse(saved) : [];
-        } catch {
-            return [];
+    private rehydrateCurrentEmpresa(empresas: EmpresaInfo[]): void {
+        const savedId = sessionStorage.getItem(this.STORAGE_KEY);
+        if (savedId) {
+            const found = empresas.find(e => e.id === savedId);
+            if (found) {
+                this.currentEmpresaSubject.next(found);
+            } else {
+                // ID salvo não existe mais nas permissões do usuário
+                this.clear();
+            }
         }
-    }
-
-    private saveToStorage(ids: string[]): void {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(ids));
     }
 }

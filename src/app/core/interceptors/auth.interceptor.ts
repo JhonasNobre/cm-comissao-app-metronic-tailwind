@@ -23,7 +23,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
     // Clonar requisição e adicionar headers
     const token = authService.getAccessToken();
-    const selectedEmpresaIds = empresaSelectorService.getSelectedEmpresaIds();
+    const currentEmpresaId = empresaSelectorService.getCurrentEmpresaId();
 
     let headers: { [key: string]: string } = {};
 
@@ -31,9 +31,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Adicionar header X-Empresa-Ids se houver empresas selecionadas
-    if (selectedEmpresaIds.length > 0) {
-        headers['X-Empresa-Ids'] = selectedEmpresaIds.join(',');
+    // Adicionar header X-Empresa-Id se houver contexto selecionado
+    if (currentEmpresaId) {
+        headers['X-Empresa-Id'] = currentEmpresaId;
     }
 
     if (Object.keys(headers).length > 0) {

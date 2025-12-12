@@ -1,72 +1,54 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { Subscription } from 'rxjs';
+import { Router } from '@angular/router';
 import { EmpresaSelectorService, EmpresaInfo } from '../../../core/services/empresa-selector.service';
-import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
     selector: 'app-empresa-selector',
     standalone: true,
-    imports: [CommonModule, FormsModule, MultiSelectModule],
+    imports: [CommonModule],
     template: `
-        <div *ngIf="empresas.length > 1" class="empresa-selector">
-            <p-multiSelect
-                [options]="empresaOptions"
-                [(ngModel)]="selectedIds"
-                (onChange)="onSelectionChange()"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Selecione empresas"
-                [showToggleAll]="false"
-                [maxSelectedLabels]="1"
-                selectedItemsLabel="{0} empresas"
-                styleClass="w-full"
-            />
-        </div>
-        <div *ngIf="empresas.length === 1" class="single-empresa">
-            <span class="text-sm text-gray-600">{{ empresas[0].nome }}</span>
+        <div *ngIf="currentEmpresa" class="d-flex align-items-center gap-2" [class.invisible]="!hasMultipleEmpresas">
+            <!-- Nome da Empresa Atual -->
+            <div class="d-flex flex-column align-items-end d-none d-lg-flex">
+                <span class="text-dark fw-bolder fs-7">{{ currentEmpresa.nome }}</span>
+                <span class="text-muted fs-8">Empresa Atual</span>
+            </div>
+
+            <!-- Botão Trocar (Só aparece se user tiver > 1 empresa) -->
+            <button 
+                *ngIf="hasMultipleEmpresas" 
+                (click)="trocarEmpresa()" 
+                class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-primary w-30px h-30px w-md-35px h-md-35px"
+                title="Trocar Empresa">
+                <i class="pi pi-sync fs-4"></i>
+            </button>
         </div>
     `,
     styles: [`
-        .empresa-selector {
-            min-width: 180px;
-        }
-        .single-empresa {
-            display: flex;
-            align-items: center;
+        .btn-custom {
+            transition: all 0.3s ease;
         }
     `]
 })
-export class EmpresaSelectorComponent implements OnInit, OnDestroy {
+export class EmpresaSelectorComponent implements OnInit {
     private empresaSelectorService = inject(EmpresaSelectorService);
-    private authService = inject(AuthService);
-    private subscription?: Subscription;
+    private router = inject(Router);
 
-    empresas: EmpresaInfo[] = [];
-    selectedIds: string[] = [];
-    empresaOptions: { label: string; value: string }[] = [];
+    currentEmpresa: EmpresaInfo | null = null;
+    hasMultipleEmpresas = false;
 
     ngOnInit(): void {
-        this.subscription = this.empresaSelectorService.userEmpresas$.subscribe(empresas => {
-            this.empresas = empresas;
-            this.empresaOptions = empresas.map(e => ({
-                label: e.nome,
-                value: e.id
-            }));
+        this.empresaSelectorService.currentEmpresa$.subscribe(empresa => {
+            this.currentEmpresa = empresa;
         });
 
-        this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
-            this.selectedIds = ids;
+        this.empresaSelectorService.userEmpresas$.subscribe(list => {
+            this.hasMultipleEmpresas = list.length > 1;
         });
     }
 
-    ngOnDestroy(): void {
-        this.subscription?.unsubscribe();
-    }
-
-    onSelectionChange(): void {
-        this.empresaSelectorService.setSelectedEmpresas(this.selectedIds);
+    trocarEmpresa(): void {
+        this.router.navigate(['/auth/selecionar-empresa']);
     }
 }
