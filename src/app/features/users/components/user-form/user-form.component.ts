@@ -133,7 +133,7 @@ export class UserFormComponent implements OnInit {
             equipeIds: [[]],
             restricaoHorario: this.fb.group({
                 ativo: [false],
-                bloquearEmFeriadosNacionais: [false],
+                feriadosIds: this.fb.array([]),
                 estadoId: [null],
                 municipioId: [null],
                 horarios: this.fb.array([])

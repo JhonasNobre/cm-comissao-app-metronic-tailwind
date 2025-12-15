@@ -10,28 +10,87 @@
     <div *ngIf="hasRestricaoHorario" formGroupName="restricaoHorario"
         class="flex flex-col gap-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
 
-        <!-- Bloqueio em Feriados -->
-        <div class="flex items-center gap-2">
-            <p-checkbox formControlName="bloquearEmFeriadosNacionais" [binary]="true" inputId="feriados"></p-checkbox>
-            <label for="feriados" class="cursor-pointer select-none">Bloquear em Feriados
-                Nacionais</label>
-        </div>
-
-        <!-- UF e Código IBGE -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="flex flex-col gap-2">
-                <label for="estadoId" class="text-sm font-medium text-gray-600">Estado</label>
-                <p-select formControlName="estadoId" placeholder="Selecione o estado" [options]="states"
-                    optionLabel="nome" optionValue="id" [showClear]="true" [filter]="true" filterBy="nome"
-                    appendTo="body" styleClass="w-full" [style]="{'width':'100%'}">
-                </p-select>
+        <!-- Feriados e Recessos Section -->
+        <div class="flex flex-col gap-3 border-b pb-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-800">Feriados e Recessos</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Selecione os feriados que o usuário terá o acesso do sistema
+                        interrompido.</p>
+                </div>
             </div>
-            <div class="flex flex-col gap-2">
-                <label for="municipioId" class="text-sm font-medium text-gray-600">Cidade</label>
-                <p-select formControlName="municipioId" placeholder="Selecione a cidade" [options]="cities"
-                    optionLabel="nome" optionValue="id" [showClear]="true" [filter]="true" filterBy="nome"
-                    appendTo="body" styleClass="w-full" [style]="{'width':'100%'}">
-                </p-select>
+
+            <!-- Toggle to show National Holidays -->
+            <div class="flex items-center gap-2">
+                <p-checkbox [binary]="true" inputId="showNationalHolidays" [(ngModel)]="showNationalHolidays"
+                    [ngModelOptions]="{standalone: true}" (onChange)="toggleShowNationalHolidays()"></p-checkbox>
+                <label for="showNationalHolidays" class="cursor-pointer select-none font-medium">
+                    Feriados Nacionais
+                </label>
+            </div>
+
+            <!-- National Holidays List -->
+            <div *ngIf="showNationalHolidays" class="ml-6 flex flex-col gap-2 border-l-2 border-gray-200 pl-4">
+                <!-- Master Checkbox -->
+                <div class="flex items-center gap-2">
+                    <p-checkbox [binary]="true" inputId="allNationalHolidays" [(ngModel)]="allNationalHolidaysSelected"
+                        [ngModelOptions]="{standalone: true}"
+                        (onChange)="toggleAllNationalHolidays($event.checked)"></p-checkbox>
+                    <label for="allNationalHolidays"
+                        class="cursor-pointer select-none text-sm font-medium text-primary">
+                        Selecionar Todos os Feriados Nacionais
+                    </label>
+                </div>
+
+                <!-- Individual National Holidays -->
+                <div *ngIf="nationalHolidays.length > 0" class="flex flex-col gap-1.5 mt-2">
+                    <div *ngFor="let holiday of nationalHolidays" class="flex items-center gap-2">
+                        <p-checkbox [binary]="true" [inputId]="'holiday-' + holiday.id"
+                            [checked]="isHolidaySelected(holiday.id)"
+                            (onChange)="toggleHoliday(holiday.id, $event.checked)"></p-checkbox>
+                        <label [for]="'holiday-' + holiday.id" class="cursor-pointer select-none text-sm">
+                            {{ holiday.nome }} ({{ holiday.data | date: 'dd/MM' }})
+                        </label>
+                    </div>
+                </div>
+
+                <div *ngIf="nationalHolidays.length === 0" class="text-xs text-gray-500 italic">
+                    Carregando feriados nacionais...
+                </div>
+            </div>
+
+            <!-- State/City Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div class="flex flex-col gap-2">
+                    <label for="estadoId" class="text-sm font-medium text-gray-600">Estado</label>
+                    <p-select formControlName="estadoId" placeholder="Selecione o estado" [options]="states"
+                        optionLabel="nome" optionValue="id" [showClear]="true" [filter]="true" filterBy="nome"
+                        appendTo="body" styleClass="w-full" [style]="{'width':'100%'}">
+                    </p-select>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label for="municipioId" class="text-sm font-medium text-gray-600">Cidade</label>
+                    <p-select formControlName="municipioId" placeholder="Selecione a cidade" [options]="cities"
+                        optionLabel="nome" optionValue="id" [showClear]="true" [filter]="true" filterBy="nome"
+                        appendTo="body" styleClass="w-full" [style]="{'width':'100%'}">
+                    </p-select>
+                </div>
+            </div>
+
+            <!-- Regional Holidays List -->
+            <div *ngIf="regionalHolidays.length > 0"
+                class="ml-6 flex flex-col gap-2 border-l-2 border-gray-200 pl-4 mt-2">
+                <h4 class="text-sm font-semibold text-gray-700">Feriados Regionais</h4>
+                <div class="flex flex-col gap-1.5">
+                    <div *ngFor="let holiday of regionalHolidays" class="flex items-center gap-2">
+                        <p-checkbox [binary]="true" [inputId]="'regional-' + holiday.id"
+                            [checked]="isHolidaySelected(holiday.id)"
+                            (onChange)="toggleHoliday(holiday.id, $event.checked)"></p-checkbox>
+                        <label [for]="'regional-' + holiday.id" class="cursor-pointer select-none text-sm">
+                            {{ holiday.nome }} ({{ holiday.data | date: 'dd/MM' }}) - {{ holiday.tipo }}
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
 
