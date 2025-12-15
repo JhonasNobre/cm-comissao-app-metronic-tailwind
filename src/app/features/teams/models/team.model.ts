@@ -16,10 +16,19 @@ export interface TeamListDTO {
     perfilAcessoNome?: string;
     quantidadeUsuarios: number;
     criadoEm: Date;
+
+    // Campos adicionados para layout de cards
+    grupoEquipeNome?: string;
+    grupoEquipeCor?: string;
+    grupoEquipeId?: string;
+    liderNome?: string;
+    liderEmail?: string;
 }
 
 export interface TeamCreateDTO {
     nome: string;
+    descricao?: string;
+    grupoEquipeId?: string;
     perfilAcessoId?: string;
     restricaoHorario?: any;
 }
@@ -27,6 +36,8 @@ export interface TeamCreateDTO {
 export interface TeamUpdateDTO {
     id: string;
     nome: string;
+    descricao?: string;
+    grupoEquipeId?: string;
     perfilAcessoId?: string;
     restricaoHorario?: any;
 }

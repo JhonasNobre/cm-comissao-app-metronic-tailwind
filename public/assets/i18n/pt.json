@@ -12,7 +12,8 @@
         },
         "phrase": {
             "sure_delete_item": "Tem certeza que deseja excluir {{item}}?",
-            "delete_confirmation_header": "Confirmar Exclusão"
+            "delete_confirmation_header": "Confirmar Exclusão",
+            "no_matching_records_found": "Nenhum registro encontrado"
         },
         "days": {
             "sunday": "Domingo",

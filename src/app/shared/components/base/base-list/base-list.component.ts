@@ -50,6 +50,7 @@ export abstract class BaseListComponent<T extends BaseEntity> extends BaseCompon
         this.loadData(params).subscribe({
             next: (res) => {
                 this.itens = res;
+                console.log(this.itens);
             },
             error: (error) => {
                 this.showError(this.translate.translate('error.error_load_data'));

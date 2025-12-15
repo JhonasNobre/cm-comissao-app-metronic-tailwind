@@ -1,0 +1,27 @@
+<p-confirmDialog></p-confirmDialog>
+
+<div class="kt-container-fluid">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">
+                Grupos de Equipe
+            </h1>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <!-- Botão de Filtros removido ou mantido se houver filtros avançados -->
+            <!-- <button class="kt-btn kt-btn-outline kt-btn-primary">
+                <i class="ki-filled ki-setting-4"></i>
+                Filtros
+            </button> -->
+        </div>
+    </div>
+</div>
+
+<div class="kt-container-fluid">
+    <div class="grid gap-5 lg:gap-7.5">
+        <app-generic-p-table tableName="team-group-list" [tableData]="itens" [columnDefinition]="columns" [rows]="10"
+            [displayCreateAction]="true" (add)="onAddClick()" [displayEditAction]="true" (edit)="onEditClick($event)"
+            [displayDeleteAction]="true" (delete)="onDeleteClick($event)">
+        </app-generic-p-table>
+    </div>
+</div>

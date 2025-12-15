@@ -1,42 +1,55 @@
-import { Component } from '@angular/core';
-// Trigger rebuild
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { LoginRequest } from '../../../../core/models/auth.model';
 
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, ReactiveFormsModule],
     templateUrl: './login.component.html',
     host: { class: 'contents' }
 })
-export class LoginComponent {
-    credentials: LoginRequest = {
-        username: '',
-        password: ''
-    };
-
+export class LoginComponent implements OnInit {
+    loginForm!: FormGroup;
     loading = false;
     error = '';
+    currentYear = new Date().getFullYear();
 
     constructor(
+        private fb: FormBuilder,
         private authService: AuthService,
         private router: Router
     ) { }
 
+    ngOnInit() {
+        this.loginForm = this.fb.group({
+            username: ['', [Validators.required, Validators.minLength(3)]],
+            password: ['', [Validators.required, Validators.minLength(6)]]
+        });
+    }
+
+    // Getters para facilitar acesso aos controles
+    get username() { return this.loginForm.get('username'); }
+    get password() { return this.loginForm.get('password'); }
+
     login() {
-        if (!this.credentials.username || !this.credentials.password) {
-            this.error = 'Preencha todos os campos';
+        // Marcar todos os campos como touched para exibir erros
+        if (this.loginForm.invalid) {
+            this.loginForm.markAllAsTouched();
             return;
         }
 
         this.loading = true;
         this.error = '';
 
-        this.authService.login(this.credentials).subscribe({
+        const credentials = {
+            username: this.loginForm.value.username,
+            password: this.loginForm.value.password
+        };
+
+        this.authService.login(credentials).subscribe({
             next: () => {
                 this.router.navigate(['/']);
             },
@@ -50,5 +63,10 @@ export class LoginComponent {
                 }
             }
         });
+    }
+
+    forgotPassword() {
+        // TODO: Implementar tela de recuperação de senha
+        alert('Funcionalidade em desenvolvimento. Entre em contato com o administrador.');
     }
 }

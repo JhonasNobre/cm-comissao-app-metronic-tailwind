@@ -1,0 +1,38 @@
+<form [formGroup]="form" class="flex flex-col gap-4">
+
+    <!-- Nome -->
+    <div class="flex flex-col gap-2">
+        <label for="nome" class="font-semibold text-gray-700">Nome do Grupo</label>
+        <input pInputText id="nome" formControlName="nome" placeholder="Ex: Vendas SP" class="w-full" />
+        <small *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched" class="text-red-500">
+            Nome é obrigatório
+        </small>
+    </div>
+
+    <!-- Descrição -->
+    <div class="flex flex-col gap-2">
+        <label for="descricao" class="font-semibold text-gray-700">Descrição</label>
+        <textarea pInputText id="descricao" formControlName="descricao" rows="3" class="w-full"
+            placeholder="Descrição opcional..."></textarea>
+    </div>
+
+    <!-- Cor -->
+    <div class="flex flex-col gap-2">
+        <label for="cor" class="font-semibold text-gray-700">Cor do Grupo</label>
+        <div class="flex items-center gap-3">
+            <p-colorPicker formControlName="cor" [inline]="false"></p-colorPicker>
+            <span class="text-sm text-gray-500">{{ form.get('cor')?.value || 'Nenhuma cor selecionada' }}</span>
+            <div class="w-8 h-8 rounded-full border border-gray-300"
+                [style.background-color]="form.get('cor')?.value || '#ffffff'"></div>
+        </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <div class="flex justify-end gap-2">
+        <button pButton label="Cancelar" class="p-button-text" (click)="close()"></button>
+        <button pButton label="Salvar" (click)="save()" [disabled]="form.invalid || loading"
+            [loading]="loading"></button>
+    </div>
+
+</form>

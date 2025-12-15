@@ -21,6 +21,7 @@ export const routes: Routes = [
       // Cadastros Base
       { path: 'companies', loadComponent: () => import('./features/companies/components/company-list/company-list.component').then(m => m.CompanyListComponent) },
       { path: 'teams', loadComponent: () => import('./features/teams/components/team-list/team-list.component').then(m => m.TeamListComponent) },
+      { path: 'team-groups', loadComponent: () => import('./features/teams/components/team-group-list/team-group-list.component').then(m => m.TeamGroupListComponent) },
 
       // Access Profiles & Holidays
       { path: 'access-profiles', loadComponent: () => import('./features/access-profiles/components/access-profile-list/access-profile-list.component').then(m => m.AccessProfileListComponent) },

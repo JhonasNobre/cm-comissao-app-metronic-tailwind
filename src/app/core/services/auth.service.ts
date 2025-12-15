@@ -46,6 +46,7 @@ export class AuthService {
             } else {
                 this.isAuthenticatedSubject.next(true);
                 this.updateCurrentUser(token);
+                this.updateEmpresaSelector(); // Restaurar empresas no refresh
             }
         }
     }
@@ -281,15 +282,13 @@ export class AuthService {
         const now = new Date().getTime();
         const timeUntilExpiry = expiresAt - now;
 
-        // Renovar 2 minutos antes de expirar (ou quando faltar 20% do tempo)
-        const refreshBuffer = Math.min(2 * 60 * 1000, timeUntilExpiry * 0.2);
-        const refreshTime = timeUntilExpiry - refreshBuffer;
+        // Renovar quando decorrer 75% da vida útil do token (ou seja, faltar 25%)
+        // Ex: Token de 5min -> Renova aos 3m45s.
+        const delay = Math.max(0, timeUntilExpiry * 0.75);
 
-        if (refreshTime > 0) {
-            this.tokenRefreshTimer = setTimeout(() => {
-                this.refreshToken();
-            }, refreshTime);
-        }
+        this.tokenRefreshTimer = setTimeout(() => {
+            this.refreshToken();
+        }, delay);
     }
 
     /**

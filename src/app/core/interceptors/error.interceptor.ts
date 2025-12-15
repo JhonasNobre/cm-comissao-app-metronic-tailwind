@@ -2,9 +2,11 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
+import { AuthService } from '../services/auth.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     const messageService = inject(MessageService);
+    const authService = inject(AuthService);
 
     return next(req).pipe(
         catchError((error) => {
@@ -41,8 +43,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
                         errorMessage = allMessages.join('; ');
                     }
                 } else if (error.status === 401) {
-                    errorSummary = 'Não autorizado';
-                    errorMessage = 'Sua sessão expirou ou você não tem permissão.';
+                    errorSummary = 'Sessão Expirada';
+                    errorMessage = 'Sua sessão expirou. Por favor, faça login novamente.';
+                    authService.logout(); // Redireciona para /auth/login
                 } else if (error.status === 403) {
                     errorSummary = 'Acesso negado';
                     errorMessage = 'Você não tem permissão para acessar este recurso.';
@@ -57,7 +60,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
                 }
             }
 
-            // Exibe o toast de erro
+            // Exibe o toast de erro (exceto 401 se quisermos evitar spam no logout, mas ok deixar)
             messageService.add({
                 severity: 'error',
                 summary: errorSummary,

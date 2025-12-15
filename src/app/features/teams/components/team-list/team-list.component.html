@@ -6,6 +6,28 @@
             </h1>
         </div>
         <div class="flex items-center gap-2.5">
+            <!-- View Mode Toggles -->
+            <div class="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1 mr-2">
+                <button (click)="viewMode = 'grid'" [class.bg-white]="viewMode === 'grid'"
+                    [class.text-primary]="viewMode === 'grid'" [class.shadow-sm]="viewMode === 'grid'"
+                    class="p-2 rounded-md text-gray-500 hover:text-gray-700 transition-all flex items-center justify-center">
+                    <i class="ki-duotone ki-element-11 fs-2">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                        <span class="path3"></span>
+                        <span class="path4"></span>
+                    </i>
+                </button>
+                <button (click)="viewMode = 'list'" [class.bg-white]="viewMode === 'list'"
+                    [class.text-primary]="viewMode === 'list'" [class.shadow-sm]="viewMode === 'list'"
+                    class="p-2 rounded-md text-gray-500 hover:text-gray-700 transition-all flex items-center justify-center">
+                    <i class="ki-duotone ki-row-horizontal fs-2">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                    </i>
+                </button>
+            </div>
+
             <button class="kt-btn kt-btn-primary" (click)="openDialog()">
                 <i class="ki-filled ki-plus"></i>
                 {{ 'teams.list.new_team' | transloco }}
@@ -15,10 +37,228 @@
 </div>
 
 <div class="kt-container-fluid">
-    <div class="grid gap-5 lg:gap-7.5">
-        <app-generic-p-table tableName="team-list" [tableData]="itens" [columnDefinition]="columns" [rows]="10"
-            [displayCreateAction]="false" [displayEditAction]="true" [displayDeleteAction]="true"
-            (edit)="openDialog($event)" (delete)="onRemover($event)">
+    <!-- VIEW MODE: GRID (CARDS) -->
+    <div *ngIf="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-7.5">
+        <div *ngFor="let team of itens"
+            class="kt-card bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700"
+            (click)="openDialog(team)">
+            <!-- (Conteúdo do Card Mantido) -->
+            <ng-container *ngTemplateOutlet="cardContent; context: {$implicit: team}"></ng-container>
+        </div>
+    </div>
+
+    <!-- VIEW MODE: LIST (TABLE) -->
+    <div *ngIf="viewMode === 'list'"
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <app-generic-p-table #genericTable tableName="teams-list" [tableData]="itens" [columnDefinition]="columns"
+            [rows]="10" [displayCreateAction]="true" (add)="openDialog()" [displayEditAction]="true"
+            (edit)="openDialog($event)" [displayDeleteAction]="true" (delete)="onRemover($event)">
         </app-generic-p-table>
+
+        <!-- Templates Customizados para Colunas -->
+
+        <!-- Coluna: Nome (Avatar + Texto) -->
+        <ng-template #nameTemplate let-team let-col="col">
+            <div class="flex items-center gap-3">
+                <div [ngClass]="getAvatarClasses(team.nome)"
+                    class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    {{ getInitials(team.nome) }}
+                </div>
+                <span class="font-semibold text-gray-800 dark:text-gray-100">{{ team.nome }}</span>
+            </div>
+        </ng-template>
+
+        <!-- Coluna: Grupo (Badge Colorido) -->
+        <ng-template #groupTemplate let-team let-col="col">
+            <span *ngIf="team.grupoEquipeNome"
+                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+                [style.backgroundColor]="(team.grupoEquipeCor || '#009EF7') + '15'"
+                [style.color]="(team.grupoEquipeCor || '#009EF7')">
+                <span class="w-1.5 h-1.5 rounded-full mr-1.5"
+                    [style.backgroundColor]="(team.grupoEquipeCor || '#009EF7')"></span>
+                {{ team.grupoEquipeNome }}
+            </span>
+            <span *ngIf="!team.grupoEquipeNome" class="text-xs text-gray-400 italic">N/A</span>
+        </ng-template>
+
+        <!-- Coluna: Líder -->
+        <ng-template #leaderTemplate let-team let-col="col">
+            <div class="flex items-center gap-2">
+                <div *ngIf="team.liderNome" [ngClass]="getAvatarClasses(team.liderEmail || team.liderNome)"
+                    class="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                    {{ getInitials(team.liderNome) }}
+                </div>
+                <span class="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    {{ team.liderNome || 'Sem líder' }}
+                </span>
+            </div>
+        </ng-template>
+
+        <!-- Coluna: Perfil -->
+        <ng-template #profileTemplate let-team let-col="col">
+            <span
+                class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+                <i class="ki-duotone ki-shield-tick text-gray-500 text-xs">
+                    <span class="path1"></span><span class="path2"></span>
+                </i>
+                {{ team.perfilAcessoNome || 'N/A' }}
+            </span>
+        </ng-template>
+
+        <!-- Coluna: Membros (Contador) -->
+        <ng-template #membersTemplate let-team let-col="col">
+            <div class="flex justify-center">
+                <span
+                    class="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded-md bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100">
+                    {{ team.quantidadeUsuarios }}
+                </span>
+            </div>
+        </ng-template>
+    </div>
+
+    <!-- Template para conteúdo do Card (Reuso) -->
+    <ng-template #cardContent let-team>
+        <div class="kt-card-content p-6">
+
+
+            <!-- Header do Card: Avatar + Nome -->
+            <div class="flex items-start gap-4 mb-4">
+                <!-- Avatar do Líder -->
+                <div class="flex-shrink-0">
+                    <div [ngClass]="getAvatarClasses(team.liderEmail || team.liderNome)"
+                        class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                        {{ getInitials(team.liderNome) }}
+                    </div>
+                </div>
+
+                <!-- Nome da Equipe -->
+                <div class="flex-grow min-w-0">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1 truncate" [title]="team.nome">
+                        {{ team.nome }}
+                    </h3>
+                    <div class="flex items-center gap-1 text-sm text-gray-500 truncate">
+                        <i class="ki-duotone ki-user fs-6 text-gray-400">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                        <span>{{ team.liderNome || 'Sem líder definido' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Badge do Grupo -->
+            <div class="mb-6 h-8 flex items-center">
+                <span *ngIf="team.grupoEquipeNome"
+                    class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
+                    [style.backgroundColor]="(team.grupoEquipeCor || '#009EF7') + '15'"
+                    [style.color]="(team.grupoEquipeCor || '#009EF7')">
+                    <span class="w-2 h-2 rounded-full mr-2"
+                        [style.backgroundColor]="(team.grupoEquipeCor || '#009EF7')"></span>
+                    {{ team.grupoEquipeNome }}
+                </span>
+                <span *ngIf="!team.grupoEquipeNome" class="text-xs text-gray-400 italic">
+                    Sem grupo
+                </span>
+            </div>
+
+            <!-- Informações (Grid 2 colunas) -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <!-- Membros -->
+                <div class="flex flex-col gap-1 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <span class="text-xs font-medium text-gray-500 uppercase">Membros</span>
+                    <div class="flex items-center gap-2">
+                        <i class="ki-duotone ki-people fs-4 text-primary">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                            <span class="path3"></span>
+                            <span class="path4"></span>
+                            <span class="path5"></span>
+                        </i>
+                        <span class="text-lg font-bold text-gray-800 dark:text-gray-200">{{ team.quantidadeUsuarios
+                            }}</span>
+                    </div>
+                </div>
+
+                <!-- Perfil -->
+                <div class="flex flex-col gap-1 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <span class="text-xs font-medium text-gray-500 uppercase">Perfil</span>
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <i class="ki-duotone ki-shield-tick fs-4 text-success">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                        <span class="text-sm font-bold text-gray-800 dark:text-gray-200 truncate"
+                            [title]="team.perfilAcessoNome">
+                            {{ team.perfilAcessoNome || 'N/A' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <button (click)="openDialog(team); $event.stopPropagation()"
+                    class="flex-1 py-2 px-4 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                    <i class="ki-duotone ki-pencil fs-5">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                    </i>
+                    Editar
+                </button>
+                <button (click)="team && onRemover(team); $event.stopPropagation()"
+                    class="py-2 px-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors"
+                    title="Excluir equipe">
+                    <i class="ki-duotone ki-trash fs-5">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                        <span class="path3"></span>
+                        <span class="path4"></span>
+                        <span class="path5"></span>
+                    </i>
+                </button>
+            </div>
+        </div>
+    </ng-template>
+
+    <!-- Estado Vazio -->
+    <div *ngIf="!loading && (!itens || itens.length === 0)"
+        class="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-gray-700">
+        <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-5">
+            <i class="ki-duotone ki-people fs-3x text-gray-400">
+                <span class="path1"></span>
+                <span class="path2"></span>
+                <span class="path3"></span>
+                <span class="path4"></span>
+                <span class="path5"></span>
+            </i>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Nenhuma equipe encontrada</h3>
+        <p class="text-gray-500 text-center max-w-sm mb-6">
+            Comece criando uma equipe para organizar seus usuários e definir regras de comissão.
+        </p>
+        <button class="kt-btn kt-btn-primary" (click)="openDialog()">
+            <i class="ki-filled ki-plus"></i>
+            Criar primeira equipe
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-7.5">
+        <div *ngFor="let i of [1,2,3,4,5,6]"
+            class="kt-card bg-white dark:bg-gray-800 rounded-xl p-6 animate-pulse border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                <div class="flex-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                </div>
+            </div>
+            <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-6"></div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div class="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+            <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded mt-4"></div>
+        </div>
     </div>
 </div>

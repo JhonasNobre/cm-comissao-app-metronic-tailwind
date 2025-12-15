@@ -2,6 +2,7 @@
     style="background-image: url('assets/media/images/2600x1600/bg-1.png');">
     <div class="kt-card max-w-[370px] w-full bg-white dark:bg-gray-800 shadow-lg rounded-xl">
         <div class="kt-card-content flex flex-col gap-5 p-10">
+            <!-- Cabeçalho -->
             <div class="text-center mb-2.5">
                 <h3 class="text-2xl font-semibold text-gray-900 dark:text-white leading-none mb-2.5">
                     ClickMenos
@@ -13,27 +14,51 @@
                 </div>
             </div>
 
-            <form (ngSubmit)="login()" class="flex flex-col gap-5">
+            <!-- Formulário -->
+            <form [formGroup]="loginForm" (ngSubmit)="login()" class="flex flex-col gap-5">
+                <!-- Alerta de Erro -->
                 <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
                     role="alert">
                     <span class="block sm:inline">{{ error }}</span>
                 </div>
 
+                <!-- Campo Usuário -->
                 <div class="flex flex-col gap-1">
                     <label class="form-label text-gray-900 dark:text-gray-100 font-medium">Usuário</label>
-                    <input type="text" [(ngModel)]="credentials.username" name="username"
+                    <input type="text" formControlName="username"
                         class="kt-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        placeholder="Digite seu usuário" required [disabled]="loading" />
+                        [class.border-red-500]="username?.invalid && username?.touched" placeholder="Digite seu usuário"
+                        autocomplete="username" />
+                    <!-- Mensagens de erro -->
+                    <div *ngIf="username?.invalid && username?.touched" class="text-red-600 text-sm mt-1">
+                        <span *ngIf="username?.errors?.['required']">Usuário é obrigatório</span>
+                        <span *ngIf="username?.errors?.['minlength']">Usuário deve ter no mínimo 3 caracteres</span>
+                    </div>
                 </div>
 
+                <!-- Campo Senha -->
                 <div class="flex flex-col gap-1">
-                    <label class="form-label text-gray-900 dark:text-gray-100 font-medium">Senha</label>
-                    <input type="password" [(ngModel)]="credentials.password" name="password"
+                    <div class="flex justify-between items-center">
+                        <label class="form-label text-gray-900 dark:text-gray-100 font-medium">Senha</label>
+                        <!-- Link Esqueci Senha -->
+                        <a (click)="forgotPassword()"
+                            class="text-blue-600 hover:text-blue-700 text-sm cursor-pointer font-medium">
+                            Esqueceu a senha?
+                        </a>
+                    </div>
+                    <input type="password" formControlName="password"
                         class="kt-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        placeholder="Digite sua senha" required [disabled]="loading" />
+                        [class.border-red-500]="password?.invalid && password?.touched" placeholder="Digite sua senha"
+                        autocomplete="current-password" />
+                    <!-- Mensagens de erro -->
+                    <div *ngIf="password?.invalid && password?.touched" class="text-red-600 text-sm mt-1">
+                        <span *ngIf="password?.errors?.['required']">Senha é obrigatória</span>
+                        <span *ngIf="password?.errors?.['minlength']">Senha deve ter no mínimo 6 caracteres</span>
+                    </div>
                 </div>
 
-                <button type="submit" [disabled]="loading"
+                <!-- Botão Entrar -->
+                <button type="submit" [disabled]="loading || loginForm.invalid"
                     class="kt-btn kt-btn-primary flex justify-center w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     <span *ngIf="!loading" class="indicator-label">Entrar</span>
                     <span *ngIf="loading" class="indicator-progress flex items-center gap-2">
@@ -43,9 +68,10 @@
                 </button>
             </form>
 
+            <!-- Copyright -->
             <div class="text-center mt-4">
                 <p class="text-xs text-gray-400">
-                    &copy; 2025 ClickMenos. Todos os direitos reservados.
+                    &copy; {{ currentYear }} ClickMenos. Todos os direitos reservados.
                 </p>
             </div>
         </div>

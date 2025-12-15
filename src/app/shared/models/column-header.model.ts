@@ -80,7 +80,7 @@ export interface ColumnHeader<T> {
     optional?: boolean;
     /** Se a coluna opcional deve vir selecionada por padrão. */
     defaultSelected?: boolean;
-    
+
     /** Estilos CSS em linha para a coluna (ex: 'min-width: 150px;'). */
     style?: string;
     /** A ordem de exibição da coluna. */
@@ -89,5 +89,7 @@ export interface ColumnHeader<T> {
     filter?: boolean;
     /** Se a coluna pode ser ordenada. */
     sortable?: boolean;
+    /** Template customizado para o corpo da célula. */
+    bodyTemplate?: import('@angular/core').TemplateRef<any>;
 }
 

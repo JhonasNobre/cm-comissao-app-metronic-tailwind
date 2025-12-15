@@ -12,6 +12,10 @@ import { BaseFormDialogComponent } from '../../../../shared/components/base/base
 import { TeamCreateDTO, TeamUpdateDTO } from '../../models/team.model';
 import { AccessProfileService } from '../../../access-profiles/services/access-profile.service';
 import { AccessProfile } from '../../../access-profiles/models/access-profile.model';
+import { TeamGroupService, TeamGroup } from '../../services/team-group.service';
+import { TeamMembersService, TeamMember } from '../../services/team-members.service';
+import { TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
     selector: 'app-team-form-dialog',
@@ -26,15 +30,21 @@ import { AccessProfile } from '../../../access-profiles/models/access-profile.mo
         SelectModule,
         InputMaskModule,
         DividerModule,
-        TranslocoModule
+        TranslocoModule,
+        TableModule,
+        TooltipModule
     ],
     templateUrl: './team-form-dialog.component.html'
 })
 export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateDTO | TeamUpdateDTO> {
     private accessProfileService = inject(AccessProfileService);
+    private teamGroupService = inject(TeamGroupService);
+    private teamMembersService = inject(TeamMembersService);
 
     accessProfiles: AccessProfile[] = [];
+    teamGroups: TeamGroup[] = [];
     hasRestricaoHorario = false;
+    members: TeamMember[] = [];
 
     diasSemanaOptions: any[] = [];
 
@@ -49,33 +59,56 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
             { label: this.translate.translate('general.days.saturday'), value: 'Sabado' }
         ];
 
-        this.loadAccessProfiles();
+        // Carregar dependências em paralelo antes de preencher o form
+        // para garantir que os dropdowns tenham opções
+        const requests = {
+            profiles: this.accessProfileService.list(),
+            groups: this.teamGroupService.list({ apenasAtivos: true })
+        };
 
-        if (data && data.id) {
-            this.form.patchValue({
-                id: data.id,
-                nome: data.nome,
-                perfilAcessoId: data.perfilAcessoId
+        import('rxjs').then(({ forkJoin }) => {
+            forkJoin(requests).subscribe({
+                next: (results) => {
+                    this.accessProfiles = results.profiles;
+                    this.teamGroups = results.groups;
+
+                    // Só aplica o patchValue depois que as listas estiverem carregadas
+                    if (data && data.id) {
+                        this.patchFormData(data);
+                        this.loadMembers(data.id);
+                    }
+                },
+                error: (err) => console.error('Error loading dependencies', err)
+            });
+        });
+    }
+
+    private patchFormData(data: any): void {
+        this.form.patchValue({
+            id: data.id,
+            nome: data.nome,
+            descricao: data.descricao,
+            perfilAcessoId: data.perfilAcessoId,
+            grupoEquipeId: data.grupoEquipeId
+        });
+
+        if (data.restricaoHorario) {
+            this.hasRestricaoHorario = true;
+            this.form.get('restricaoHorario')?.patchValue({
+                bloquearEmFeriadosNacionais: data.restricaoHorario.bloquearEmFeriadosNacionais,
+                ufFeriados: data.restricaoHorario.ufFeriados,
+                codigoIbgeMunicipio: data.restricaoHorario.codigoIbgeMunicipio
             });
 
-            if (data.restricaoHorario) {
-                this.hasRestricaoHorario = true;
-                this.form.get('restricaoHorario')?.patchValue({
-                    bloquearEmFeriadosNacionais: data.restricaoHorario.bloquearEmFeriadosNacionais,
-                    ufFeriados: data.restricaoHorario.ufFeriados,
-                    codigoIbgeMunicipio: data.restricaoHorario.codigoIbgeMunicipio
+            if (data.restricaoHorario?.horarios) {
+                this.clearHorarios();
+                data.restricaoHorario.horarios.forEach((h: any) => {
+                    this.addHorario(h);
                 });
-
-                if (data.restricaoHorario?.horarios) {
-                    this.clearHorarios();
-                    data.restricaoHorario.horarios.forEach((h: any) => {
-                        this.addHorario(h);
-                    });
-                    this.sortHorarios();
-                }
-            } else {
-                this.hasRestricaoHorario = false;
+                this.sortHorarios();
             }
+        } else {
+            this.hasRestricaoHorario = false;
         }
     }
 
@@ -83,6 +116,8 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
         return this.formBuilder.group({
             id: [null],
             nome: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+            descricao: ['', [Validators.maxLength(500)]],
+            grupoEquipeId: [null],
             perfilAcessoId: [null],
             restricaoHorario: this.formBuilder.group({
                 bloquearEmFeriadosNacionais: [false],
@@ -99,13 +134,6 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
             ...formValue,
             restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null
         };
-    }
-
-    private loadAccessProfiles(): void {
-        this.accessProfileService.list().subscribe({
-            next: (profiles) => this.accessProfiles = profiles,
-            error: (err) => console.error('Error loading access profiles', err)
-        });
     }
 
     get horarios(): FormArray {
@@ -177,6 +205,39 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
             this.clearHorarios();
         } else if (this.horarios.length === 0) {
             this.addHorario();
+        }
+    }
+    loadMembers(teamId: string): void {
+        this.teamMembersService.listMembers(teamId).subscribe({
+            next: (members) => this.members = members,
+            error: (err) => console.error('Error loading members', err)
+        });
+    }
+
+    onAddMember(email: string): void {
+        const teamId = this.form.get('id')?.value;
+        if (!email || !teamId) return;
+
+        this.teamMembersService.addMember(teamId, email).subscribe({
+            next: () => {
+                this.loadMembers(teamId);
+            },
+            error: (err) => {
+                // O ErrorInterceptor já exibe o toast com a mensagem correta
+                console.error('Erro ao adicionar membro', err);
+            }
+        });
+    }
+
+    onRemoveMember(member: TeamMember): void {
+        const teamId = this.form.get('id')?.value;
+        if (!teamId) return;
+
+        if (confirm(`Tem certeza que deseja remover ${member.nome} da equipe?`)) {
+            this.teamMembersService.removeMember(teamId, member.usuarioId).subscribe({
+                next: () => this.loadMembers(teamId),
+                error: (err) => console.error('Error removing member', err)
+            });
         }
     }
 }
