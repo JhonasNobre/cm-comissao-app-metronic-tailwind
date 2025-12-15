@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, TemplateRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
@@ -16,25 +16,35 @@ import { ColumnHeader } from '../../../../shared/models/column-header.model';
     ],
     templateUrl: './user-list.component.html'
 })
-export class UserListComponent implements OnInit {
+export class UserListComponent implements OnInit, AfterViewInit {
     private userService = inject(UserService);
     private router = inject(Router);
 
-    users: UserListDTO[] = [];
+    @ViewChild('nameTemplate') nameTemplate!: TemplateRef<any>;
+    @ViewChild('roleTemplate') roleTemplate!: TemplateRef<any>;
+    @ViewChild('statusTemplate') statusTemplate!: TemplateRef<any>;
+    users: any[] = []; // Changed to any to support extended properties like corAvatar
     loading: boolean = true;
     columns: ColumnHeader<UserListDTO>[] = [];
 
+    private avatarColors = ['primary', 'success', 'info', 'warning', 'danger', 'dark'];
+
     ngOnInit(): void {
-        this.initializeColumns();
         this.loadUsers();
+    }
+
+    ngAfterViewInit(): void {
+        setTimeout(() => {
+            this.initializeColumns();
+        });
     }
 
     private initializeColumns(): void {
         this.columns = [
-            { field: 'nome', header: 'Nome' },
-            { field: 'email', header: 'Email' },
-            { field: 'perfil', header: 'Perfil' },
-            { field: 'ativo', header: 'Status' }
+            { field: 'nome', header: 'Nome', bodyTemplate: this.nameTemplate },
+            { field: 'email', header: 'Email', hidden: true },
+            { field: 'perfil', header: 'Perfil', bodyTemplate: this.roleTemplate },
+            { field: 'ativo', header: 'Status', bodyTemplate: this.statusTemplate }
         ];
     }
 
@@ -42,7 +52,10 @@ export class UserListComponent implements OnInit {
         this.loading = true;
         this.userService.list().subscribe({
             next: (data) => {
-                this.users = data;
+                this.users = data.map(user => ({
+                    ...user,
+                    corAvatar: this.getAvatarColor(user.nome)
+                }));
                 this.loading = false;
             },
             error: (err) => {
@@ -50,6 +63,17 @@ export class UserListComponent implements OnInit {
                 this.loading = false;
             }
         });
+    }
+
+    getInitial(name: any): string {
+        if (!name) return '';
+        return String(name).charAt(0).toUpperCase();
+    }
+
+    private getAvatarColor(name: string): string {
+        if (!name) return 'primary';
+        const index = name.charCodeAt(0) % this.avatarColors.length;
+        return this.avatarColors[index];
     }
 
     onNew(): void {

@@ -1,0 +1,117 @@
+<div [formGroup]="form" class="flex flex-col gap-6 mt-4">
+
+    <!-- Seção 1: Informações Pessoais -->
+    <div class="flex flex-col gap-4">
+        <h3 class="text-base font-bold text-gray-900 border-b pb-2">Informações Pessoais:</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Linha 1: Nome e Email -->
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 required">Nome</label>
+                <input type="text" pInputText formControlName="nomeCompleto" class="w-full" placeholder="Escreva" />
+                <small *ngIf="form.get('nomeCompleto')?.invalid && form.get('nomeCompleto')?.touched"
+                    class="text-red-500">
+                    Nome é obrigatório.
+                </small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 required">Email</label>
+                <input type="email" pInputText formControlName="email" class="w-full" placeholder="exemplo@gmail.com" />
+                <small *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="text-red-500">
+                    Email inválido ou obrigatório.
+                </small>
+            </div>
+
+            <!-- Linha 2: CPF e Telefone -->
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 required">CPF ou CNPJ</label>
+                <p-inputMask mask="999.999.999-99" formControlName="cpf" placeholder="000.000.000-00"
+                    styleClass="w-full"></p-inputMask>
+                <small *ngIf="form.get('cpf')?.invalid && form.get('cpf')?.touched" class="text-red-500">
+                    CPF é obrigatório.
+                </small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 required">Telefone</label>
+                <p-inputMask mask="(99) 99999-9999" formControlName="telefone" placeholder="+55 (00) 00000-0000"
+                    styleClass="w-full"></p-inputMask>
+                <small *ngIf="form.get('telefone')?.invalid && form.get('telefone')?.touched" class="text-red-500">
+                    Telefone é obrigatório.
+                </small>
+            </div>
+
+            <!-- Campo de Senha (Mantido mas discreto, pois não está no print mas backend exige) -->
+            <div [ngClass]="{'hidden': isEditMode}" class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700 required">Senha</label>
+                <p-password formControlName="senha" [toggleMask]="true" [feedback]="false" styleClass="w-full"
+                    inputStyleClass="w-full" placeholder="********"></p-password>
+                <small *ngIf="form.get('senha')?.invalid && form.get('senha')?.touched" class="text-red-500">
+                    Senha obrigatória (min 8 chars).
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção 2: Status do usuário -->
+    <div class="flex flex-col gap-2">
+        <h3 class="text-base font-bold text-gray-900">Status do usuário:</h3>
+        <p class="text-sm text-gray-500 italic mb-2">Ideal para aplicar em periodos que o usuário entrar em férias,
+            estiver em recesso, for afastado ou outros motivos.</p>
+
+        <div class="flex items-center gap-2">
+            <!-- Placeholder visual por enquanto -->
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" value="" class="sr-only peer" checked> <!-- Dummy checked for now -->
+                <div
+                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                </div>
+                <span class="ml-3 text-sm font-medium text-gray-900">O usuário está Ativo</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Seção 3: O usuário na equipe -->
+    <div class="flex flex-col gap-2">
+        <h3 class="text-base font-bold text-gray-900">O usuário na equipe:</h3>
+        <p class="text-sm text-gray-500 italic mb-2">Defina a equipe e perfil que o usuário desempenhará na equipe</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Equipe -->
+            <div class="flex gap-2 items-center">
+                <p-select *ngIf="!isManager" [options]="teams" formControlName="equipeIds" optionLabel="nome"
+                    optionValue="id" placeholder="Selecione a equipe" styleClass="w-full" [style]="{'width':'100%'}"
+                    appendTo="body" [showClear]="true"></p-select>
+
+                <p-multiSelect *ngIf="isManager" [options]="teams" formControlName="equipeIds" optionLabel="nome"
+                    optionValue="id" placeholder="Selecione as equipes" styleClass="w-full" [style]="{'width':'100%'}"
+                    appendTo="body" [showClear]="true" display="chip"></p-multiSelect>
+
+                <button pButton icon="ki-filled ki-plus" class="p-button-secondary p-button-sm"></button>
+            </div>
+
+            <!-- Grupo (Placeholder - campo não existe no backend ainda) -->
+            <div class="flex gap-2 items-center">
+                <p-select [options]="[]" placeholder="Selecione o grupo" styleClass="w-full" [style]="{'width':'100%'}"
+                    disabled="true"></p-select>
+                <button pButton icon="ki-filled ki-plus" class="p-button-secondary p-button-sm"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção 4: O usuário no sistema -->
+    <div class="flex flex-col gap-2">
+        <h3 class="text-base font-bold text-gray-900">O usuário no sistema:</h3>
+        <p class="text-sm text-gray-500 italic mb-2">Defina o perfil geral que o usuário terá dentro de todo o sistema.
+        </p>
+
+        <div class="flex gap-2 items-center">
+            <p-select [options]="userRoleOptions" formControlName="tipoUsuario" optionLabel="label" optionValue="value"
+                placeholder="Selecione o perfil" styleClass="w-full" [style]="{'width':'100%'}"
+                appendTo="body"></p-select>
+            <button pButton icon="ki-filled ki-plus" class="p-button-secondary p-button-sm"></button>
+        </div>
+    </div>
+
+</div>

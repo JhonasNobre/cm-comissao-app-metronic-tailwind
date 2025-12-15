@@ -1,4 +1,4 @@
-import { Component, inject, AfterViewInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, inject, AfterViewInit, ViewChild, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';

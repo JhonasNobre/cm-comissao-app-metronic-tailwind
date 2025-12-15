@@ -91,5 +91,6 @@ export interface ColumnHeader<T> {
     sortable?: boolean;
     /** Template customizado para o corpo da célula. */
     bodyTemplate?: import('@angular/core').TemplateRef<any>;
+    /** Se a coluna deve ser escondida por padrão. */
+    hidden?: boolean;
 }
-

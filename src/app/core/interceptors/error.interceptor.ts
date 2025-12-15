@@ -4,6 +4,8 @@ import { catchError, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '../services/auth.service';
 
+let isLoggingOut = false; // Flag para evitar múltiplos logouts
+
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     const messageService = inject(MessageService);
     const authService = inject(AuthService);
@@ -12,6 +14,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         catchError((error) => {
             let errorMessage = 'Ocorreu um erro inesperado.';
             let errorSummary = 'Erro';
+            let shouldShowToast = true; // Controle de exibição do toast
 
             if (error.error instanceof ErrorEvent) {
                 // Erro do lado do cliente
@@ -43,9 +46,21 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
                         errorMessage = allMessages.join('; ');
                     }
                 } else if (error.status === 401) {
-                    errorSummary = 'Sessão Expirada';
-                    errorMessage = 'Sua sessão expirou. Por favor, faça login novamente.';
-                    authService.logout(); // Redireciona para /auth/login
+                    // Sessão expirada - redirecionar uma única vez
+                    if (!isLoggingOut) {
+                        isLoggingOut = true;
+                        errorSummary = 'Sessão Expirada';
+                        errorMessage = 'Sua sessão expirou. Por favor, faça login novamente.';
+
+                        // Aguardar um momento e resetar flag após logout
+                        setTimeout(() => {
+                            authService.logout();
+                            isLoggingOut = false;
+                        }, 100);
+                    } else {
+                        // Se já está fazendo logout, não mostrar toast duplicado
+                        shouldShowToast = false;
+                    }
                 } else if (error.status === 403) {
                     errorSummary = 'Acesso negado';
                     errorMessage = 'Você não tem permissão para acessar este recurso.';
@@ -60,13 +75,15 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
                 }
             }
 
-            // Exibe o toast de erro (exceto 401 se quisermos evitar spam no logout, mas ok deixar)
-            messageService.add({
-                severity: 'error',
-                summary: errorSummary,
-                detail: errorMessage,
-                life: 5000
-            });
+            // Exibe o toast de erro apenas se não for um logout duplicado
+            if (shouldShowToast) {
+                messageService.add({
+                    severity: 'error',
+                    summary: errorSummary,
+                    detail: errorMessage,
+                    life: 5000
+                });
+            }
 
             console.error('HTTP Error:', error);
             return throwError(() => error);

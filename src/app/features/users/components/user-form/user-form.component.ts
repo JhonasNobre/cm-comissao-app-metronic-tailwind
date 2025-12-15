@@ -1,17 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { CheckboxModule } from 'primeng/checkbox';
-import { SelectModule } from 'primeng/select';
-import { MultiSelect, MultiSelectModule } from 'primeng/multiselect';
-import { InputMaskModule } from 'primeng/inputmask';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
-import { DividerModule } from 'primeng/divider';
-import { PasswordModule } from 'primeng/password';
+import { TabsModule } from 'primeng/tabs';
 import { MessageService } from 'primeng/api';
 import { UserService } from '../../services/user.service';
 import { AccessProfileService } from '../../../access-profiles/services/access-profile.service';
@@ -19,8 +13,10 @@ import { TeamService } from '../../../teams/services/team.service';
 import { CompanyService } from '../../../companies/services/company.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SystemService } from '../../../../core/services/system.service';
-import { UserRole } from '../../models/user.model';
 import { AppConfirmationService } from '../../../../shared/services/confirmation.service';
+import { UserGeneralTabComponent } from './tabs/user-general-tab/user-general-tab.component';
+import { UserAccessTabComponent } from './tabs/user-access-tab/user-access-tab.component';
+import { UserScheduleTabComponent } from './tabs/user-schedule-tab/user-schedule-tab.component';
 
 @Component({
     selector: 'app-user-form',
@@ -31,15 +27,12 @@ import { AppConfirmationService } from '../../../../shared/services/confirmation
         FormsModule,
         RouterModule,
         ButtonModule,
-        InputTextModule,
-        CheckboxModule,
-        SelectModule,
-        MultiSelectModule,
-        InputMaskModule,
         CardModule,
         ToastModule,
-        DividerModule,
-        PasswordModule
+        TabsModule,
+        UserGeneralTabComponent,
+        UserAccessTabComponent,
+        UserScheduleTabComponent
     ],
     providers: [MessageService],
     templateUrl: './user-form.component.html'
@@ -64,7 +57,6 @@ export class UserFormComponent implements OnInit {
     accessProfiles: any[] = [];
     teams: any[] = [];
     companies: any[] = [];
-    hasRestricaoHorario = false;
     isProtected = false;
     isInactive = false;
 
@@ -76,10 +68,11 @@ export class UserFormComponent implements OnInit {
     keycloakRoleOptions: any[] = [];
     diasSemanaOptions: any[] = [];
 
-    getRoleLabel(value: string): string {
-        const role = this.keycloakRoleOptions.find(r => r.value === value);
-        return role ? role.label : value;
-    }
+    // ... properties
+    resources: any[] = [];
+    currentPermissions: any[] = [];
+
+    // ...
 
     ngOnInit(): void {
         this.initForm();
@@ -87,8 +80,38 @@ export class UserFormComponent implements OnInit {
         this.loadTeams();
         this.loadCompanies();
         this.loadSystemOptions();
+        this.loadResources(); // Load all resources
         this.checkEditMode();
+        this.setupProfileWatcher(); // Watch for profile changes
     }
+
+    private loadResources(): void {
+        this.profileService.listResources().subscribe({
+            next: (data) => this.resources = data,
+            error: () => console.error('Falha ao carregar recursos')
+        });
+    }
+
+    private setupProfileWatcher(): void {
+        this.form.get('perfilAcessoId')?.valueChanges.subscribe(profileId => {
+            if (profileId) {
+                this.loadProfilePermissions(profileId);
+            } else {
+                this.currentPermissions = [];
+            }
+        });
+    }
+
+    private loadProfilePermissions(profileId: string): void {
+        this.profileService.get(profileId).subscribe({
+            next: (profile: any) => {
+                this.currentPermissions = profile.permissoes || [];
+            },
+            error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar permissões do perfil' })
+        });
+    }
+
+
 
     private loadSystemOptions(): void {
         this.systemService.getRoles().subscribe(data => this.keycloakRoleOptions = data);
@@ -115,76 +138,6 @@ export class UserFormComponent implements OnInit {
                 horarios: this.fb.array([])
             })
         });
-    }
-
-    get horarios(): FormArray {
-        return this.form.get('restricaoHorario.horarios') as FormArray;
-    }
-
-    addHorario(): void {
-        const horarioGroup = this.fb.group({
-            diaSemana: ['Segunda', Validators.required],
-            horaInicio: ['08:00', Validators.required],
-            horaFim: ['18:00', Validators.required]
-        });
-        this.horarios.push(horarioGroup);
-        this.sortHorarios();
-    }
-
-    removeHorario(index: number): void {
-        this.horarios.removeAt(index);
-    }
-
-    sortHorarios(): void {
-        const daysOrder: { [key: string]: number } = {
-            'Domingo': 0,
-            'Segunda': 1,
-            'Terca': 2,
-            'Quarta': 3,
-            'Quinta': 4,
-            'Sexta': 5,
-            'Sabado': 6
-        };
-
-        const horariosArray = this.horarios.controls.map((control, index) => ({
-            control,
-            index,
-            value: control.value
-        }));
-
-        horariosArray.sort((a, b) => {
-            const dayA = daysOrder[a.value.diaSemana] ?? 0;
-            const dayB = daysOrder[b.value.diaSemana] ?? 0;
-
-            if (dayA !== dayB) {
-                return dayA - dayB;
-            }
-
-            return a.value.horaInicio.localeCompare(b.value.horaInicio);
-        });
-
-        while (this.horarios.length !== 0) {
-            this.horarios.removeAt(0);
-        }
-        horariosArray.forEach(item => {
-            this.horarios.push(item.control);
-        });
-    }
-
-    toggleRestricaoHorario(event: any): void {
-        this.hasRestricaoHorario = event.checked;
-        if (!this.hasRestricaoHorario) {
-            this.form.get('restricaoHorario')?.patchValue({
-                bloquearEmFeriadosNacionais: false,
-                ufFeriados: '',
-                codigoIbgeMunicipio: ''
-            });
-            while (this.horarios.length !== 0) {
-                this.horarios.removeAt(0);
-            }
-        } else if (this.horarios.length === 0) {
-            this.addHorario();
-        }
     }
 
     private loadAccessProfiles(): void {
@@ -241,19 +194,27 @@ export class UserFormComponent implements OnInit {
                     equipeIds: user.equipeIds || []
                 });
 
+                if (user.perfilAcessoId) {
+                    this.loadProfilePermissions(user.perfilAcessoId);
+                }
+
                 this.isProtected = user.isProtected;
                 this.isInactive = user.inativo;
 
                 if (user.restricaoHorario) {
-                    this.hasRestricaoHorario = true;
                     this.form.get('restricaoHorario')?.patchValue({
                         bloquearEmFeriadosNacionais: user.restricaoHorario.bloquearEmFeriadosNacionais,
                         ufFeriados: user.restricaoHorario.ufFeriados,
                         codigoIbgeMunicipio: user.restricaoHorario.codigoIbgeMunicipio
                     });
 
-                    while (this.horarios.length !== 0) {
-                        this.horarios.removeAt(0);
+                    // Logic to populate FormArray is now expected to be handled by the child or we prepopulate here?
+                    // WE MUST prepopulate here because the child displays what's in the form.
+                    // The child reads 'restricaoHorario.horarios' FormArray.
+                    // So we must push into it here.
+                    const horariosArray = this.form.get('restricaoHorario.horarios') as any; // FormArray
+                    while (horariosArray.length !== 0) {
+                        horariosArray.removeAt(0);
                     }
                     if (user.restricaoHorario.horarios) {
                         user.restricaoHorario.horarios.forEach((h: any) => {
@@ -262,9 +223,9 @@ export class UserFormComponent implements OnInit {
                                 horaInicio: [h.horaInicio, Validators.required],
                                 horaFim: [h.horaFim, Validators.required]
                             });
-                            this.horarios.push(horarioGroup);
+                            horariosArray.push(horarioGroup);
                         });
-                        this.sortHorarios();
+                        // Sorting can be done here or child will sort on add.
                     }
                 }
                 this.loading = false;
@@ -283,15 +244,18 @@ export class UserFormComponent implements OnInit {
         }
 
         this.loading = true;
-        const formValue = this.form.getRawValue(); // Use getRawValue to include disabled fields if needed (though we don't send disabled ones for update usually)
+        const formValue = this.form.getRawValue();
+
+        // Check if there is actual restriction data
+        const res = formValue.restricaoHorario;
+        const hasRestricao = res && (res.bloquearEmFeriadosNacionais || res.ufFeriados || (res.horarios && res.horarios.length > 0));
 
         const payload = {
             ...formValue,
-            restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null
+            restricaoHorario: hasRestricao ? formValue.restricaoHorario : null
         };
 
         if (this.isEditMode && this.userId) {
-            // Remove fields that shouldn't be sent on update (email/cpf are generally immutable here)
             const { cpf, email, senha, ...updatePayload } = payload;
             updatePayload.id = this.userId;
 

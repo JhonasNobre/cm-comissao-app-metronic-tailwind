@@ -14,7 +14,44 @@
 <div class="kt-container-fluid">
     <div class="grid gap-5 lg:gap-7.5">
         <app-generic-p-table tableName="user-list" [tableData]="users" [columnDefinition]="columns" [rows]="10"
-            [displayEditAction]="true" [displayDeleteAction]="false" (edit)="onEdit($event)">
+            [displayCreateAction]="true" [displayEditAction]="true" [displayDeleteAction]="false" (add)="onNew()"
+            (edit)="onEdit($event)">
         </app-generic-p-table>
     </div>
 </div>
+
+<!-- Templates Customizados -->
+
+<!-- Template de Nome com Avatar -->
+<ng-template #nameTemplate let-row="row">
+    <div class="flex items-center gap-3">
+        <!-- Avatar Simples com Iniciais -->
+        <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm"
+            [ngClass]="'bg-' + (row.corAvatar || 'primary') + '-500'"
+            [style.background-color]="row.corAvatar ? '' : '#3b82f6'">
+            {{ getInitial(row.nome) }}
+        </div>
+        <div class="flex flex-col">
+            <span class="text-gray-900 font-medium text-sm hover:text-primary transition-colors cursor-pointer"
+                (click)="onEdit(row)">
+                {{ row.nome }}
+            </span>
+            <span class="text-gray-500 text-xs">{{ row.email }}</span>
+        </div>
+    </div>
+</ng-template>
+
+<!-- Template de Perfil/Role -->
+<ng-template #roleTemplate let-row="row">
+    <span class="badge badge-light-primary text-xs px-2 py-1 rounded">
+        {{ row.perfil || 'Sem Perfil' }}
+    </span>
+</ng-template>
+
+<!-- Template de Status -->
+<ng-template #statusTemplate let-row="row">
+    <span class="badge text-xs px-2 py-1 rounded"
+        [ngClass]="row.ativo ? 'badge-light-success text-success' : 'badge-light-danger text-danger'">
+        {{ row.ativo ? 'Ativo' : 'Inativo' }}
+    </span>
+</ng-template>

@@ -287,7 +287,11 @@ export class GenericPTableComponent<T extends BaseEntity> implements OnInit, OnC
 
     private updateVisibleColumns(): void {
         const mandatoryColumns = this.columnDefinition.filter(col => !col.optional);
-        this.visibleColumns = [...mandatoryColumns, ...this.selectedColumns]
+        const allColumns = [...mandatoryColumns, ...this.selectedColumns];
+
+        // Filter out hidden columns and sort by order
+        this.visibleColumns = allColumns
+            .filter(col => !col.hidden)
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     }
 

@@ -1,0 +1,146 @@
+<div [formGroup]="form" class="flex flex-col gap-6 mt-4">
+    <!-- Seção: Imobiliárias -->
+    <div class="flex flex-col gap-2">
+        <label class="font-semibold text-gray-700 required">Imobiliárias</label>
+        <p-multiSelect formControlName="empresaIds" [options]="companies" optionLabel="name" optionValue="id"
+            placeholder="Selecione as imobiliárias" [style]="{'width':'100%'}" appendTo="body" [filter]="true"
+            filterBy="name" [showClear]="true" display="chip">
+        </p-multiSelect>
+        <small class="text-red-500" *ngIf="form.get('empresaIds')?.invalid && form.get('empresaIds')?.touched">
+            Selecione ao menos uma imobiliária
+        </small>
+    </div>
+
+    <div class="border-t border-gray-200 my-2"></div>
+
+    <!-- Seção: Permissões (Visualização) -->
+    <div class="flex flex-col gap-4">
+        <div class="flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Permissões de Acesso</h3>
+            <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                <i class="ki-filled ki-lock-2 text-xs mr-1"></i>
+                Herdado do Perfil Selecionado
+            </span>
+        </div>
+
+        <p class="text-gray-500 text-sm mb-2">Selecione as telas que o usuário terá acesso e adicione ações que ele
+            poderá realizar (Visualização baseada no perfil):</p>
+
+        <!-- PrimeNG v20+ Accordion Syntax -->
+        <p-accordion [value]="activeIndices" [multiple]="true" styleClass="w-full">
+            <p-accordion-panel *ngFor="let group of groupedResources; let i = index" [value]="i">
+                <p-accordion-header>
+                    <div class="flex justify-between items-center w-full pr-4">
+                        <span class="font-bold text-gray-800">{{ group.name }}</span>
+                        <span
+                            class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors pointer-events-none">
+                            {{ isOpen(i) ? 'Mostrar menos' : 'Mostrar mais' }}
+                        </span>
+                    </div>
+                </p-accordion-header>
+                <p-accordion-content>
+                    <div class="flex flex-col gap-6 p-2">
+                        <div *ngFor="let res of group.resources"
+                            class="flex flex-col gap-3 p-4 bg-gray-50 rounded border border-gray-100">
+                            <div class="flex flex-col gap-1 mb-1">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-bold text-blue-600">{{ res.nome }}</h4>
+                                    </div>
+                                    <span class="text-xs text-gray-400">Recurso ID: {{ res.id }}</span>
+                                </div>
+                                <!-- Descrição do Recurso -->
+                                <div class="text-xs text-gray-500 italic" *ngIf="res.descricao">
+                                    {{ res.descricao }}
+                                </div>
+                            </div>
+
+                            <!-- Operações -->
+                            <div class="flex flex-col gap-2">
+                                <label class="text-xs font-semibold text-gray-600 uppercase">Operações</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <!-- Create -->
+                                    <div class="flex items-center gap-2">
+                                        <p-checkbox [binary]="true" [ngModel]="hasPermission(res.id, 'CRIAR')"
+                                            disabled="true" [ngModelOptions]="{standalone: true}"
+                                            [inputId]="'criar-' + res.id"></p-checkbox>
+                                        <label [for]="'criar-' + res.id"
+                                            class="cursor-pointer select-none text-sm">Adicionar</label>
+                                    </div>
+                                    <!-- Update -->
+                                    <div class="flex items-center gap-2 ml-4">
+                                        <p-checkbox [binary]="true" [ngModel]="hasPermission(res.id, 'ATUALIZAR')"
+                                            disabled="true" [ngModelOptions]="{standalone: true}"
+                                            [inputId]="'atualizar-' + res.id"></p-checkbox>
+                                        <label [for]="'atualizar-' + res.id"
+                                            class="cursor-pointer select-none text-sm">Alterar</label>
+                                    </div>
+                                    <!-- Approve -->
+                                    <div class="flex items-center gap-2 ml-4">
+                                        <p-checkbox [binary]="true" [ngModel]="hasPermission(res.id, 'APROVAR')"
+                                            disabled="true" [ngModelOptions]="{standalone: true}"
+                                            [inputId]="'aprovar-' + res.id"></p-checkbox>
+                                        <label [for]="'aprovar-' + res.id"
+                                            class="cursor-pointer select-none text-sm">Aprovar</label>
+                                    </div>
+                                    <!-- Read -->
+                                    <div class="flex items-center gap-2 ml-4">
+                                        <p-checkbox [binary]="true" [ngModel]="hasPermission(res.id, 'LER')"
+                                            disabled="true" [ngModelOptions]="{standalone: true}"
+                                            [inputId]="'ler-' + res.id"></p-checkbox>
+                                        <label [for]="'ler-' + res.id"
+                                            class="cursor-pointer select-none text-sm">Consultar</label>
+                                    </div>
+                                    <!-- Print -->
+                                    <div class="flex items-center gap-2 ml-4">
+                                        <p-checkbox [binary]="true" [ngModel]="hasPermission(res.id, 'IMPRIMIR')"
+                                            disabled="true" [ngModelOptions]="{standalone: true}"
+                                            [inputId]="'imprimir-' + res.id"></p-checkbox>
+                                        <label [for]="'imprimir-' + res.id"
+                                            class="cursor-pointer select-none text-sm">Imprimir</label>
+                                    </div>
+                                    <!-- Delete -->
+                                    <div class="flex items-center gap-2 ml-4">
+                                        <p-checkbox [binary]="true" [ngModel]="hasPermission(res.id, 'EXCLUIR')"
+                                            disabled="true" [ngModelOptions]="{standalone: true}"
+                                            [inputId]="'excluir-' + res.id"></p-checkbox>
+                                        <label [for]="'excluir-' + res.id"
+                                            class="cursor-pointer select-none text-sm">Remover</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Visualização (Scope) -->
+                            <div class="flex flex-col gap-2 mt-2">
+                                <label class="text-xs font-semibold text-gray-600 uppercase">Visualização</label>
+                                <div class="flex flex-wrap gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <p-checkbox [binary]="true" [ngModel]="isScopeSelected(res.id, 'TODOS')"
+                                            disabled="true" [ngModelOptions]="{standalone: true}"
+                                            [inputId]="'todos-' + res.id"></p-checkbox>
+                                        <label [for]="'todos-' + res.id"
+                                            class="cursor-pointer select-none text-sm">Todos os Dados</label>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <p-checkbox [binary]="true" [ngModel]="isScopeSelected(res.id, 'DADOS_USUARIO')"
+                                            disabled="true" [ngModelOptions]="{standalone: true}"
+                                            [inputId]="'usuario-' + res.id"></p-checkbox>
+                                        <label [for]="'usuario-' + res.id"
+                                            class="cursor-pointer select-none text-sm">Dados do Usuário</label>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <p-checkbox [binary]="true" [ngModel]="isScopeSelected(res.id, 'DADOS_EQUIPE')"
+                                            disabled="true" [ngModelOptions]="{standalone: true}"
+                                            [inputId]="'equipe-' + res.id"></p-checkbox>
+                                        <label [for]="'equipe-' + res.id"
+                                            class="cursor-pointer select-none text-sm">Dados da Equipe</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </p-accordion-content>
+            </p-accordion-panel>
+        </p-accordion>
+    </div>
+</div>
