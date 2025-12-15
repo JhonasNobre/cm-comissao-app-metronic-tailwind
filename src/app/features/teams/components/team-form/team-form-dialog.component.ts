@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormArray, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -17,6 +17,8 @@ import { TeamMembersService, TeamMember } from '../../services/team-members.serv
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { StateService } from '../../../../features/states/services/state.service';
+import { HolidayService } from '../../../../core/services/holiday.service';
+import { Holiday } from '../../../../core/models/holiday.model';
 
 @Component({
     selector: 'app-team-form-dialog',
@@ -42,6 +44,7 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
     private teamGroupService = inject(TeamGroupService);
     private teamMembersService = inject(TeamMembersService);
     private stateService = inject(StateService);
+    private holidayService = inject(HolidayService);
 
     accessProfiles: AccessProfile[] = [];
     teamGroups: TeamGroup[] = [];
@@ -116,7 +119,7 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
             this.hasRestricaoHorario = true;
             this.form.get('restricaoHorario')?.patchValue({
                 ativo: true,
-                bloquearEmFeriadosNacionais: data.restricaoHorario.bloquearEmFeriadosNacionais,
+                feriadosIds: data.restricaoHorario.feriadosIds || [],
                 estadoId: data.restricaoHorario.estadoId,
                 municipioId: data.restricaoHorario.municipioId
             });
@@ -147,7 +150,7 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
             perfilAcessoId: [null],
             restricaoHorario: this.formBuilder.group({
                 ativo: [false],
-                bloquearEmFeriadosNacionais: [false],
+                feriadosIds: this.fb.array([]),
                 estadoId: [null],
                 municipioId: [null],
                 horarios: this.formBuilder.array([])
@@ -248,7 +251,7 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
 
         if (!isChecked) {
             this.form.get('restricaoHorario')?.patchValue({
-                bloquearEmFeriadosNacionais: false,
+                feriadosIds: [],
                 estadoId: null,
                 municipioId: null
             });

@@ -92,7 +92,7 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
             quantidadeMaximaReservas: [0, [Validators.required, Validators.min(0)]],
             ehPadrao: [false],
             restricaoHorario: this.formBuilder.group({
-                bloquearEmFeriadosNacionais: [false],
+                feriadosIds: this.formBuilder.array([]),
                 estadoId: [null],
                 municipioId: [null],
                 horarios: this.formBuilder.array([])
@@ -175,7 +175,7 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
         if (data.restricaoHorario) {
             this.hasRestricaoHorario = true;
             this.form.get('restricaoHorario')?.patchValue({
-                bloquearEmFeriadosNacionais: data.restricaoHorario.bloquearEmFeriadosNacionais,
+                feriadosIds: data.restricaoHorario.feriadosIds || [],
                 estadoId: data.restricaoHorario.estadoId,
                 municipioId: data.restricaoHorario.municipioId
             });
@@ -271,7 +271,7 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
         this.hasRestricaoHorario = event;
         if (!this.hasRestricaoHorario) {
             this.form.get('restricaoHorario')?.patchValue({
-                bloquearEmFeriadosNacionais: false,
+                feriadosIds: [],
                 estadoId: null,
                 municipioId: null
             });
