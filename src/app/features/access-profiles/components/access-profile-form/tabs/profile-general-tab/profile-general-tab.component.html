@@ -1,0 +1,42 @@
+<div [formGroup]="form" class="flex flex-col gap-6 mt-4">
+    <!-- Nome do Perfil -->
+    <div class="flex flex-col gap-2">
+        <label for="nome" class="font-semibold text-gray-700 required">Título do Perfil</label>
+        <input pInputText id="nome" formControlName="nome" placeholder="Escreva aqui..." class="w-full" />
+        <small class="text-red-500" *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched">
+            Campo obrigatório (mínimo 3 caracteres)
+        </small>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+        <!-- Limite Desconto Máximo -->
+        <div class="flex flex-col gap-2">
+            <label for="limiteDesconto" class="font-semibold text-gray-700 required">Limite Desconto (%)</label>
+            <p-inputNumber id="limiteDesconto" formControlName="limiteDescontoMaximo" [min]="0" [max]="100" suffix="%"
+                [showButtons]="true" class="w-full">
+            </p-inputNumber>
+            <small class="text-red-500"
+                *ngIf="form.get('limiteDescontoMaximo')?.invalid && form.get('limiteDescontoMaximo')?.touched">
+                Valor entre 0 e 100
+            </small>
+        </div>
+
+        <!-- Quantidade Máxima de Reservas -->
+        <div class="flex flex-col gap-2">
+            <label for="maxReservas" class="font-semibold text-gray-700 required">Máx. Reservas</label>
+            <p-inputNumber id="maxReservas" formControlName="quantidadeMaximaReservas" [min]="0" [showButtons]="true"
+                class="w-full">
+            </p-inputNumber>
+            <small class="text-red-500"
+                *ngIf="form.get('quantidadeMaximaReservas')?.invalid && form.get('quantidadeMaximaReservas')?.touched">
+                Valor mínimo: 0
+            </small>
+        </div>
+    </div>
+
+    <!-- Perfil Padrão -->
+    <div class="flex items-center gap-2">
+        <p-checkbox formControlName="ehPadrao" [binary]="true" inputId="ehPadrao"></p-checkbox>
+        <label for="ehPadrao" class="cursor-pointer select-none">Perfil Padrão</label>
+    </div>
+</div>

@@ -9,11 +9,15 @@ import { InputMaskModule } from 'primeng/inputmask';
 import { DividerModule } from 'primeng/divider';
 import { TableModule } from 'primeng/table';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { TabsModule } from 'primeng/tabs';
 import { TranslocoModule } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
 import { BaseFormComponent, FormReadyData } from '../../../../shared/components/base/base-form/base-form.component';
 import { AccessProfileService } from '../../services/access-profile.service';
 import { PermissionDetail } from '../../models/access-profile.model';
+import { ProfileGeneralTabComponent } from './tabs/profile-general-tab/profile-general-tab.component';
+import { ProfileAccessTabComponent } from './tabs/profile-access-tab/profile-access-tab.component';
+import { ProfileScheduleTabComponent } from './tabs/profile-schedule-tab/profile-schedule-tab.component';
 
 @Component({
     selector: 'app-access-profile-form',
@@ -30,7 +34,11 @@ import { PermissionDetail } from '../../models/access-profile.model';
         DividerModule,
         TableModule,
         InputNumberModule,
-        TranslocoModule
+        TabsModule,
+        TranslocoModule,
+        ProfileGeneralTabComponent,
+        ProfileAccessTabComponent,
+        ProfileScheduleTabComponent
     ],
     templateUrl: './access-profile-form.component.html'
 })
@@ -85,8 +93,8 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
             ehPadrao: [false],
             restricaoHorario: this.formBuilder.group({
                 bloquearEmFeriadosNacionais: [false],
-                ufFeriados: [''],
-                codigoIbgeMunicipio: [''],
+                estadoId: [null],
+                municipioId: [null],
                 horarios: this.formBuilder.array([])
             })
         });
@@ -102,18 +110,24 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
             if (row.canRead) permissions.push({ recursoId: row.recursoId, acao: 'LER', nivelAcesso: row.scope });
             if (row.canUpdate) permissions.push({ recursoId: row.recursoId, acao: 'ATUALIZAR', nivelAcesso: row.scope });
             if (row.canDelete) permissions.push({ recursoId: row.recursoId, acao: 'EXCLUIR', nivelAcesso: row.scope });
+            if (row.canApprove) permissions.push({ recursoId: row.recursoId, acao: 'APROVAR', nivelAcesso: row.scope });
+            if (row.canPrint) permissions.push({ recursoId: row.recursoId, acao: 'IMPRIMIR', nivelAcesso: row.scope });
         });
+
+        const restricaoHorario = this.hasRestricaoHorario ? { ...formValue.restricaoHorario } : null;
+
+
 
         return {
             ...formValue,
-            restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null,
+            restricaoHorario: restricaoHorario,
             permissoes: permissions
         };
     }
 
     protected override onSave(data: any): void {
         // Custom validation for permissions
-        const hasPermissions = this.permissionRows.some(r => r.canCreate || r.canRead || r.canUpdate || r.canDelete);
+        const hasPermissions = this.permissionRows.some(r => r.canCreate || r.canRead || r.canUpdate || r.canDelete || r.canApprove || r.canPrint);
         if (!hasPermissions) {
             this.showWarn('Selecione ao menos uma permissão.');
             return;
@@ -143,6 +157,8 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
             canRead: false,
             canUpdate: false,
             canDelete: false,
+            canApprove: false,
+            canPrint: false,
             scope: 'DADOS_USUARIO'
         }));
     }
@@ -160,8 +176,8 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
             this.hasRestricaoHorario = true;
             this.form.get('restricaoHorario')?.patchValue({
                 bloquearEmFeriadosNacionais: data.restricaoHorario.bloquearEmFeriadosNacionais,
-                ufFeriados: data.restricaoHorario.ufFeriados,
-                codigoIbgeMunicipio: data.restricaoHorario.codigoIbgeMunicipio
+                estadoId: data.restricaoHorario.estadoId,
+                municipioId: data.restricaoHorario.municipioId
             });
 
             this.clearHorarios();
@@ -186,6 +202,8 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
                 if (p.acao === 'LER') row.canRead = true;
                 if (p.acao === 'ATUALIZAR') row.canUpdate = true;
                 if (p.acao === 'EXCLUIR') row.canDelete = true;
+                if (p.acao === 'APROVAR') row.canApprove = true;
+                if (p.acao === 'IMPRIMIR') row.canPrint = true;
                 row.scope = p.nivelAcesso;
             }
         });
@@ -250,16 +268,21 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
     }
 
     toggleRestricaoHorario(event: any): void {
-        this.hasRestricaoHorario = event.checked;
+        this.hasRestricaoHorario = event;
         if (!this.hasRestricaoHorario) {
             this.form.get('restricaoHorario')?.patchValue({
                 bloquearEmFeriadosNacionais: false,
-                ufFeriados: '',
-                codigoIbgeMunicipio: ''
+                estadoId: null,
+                municipioId: null
             });
             this.clearHorarios();
         } else if (this.horarios.length === 0) {
             this.addHorario();
         }
+    }
+
+    onPermissionsChange(updatedPermissions: any[]): void {
+        // O array permissionRows já é atualizado via two-way binding
+        // Este método pode ser usado para validações futuras se necessário
     }
 }

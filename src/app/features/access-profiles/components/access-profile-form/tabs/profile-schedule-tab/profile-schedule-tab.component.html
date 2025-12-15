@@ -1,0 +1,116 @@
+<div class="flex flex-col gap-6 mt-4">
+    <!-- Título e Toggle -->
+    <div class="flex flex-col gap-4">
+        <h3 class="font-bold text-gray-800">Restrição de Horário</h3>
+        <div class="flex items-center gap-2">
+            <p-checkbox [binary]="true" [(ngModel)]="hasRestricaoHorario" (onChange)="onToggleChange($event)"
+                inputId="restricaoHorario" [ngModelOptions]="{standalone: true}"></p-checkbox>
+            <label for="restricaoHorario" class="cursor-pointer select-none">
+                Ativar Restrição de Horário
+            </label>
+        </div>
+    </div>
+
+    <!-- Conteúdo da Restrição (mostrado quando toggle está ativo) -->
+    <div *ngIf="hasRestricaoHorario" [formGroup]="form"
+        class="flex flex-col gap-6 p-4 bg-gray-50 rounded border border-gray-200">
+
+        <!-- Feriados e Recessos -->
+        <div class="flex flex-col gap-4">
+            <h4 class="font-semibold text-gray-700">Feriados e Recessos:</h4>
+            <p class="text-sm text-gray-500">
+                Selecione os feriados que o usuário terá o acesso ao sistema interrompido:
+            </p>
+
+            <!-- Feriados Nacionais -->
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700">Selecione para Adicionar Todos os Feriados Nacionais:</label>
+                <p class="text-xs text-gray-500 mb-2">
+                    Aplicando esta opção tem em feriados nacionais obrigatórios e usuário só terá o dia do seu
+                    aniversário de folga das férias
+                </p>
+                <div class="flex items-center gap-2">
+                    <p-checkbox formControlName="bloquearEmFeriadosNacionais" [binary]="true"
+                        inputId="feriados"></p-checkbox>
+                    <label for="feriados" class="cursor-pointer select-none">Feriados Nacionais</label>
+                </div>
+            </div>
+
+            <p-divider></p-divider>
+
+            <!-- Feriados Regionais -->
+            <div class="flex flex-col gap-2">
+                <label class="font-semibold text-gray-700">Selecione o Estado e Cidade do usuário para aplicar Feriados
+                    Regionais:</label>
+                <p class="text-xs text-gray-500 mb-2">
+                    São Paulo
+                </p>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- UF -->
+                    <div class="flex flex-col gap-2">
+                        <label for="estadoId" class="text-sm">Estado</label>
+                        <p-select formControlName="estadoId" placeholder="Selecione o estado" [options]="states"
+                            optionLabel="nome" optionValue="id" [showClear]="true" [filter]="true" filterBy="nome"
+                            appendTo="body">
+                        </p-select>
+                    </div>
+
+                    <!-- Município -->
+                    <div class="flex flex-col gap-2">
+                        <label for="municipioId" class="text-sm">Cidade</label>
+                        <p-select formControlName="municipioId" placeholder="Selecione a cidade" [options]="cities"
+                            optionLabel="nome" optionValue="id" [showClear]="true" [filter]="true" filterBy="nome"
+                            appendTo="body">
+                        </p-select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p-divider></p-divider>
+
+        <!-- Horários Permitidos -->
+        <div class="flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <h4 class="font-semibold text-gray-700">Horários Permitidos</h4>
+                <button pButton type="button" label="Adicionar Horário" icon="ki-filled ki-plus-squared"
+                    class="p-button-sm" (click)="onAddHorario()"></button>
+            </div>
+
+            <div *ngIf="horarios && horarios.length > 0" class="flex flex-col gap-3">
+                <div *ngFor="let horario of horarios.controls; let i = index" [formGroup]="$any(horario)"
+                    class="grid grid-cols-[2fr_1fr_1fr_auto] gap-3 items-end p-3 bg-white rounded border border-gray-200">
+
+                    <!-- Dia da Semana -->
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs text-gray-600">Dia da Semana</label>
+                        <p-select formControlName="diaSemana" [options]="diasSemanaOptions" optionLabel="label"
+                            optionValue="value" placeholder="Selecione">
+                        </p-select>
+                    </div>
+
+                    <!-- Hora Início -->
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs text-gray-600">Hora Início</label>
+                        <p-inputMask formControlName="horaInicio" mask="99:99" placeholder="08:00"></p-inputMask>
+                    </div>
+
+                    <!-- Hora Fim -->
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs text-gray-600">Hora Fim</label>
+                        <p-inputMask formControlName="horaFim" mask="99:99" placeholder="18:00"></p-inputMask>
+                    </div>
+
+                    <!-- Botão Remover -->
+                    <button pButton type="button" icon="ki-filled ki-trash" class="p-button-danger p-button-text"
+                        (click)="onRemoveHorario(i)" pTooltip="Remover horário"></button>
+                </div>
+            </div>
+
+            <p *ngIf="!horarios || horarios.length === 0" class="text-sm text-gray-500 italic">
+                Nenhum horário configurado. Clique em "Adicionar Horário" para começar.
+            </p>
+        </div>
+    </div>
+</div>

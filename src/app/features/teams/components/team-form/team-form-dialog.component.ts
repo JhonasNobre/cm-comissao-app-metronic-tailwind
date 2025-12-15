@@ -16,6 +16,7 @@ import { TeamGroupService, TeamGroup } from '../../services/team-group.service';
 import { TeamMembersService, TeamMember } from '../../services/team-members.service';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
+import { StateService } from '../../../../features/states/services/state.service';
 
 @Component({
     selector: 'app-team-form-dialog',
@@ -40,11 +41,14 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
     private accessProfileService = inject(AccessProfileService);
     private teamGroupService = inject(TeamGroupService);
     private teamMembersService = inject(TeamMembersService);
+    private stateService = inject(StateService);
 
     accessProfiles: AccessProfile[] = [];
     teamGroups: TeamGroup[] = [];
     hasRestricaoHorario = false;
     members: TeamMember[] = [];
+    states: any[] = [];
+    cities: any[] = [];
 
     diasSemanaOptions: any[] = [];
 
@@ -59,8 +63,9 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
             { label: this.translate.translate('general.days.saturday'), value: 'Sabado' }
         ];
 
+        this.loadStates();
+
         // Carregar dependências em paralelo antes de preencher o form
-        // para garantir que os dropdowns tenham opções
         const requests = {
             profiles: this.accessProfileService.list(),
             groups: this.teamGroupService.list({ apenasAtivos: true })
@@ -72,7 +77,6 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
                     this.accessProfiles = results.profiles;
                     this.teamGroups = results.groups;
 
-                    // Só aplica o patchValue depois que as listas estiverem carregadas
                     if (data && data.id) {
                         this.patchFormData(data);
                         this.loadMembers(data.id);
@@ -80,6 +84,22 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
                 },
                 error: (err) => console.error('Error loading dependencies', err)
             });
+        });
+
+        // Listeners
+        const restricaoGroup = this.form.get('restricaoHorario');
+
+        restricaoGroup?.get('ativo')?.valueChanges.subscribe(isActive => {
+            this.hasRestricaoHorario = isActive;
+        });
+
+        restricaoGroup?.get('estadoId')?.valueChanges.subscribe(stateId => {
+            if (stateId) {
+                this.loadCities(stateId);
+            } else {
+                this.cities = [];
+                restricaoGroup?.get('municipioId')?.setValue(null);
+            }
         });
     }
 
@@ -95,10 +115,15 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
         if (data.restricaoHorario) {
             this.hasRestricaoHorario = true;
             this.form.get('restricaoHorario')?.patchValue({
+                ativo: true,
                 bloquearEmFeriadosNacionais: data.restricaoHorario.bloquearEmFeriadosNacionais,
-                ufFeriados: data.restricaoHorario.ufFeriados,
-                codigoIbgeMunicipio: data.restricaoHorario.codigoIbgeMunicipio
+                estadoId: data.restricaoHorario.estadoId,
+                municipioId: data.restricaoHorario.municipioId
             });
+
+            if (data.restricaoHorario.estadoId) {
+                this.loadCities(data.restricaoHorario.estadoId);
+            }
 
             if (data.restricaoHorario?.horarios) {
                 this.clearHorarios();
@@ -109,6 +134,7 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
             }
         } else {
             this.hasRestricaoHorario = false;
+            this.form.get('restricaoHorario.ativo')?.setValue(false);
         }
     }
 
@@ -120,9 +146,10 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
             grupoEquipeId: [null],
             perfilAcessoId: [null],
             restricaoHorario: this.formBuilder.group({
+                ativo: [false],
                 bloquearEmFeriadosNacionais: [false],
-                ufFeriados: [''],
-                codigoIbgeMunicipio: [''],
+                estadoId: [null],
+                municipioId: [null],
                 horarios: this.formBuilder.array([])
             })
         });
@@ -130,14 +157,32 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
 
     protected override getFormValue(): TeamCreateDTO | TeamUpdateDTO {
         const formValue = this.form.getRawValue();
+
+        const res = formValue.restricaoHorario;
+        const hasRestricao = res && res.ativo;
+
+        let restricaoPayload = null;
+        if (hasRestricao) {
+            const { ativo, ...rest } = res;
+            restricaoPayload = rest;
+        }
+
         return {
             ...formValue,
-            restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null
+            restricaoHorario: restricaoPayload
         };
     }
 
     get horarios(): FormArray {
         return this.form.get('restricaoHorario.horarios') as FormArray;
+    }
+
+    loadStates(): void {
+        this.stateService.list().subscribe(data => this.states = data);
+    }
+
+    loadCities(stateId: string): void {
+        this.stateService.listCities(stateId).subscribe(data => this.cities = data);
     }
 
     addHorario(data?: any): void {
@@ -195,12 +240,17 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
     }
 
     toggleRestricaoHorario(event: any): void {
-        this.hasRestricaoHorario = event.checked;
-        if (!this.hasRestricaoHorario) {
+        const isChecked = event.checked;
+        this.hasRestricaoHorario = isChecked;
+
+        const group = this.form.get('restricaoHorario');
+        group?.get('ativo')?.setValue(isChecked);
+
+        if (!isChecked) {
             this.form.get('restricaoHorario')?.patchValue({
                 bloquearEmFeriadosNacionais: false,
-                ufFeriados: '',
-                codigoIbgeMunicipio: ''
+                estadoId: null,
+                municipioId: null
             });
             this.clearHorarios();
         } else if (this.horarios.length === 0) {

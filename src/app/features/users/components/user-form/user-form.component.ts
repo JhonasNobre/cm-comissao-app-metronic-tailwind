@@ -132,9 +132,10 @@ export class UserFormComponent implements OnInit {
             empresaIds: [[], [Validators.required]],
             equipeIds: [[]],
             restricaoHorario: this.fb.group({
+                ativo: [false],
                 bloquearEmFeriadosNacionais: [false],
-                ufFeriados: [''],
-                codigoIbgeMunicipio: [''],
+                estadoId: [null],
+                municipioId: [null],
                 horarios: this.fb.array([])
             })
         });
@@ -203,9 +204,10 @@ export class UserFormComponent implements OnInit {
 
                 if (user.restricaoHorario) {
                     this.form.get('restricaoHorario')?.patchValue({
+                        ativo: true,
                         bloquearEmFeriadosNacionais: user.restricaoHorario.bloquearEmFeriadosNacionais,
-                        ufFeriados: user.restricaoHorario.ufFeriados,
-                        codigoIbgeMunicipio: user.restricaoHorario.codigoIbgeMunicipio
+                        estadoId: user.restricaoHorario.estadoId,
+                        municipioId: user.restricaoHorario.municipioId
                     });
 
                     // Logic to populate FormArray is now expected to be handled by the child or we prepopulate here?
@@ -227,6 +229,8 @@ export class UserFormComponent implements OnInit {
                         });
                         // Sorting can be done here or child will sort on add.
                     }
+                } else {
+                    this.form.get('restricaoHorario.ativo')?.setValue(false);
                 }
                 this.loading = false;
             },
@@ -248,11 +252,17 @@ export class UserFormComponent implements OnInit {
 
         // Check if there is actual restriction data
         const res = formValue.restricaoHorario;
-        const hasRestricao = res && (res.bloquearEmFeriadosNacionais || res.ufFeriados || (res.horarios && res.horarios.length > 0));
+        const hasRestricao = res && res.ativo;
+
+        let restricaoPayload = null;
+        if (hasRestricao) {
+            const { ativo, ...rest } = res;
+            restricaoPayload = rest;
+        }
 
         const payload = {
             ...formValue,
-            restricaoHorario: hasRestricao ? formValue.restricaoHorario : null
+            restricaoHorario: restricaoPayload
         };
 
         if (this.isEditMode && this.userId) {

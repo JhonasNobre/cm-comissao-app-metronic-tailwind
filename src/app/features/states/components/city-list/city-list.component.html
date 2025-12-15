@@ -1,0 +1,10 @@
+<div class="mb-5">
+    <h1 class="text-xl font-bold">Cidades de {{ uf }}</h1>
+    <a routerLink="/cadastros/estados" class="text-primary hover:underline flex items-center gap-1">
+        <i class="ki-filled ki-arrow-left"></i> Voltar para Estados
+    </a>
+</div>
+
+<app-generic-p-table [tableData]="itens" [columnDefinition]="columns" [displayDetailAction]="false"
+    [displayEditAction]="false" [displayDeleteAction]="false" [displayCreateAction]="false" tableName="Municipios">
+</app-generic-p-table>

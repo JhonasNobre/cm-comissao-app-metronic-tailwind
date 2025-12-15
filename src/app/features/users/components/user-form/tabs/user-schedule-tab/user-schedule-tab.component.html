@@ -1,9 +1,8 @@
 <div [formGroup]="parentForm" class="flex flex-col gap-4 mt-4">
-    <div class="flex items-center gap-2 border-b pb-2 mb-2">
-        <p-checkbox [binary]="true" inputId="restricao" [ngModel]="hasRestricaoHorario"
-            (onChange)="toggleRestricaoHorario($event)" [ngModelOptions]="{standalone: true}"></p-checkbox>
-        <label for="restricao" class="text-lg font-semibold text-gray-800 cursor-pointer select-none"
-            (click)="hasRestricaoHorario = !hasRestricaoHorario; toggleRestricaoHorario({checked: hasRestricaoHorario})">
+    <div class="flex items-center gap-2 border-b pb-2 mb-2" formGroupName="restricaoHorario">
+        <p-checkbox [binary]="true" inputId="restricao" formControlName="ativo"
+            (onChange)="toggleRestricaoHorario($event)"></p-checkbox>
+        <label for="restricao" class="text-lg font-semibold text-gray-800 cursor-pointer select-none">
             Restrição de Horário
         </label>
     </div>
@@ -21,15 +20,18 @@
         <!-- UF e Código IBGE -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex flex-col gap-2">
-                <label for="uf" class="text-sm font-medium text-gray-600">UF Feriados</label>
-                <input pInputText id="uf" formControlName="ufFeriados" placeholder="Ex: SP" maxlength="2"
-                    class="w-full" />
+                <label for="estadoId" class="text-sm font-medium text-gray-600">Estado</label>
+                <p-select formControlName="estadoId" placeholder="Selecione o estado" [options]="states"
+                    optionLabel="nome" optionValue="id" [showClear]="true" [filter]="true" filterBy="nome"
+                    appendTo="body" styleClass="w-full" [style]="{'width':'100%'}">
+                </p-select>
             </div>
             <div class="flex flex-col gap-2">
-                <label for="ibge" class="text-sm font-medium text-gray-600">Cód. IBGE
-                    Município</label>
-                <input pInputText id="ibge" formControlName="codigoIbgeMunicipio" placeholder="Ex: 3550308"
-                    class="w-full" />
+                <label for="municipioId" class="text-sm font-medium text-gray-600">Cidade</label>
+                <p-select formControlName="municipioId" placeholder="Selecione a cidade" [options]="cities"
+                    optionLabel="nome" optionValue="id" [showClear]="true" [filter]="true" filterBy="nome"
+                    appendTo="body" styleClass="w-full" [style]="{'width':'100%'}">
+                </p-select>
             </div>
         </div>
 

@@ -1,0 +1,26 @@
+<app-generic-p-table
+    [tableData]="itens"
+    [columnDefinition]="columns"
+    [displayDetailAction]="false"
+    [displayEditAction]="false"
+    [displayDeleteAction]="false"
+    tableName="Estados"
+    [hasBtnCreate]="false"
+    [displayCreateAction]="false"
+>
+    <!-- Header Content: Import Button -->
+    <div class="flex gap-2">
+       <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none" accept=".xlsx, .xls" />
+       <button class="kt-btn kt-btn-success" (click)="fileInput.click()">
+           <i class="ki-filled ki-file-up"></i> Importar Excel
+       </button>
+    </div>
+
+    <!-- Custom Row Actions -->
+    <ng-template #customActions let-state>
+        <button class="btn btn-icon btn-sm btn-light-primary" (click)="onViewCities(state)" pTooltip="Ver Cidades" tooltipPosition="top">
+            <i class="ki-filled ki-eye"></i>
+        </button>
+    </ng-template>
+
+</app-generic-p-table>

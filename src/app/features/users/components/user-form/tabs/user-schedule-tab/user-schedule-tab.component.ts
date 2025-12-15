@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, FormArray, FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -7,6 +7,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { InputMaskModule } from 'primeng/inputmask';
 import { TooltipModule } from 'primeng/tooltip';
+import { StateService } from '../../../../../states/services/state.service';
 
 @Component({
     selector: 'app-user-schedule-tab',
@@ -29,31 +30,49 @@ export class UserScheduleTabComponent implements OnInit {
     @Input() diasSemanaOptions: any[] = [];
 
     hasRestricaoHorario = false;
+    states: any[] = [];
+    cities: any[] = [];
+
+    private stateService = inject(StateService);
 
     constructor(private fb: FormBuilder) { }
 
     ngOnInit(): void {
-        // Check initial state based on data
+        this.loadStates();
+
         const restricaoGroup = this.parentForm.get('restricaoHorario');
-        // Simple check: if form is valid/has values, we assume it's active or logic in parent set it. 
-        // Better: we rely on parent passing the correct state or we infer it. 
-        // Let's infer from the fact that we use 'restricaoHorario' form group.
-        // Actually parent manages the structure.
 
-        // Let's sync local state with parent form
-        // If parent has data, hasRestricaoHorario should be true.
-        // However, parent logic was: "payload.restricaoHorario: this.hasRestricaoHorario ? ..."
-        // So the form group might exist but be empty. 
+        // Sync local state with 'ativo' control
+        this.hasRestricaoHorario = restricaoGroup?.get('ativo')?.value === true;
 
-        // Let's assume if there are schedules or flag is set, it is true.
-        // But purely relying on 'restricaoHorario' group existence is safer if parent logic aligns.
-
-        // For now, let's keep the toggle logic here but we need to initialize 'hasRestricaoHorario' correctly.
-        // Valid way: check if bloqFeriados is true OR uf is set OR schedules > 0
-        const val = restricaoGroup?.value;
-        if (val && (val.bloquearEmFeriadosNacionais || val.ufFeriados || (val.horarios && val.horarios.length > 0))) {
-            this.hasRestricaoHorario = true;
+        // Initialize cities if state is present
+        const stateId = restricaoGroup?.get('estadoId')?.value;
+        if (this.hasRestricaoHorario && stateId) {
+            this.loadCities(stateId);
         }
+
+        // Listen to active changes to toggle UI
+        restricaoGroup?.get('ativo')?.valueChanges.subscribe(isActive => {
+            this.hasRestricaoHorario = isActive;
+        });
+
+        // Listen to state changes to load cities
+        restricaoGroup?.get('estadoId')?.valueChanges.subscribe(stateId => {
+            if (stateId) {
+                this.loadCities(stateId);
+            } else {
+                this.cities = [];
+                restricaoGroup?.get('municipioId')?.setValue(null);
+            }
+        });
+    }
+
+    loadStates(): void {
+        this.stateService.list().subscribe(data => this.states = data);
+    }
+
+    loadCities(stateId: string): void {
+        this.stateService.listCities(stateId).subscribe(data => this.cities = data);
     }
 
     get horarios(): FormArray {
@@ -111,12 +130,17 @@ export class UserScheduleTabComponent implements OnInit {
     }
 
     toggleRestricaoHorario(event: any): void {
-        this.hasRestricaoHorario = event.checked;
-        if (!this.hasRestricaoHorario) {
-            this.parentForm.get('restricaoHorario')?.patchValue({
+        const isChecked = event.checked;
+        this.hasRestricaoHorario = isChecked;
+
+        const group = this.parentForm.get('restricaoHorario');
+        group?.get('ativo')?.setValue(isChecked);
+
+        if (!isChecked) {
+            group?.patchValue({
                 bloquearEmFeriadosNacionais: false,
-                ufFeriados: '',
-                codigoIbgeMunicipio: ''
+                estadoId: null,
+                municipioId: null
             });
             while (this.horarios.length !== 0) {
                 this.horarios.removeAt(0);

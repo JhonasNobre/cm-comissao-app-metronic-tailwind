@@ -19,6 +19,9 @@ export const routes: Routes = [
       { path: 'users/:id/details', loadComponent: () => import('./features/users/components/user-profile/user-profile.component').then(m => m.UserProfileComponent) },
 
       // Cadastros Base
+      { path: 'cadastros/estados', loadComponent: () => import('./features/states/components/state-list/state-list.component').then(m => m.StateListComponent) },
+      { path: 'cadastros/estados/:uf/cidades', loadComponent: () => import('./features/states/components/city-list/city-list.component').then(m => m.CityListComponent) },
+
       { path: 'companies', loadComponent: () => import('./features/companies/components/company-list/company-list.component').then(m => m.CompanyListComponent) },
       { path: 'teams', loadComponent: () => import('./features/teams/components/team-list/team-list.component').then(m => m.TeamListComponent) },
       { path: 'team-groups', loadComponent: () => import('./features/teams/components/team-group-list/team-group-list.component').then(m => m.TeamGroupListComponent) },
