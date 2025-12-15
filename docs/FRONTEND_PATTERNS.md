@@ -133,3 +133,55 @@ Para entidades que possuem restrição de horário (Usuários, Equipes, Perfis),
 
 ### Permissões
 Para Perfis de Acesso, as permissões são enviadas como uma lista de objetos contendo `RecursoId`, `Acao` e `NivelAcesso`.
+
+---
+
+## 6. Gestão de Localização (Estados/Cidades)
+
+Para selecionar localizações, utilize o `StateService` e o componente `p-select` com filtragem.
+
+### Serviço (`StateService`)
+Este serviço fornece métodos para listar estados e cidades, utilizando cache e tipagem forte via GUIDs.
+
+```typescript
+// Listar Estados
+this.stateService.list().subscribe(states => this.states = states);
+
+// Listar Cidades (Reativo à seleção do estado)
+this.form.get('estadoId')?.valueChanges.subscribe(id => {
+    if (id) this.loadCities(id);
+});
+```
+
+### Componente de Seleção (`p-select`)
+Utilize `p-select` com `filter="true"` e `optionValue="id"`. Observar que o backend espera GUIDs.
+
+```html
+<p-select [options]="states" optionLabel="nome" optionValue="id" [filter]="true"></p-select>
+```
+
+---
+
+## 7. Padrões de Formulário Avançados
+
+### Checkbox de Controle de Estado ("Ativo")
+Para formulários opcionais aninhados (ex: `RestricaoHorario`), onde a ausência de dados significa uma coisa (ex: sem restrição) mas o usuário visualiza como um checkbox "Ativado/Desativado", utilizamos um controle virtual `ativo`.
+
+**Problema**: Se o usuário desmarcar o checkbox, os dados devem ser limpos ou ignorados, mas o estado "desmarcado" deve ser preservado na UI enquanto edita.
+
+**Solução**:
+1. Adicionar FormControl `ativo: [false]` ao FormGroup aninhado.
+2. Sincronizar o checkbox com esse controle.
+3. No `onSubmit` ou `getFormValue`, verificar `ativo`. Se false, enviar `null` ou payload vazio para o backend. Se true, enviar os dados, removendo a propriedade `ativo` do payload final (já que ela não existe no DTO).
+
+```typescript
+// Inicialização
+restricaoHorario: this.fb.group({
+    ativo: [false], // Controle virtual
+    ...outrosCampos
+})
+
+// Envio (Removendo 'ativo')
+const { ativo, ...payload } = formValue.restricaoHorario;
+return ativo ? payload : null;
+```
