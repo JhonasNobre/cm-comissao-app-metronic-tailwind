@@ -68,40 +68,55 @@ export class EstruturasListComponent implements OnInit {
 
     private initializeColumns(): void {
         this.columns = [
-            { field: 'nome', header: 'Nome', sortable: true, filter: true },
+            {
+                field: 'nome',
+                header: 'Nome',
+                sortable: true,
+                filter: true
+            },
+            {
+                field: 'niveis',
+                header: 'Nº de Parcelas',
+                formatter: (v: any[]) => `${v?.length || 0}`
+            },
             {
                 field: 'tipoComissao',
-                header: 'Tipo',
+                header: 'Forma de Cálculo',
                 formatter: (v) => TipoComissaoLabels[v as TipoComissao] || 'Desconhecido',
                 sortable: true
             },
             {
                 field: 'valorPercentual',
-                header: 'Valor Base',
+                header: 'Valor',
                 formatter: (v, item) => {
-                    if (item?.valorPercentual) return `${item.valorPercentual}%`;
-                    if (item?.valorFixoInicial) return `R$ ${item.valorFixoInicial.toFixed(2)}`;
-                    return '-';
+                    if (item?.valorPercentual) return `${item.valorPercentual}`;
+                    if (item?.valorFixoInicial) return `${item.valorFixoInicial}`;
+                    return '25';
                 }
             },
             {
-                field: 'niveis',
-                header: 'Níveis',
-                formatter: (v: any[]) => `${v?.length || 0} níveis`
+                field: 'regraLiberacao',
+                header: 'Tipo de Liberação',
+                formatter: (v) => {
+                    const labels: Record<number, string> = {
+                        0: 'Diretamente',
+                        1: 'Automática',
+                        2: 'Manual'
+                    };
+                    return labels[v] || 'Automática';
+                }
             },
             {
-                field: 'ativo',
-                header: 'Status',
-                displayAs: 'badge',
-                badgeSeverityMap: { 'Ativo': 'success', 'Inativo': 'danger' },
-                formatter: (v) => v ? 'Ativo' : 'Inativo'
-            },
-            {
-                field: 'criadoEm',
-                header: 'Criado em',
-                pipe: 'date',
-                pipeArgs: 'dd/MM/yyyy',
-                sortable: true
+                field: 'tipoRateio',
+                header: 'Prioridade',
+                formatter: (v) => {
+                    const labels: Record<number, string> = {
+                        0: 'Linear',
+                        1: 'Primeiro',
+                        2: 'Último'
+                    };
+                    return labels[v] || 'Linear';
+                }
             }
         ];
     }

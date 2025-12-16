@@ -4,7 +4,8 @@
 export enum TipoComissao {
     Percentual = 1,
     ValorFixo = 2,
-    Misto = 3
+    Misto = 3,
+    Bonus = 4
 }
 
 export enum TipoRateio {
@@ -42,7 +43,8 @@ export enum StatusParcela {
 export const TipoComissaoLabels: Record<TipoComissao, string> = {
     [TipoComissao.Percentual]: 'Percentual',
     [TipoComissao.ValorFixo]: 'Valor Fixo',
-    [TipoComissao.Misto]: 'Misto'
+    [TipoComissao.Misto]: 'Misto',
+    [TipoComissao.Bonus]: 'Bônus por Performance'
 };
 
 export const TipoRateioLabels: Record<TipoRateio, string> = {
