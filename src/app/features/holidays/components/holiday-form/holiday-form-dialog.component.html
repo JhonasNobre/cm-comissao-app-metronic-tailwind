@@ -1,0 +1,61 @@
+<div class="p-4" [formGroup]="form">
+    <div class="flex flex-col gap-4">
+
+        <!-- Nome -->
+        <div class="flex flex-col gap-2">
+            <label for="name" class="font-semibold text-gray-700">Nome do Feriado*</label>
+            <input pInputText id="name" formControlName="name" placeholder="Digite o nome" class="w-full" />
+            <small *ngIf="form.get('name')?.invalid && form.get('name')?.touched" class="text-red-500">
+                Nome é obrigatório
+            </small>
+        </div>
+
+        <!-- Data -->
+        <div class="flex flex-col gap-2">
+            <label for="date" class="font-semibold text-gray-700">Data*</label>
+            <p-datePicker formControlName="date" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"
+                placeholder="Selecione a data" styleClass="w-full" [style]="{'width':'100%'}"></p-datePicker>
+            <small *ngIf="form.get('date')?.invalid && form.get('date')?.touched" class="text-red-500">
+                Data é obrigatória
+            </small>
+        </div>
+
+        <!-- Tipo -->
+        <div class="flex flex-col gap-2">
+            <label for="type" class="font-semibold text-gray-700">Tipo*</label>
+            <p-select formControlName="type" [options]="typeOptions" optionLabel="label" optionValue="value"
+                placeholder="Selecione o tipo" styleClass="w-full" [style]="{'width':'100%'}" appendTo="body"
+                (onChange)="onTypeChange()"></p-select>
+        </div>
+
+        <!-- Estado (Visível se não for Nacional) -->
+        <div class="flex flex-col gap-2" *ngIf="showState">
+            <label for="estadoId" class="font-semibold text-gray-700">UF (Estado)*</label>
+            <p-select formControlName="estadoId" [options]="states" optionLabel="nome" optionValue="id"
+                placeholder="Selecione o estado" [filter]="true" filterBy="nome" styleClass="w-full"
+                [style]="{'width':'100%'}" appendTo="body" (onChange)="onStateChange()"></p-select>
+            <small *ngIf="form.get('estadoId')?.invalid && form.get('estadoId')?.touched" class="text-red-500">
+                Estado é obrigatório para este tipo
+            </small>
+        </div>
+
+        <!-- Município (Visível se for Municipal) -->
+        <div class="flex flex-col gap-2" *ngIf="showCity">
+            <label for="municipioId" class="font-semibold text-gray-700">Município*</label>
+            <p-select formControlName="municipioId" [options]="cities" optionLabel="nome" optionValue="id"
+                placeholder="Selecione o município" [filter]="true" filterBy="nome" styleClass="w-full"
+                [style]="{'width':'100%'}" appendTo="body" [disabled]="!form.get('estadoId')?.value"></p-select>
+            <small *ngIf="!form.get('estadoId')?.value && showCity" class="text-gray-500 text-xs">
+                Selecione um estado primeiro
+            </small>
+            <small *ngIf="form.get('municipioId')?.invalid && form.get('municipioId')?.touched" class="text-red-500">
+                Município é obrigatório para feriados municipais
+            </small>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-4">
+            <button pButton label="Cancelar" class="p-button-secondary p-button-text" (click)="onCancel()"></button>
+            <button pButton label="Salvar" (click)="onSave()" [disabled]="form.invalid || loading"></button>
+        </div>
+    </div>
+</div>

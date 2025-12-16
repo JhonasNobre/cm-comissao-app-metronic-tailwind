@@ -51,7 +51,7 @@
                 <div *ngIf="nationalHolidays.length > 0" class="flex flex-col gap-1.5 mt-2">
                     <div *ngFor="let holiday of nationalHolidays" class="flex items-center gap-2">
                         <p-checkbox [binary]="true" [inputId]="'holiday-' + holiday.id"
-                            [checked]="isHolidaySelected(holiday.id)"
+                            [ngModel]="isHolidaySelected(holiday.id)" [ngModelOptions]="{standalone: true}"
                             (onChange)="toggleHoliday(holiday.id, $event.checked)"></p-checkbox>
                         <label [for]="'holiday-' + holiday.id" class="cursor-pointer select-none text-sm">
                             {{ holiday.nome }} ({{ holiday.data | date: 'dd/MM' }})
@@ -64,37 +64,59 @@
                 </div>
             </div>
 
-            <!-- State/City Selection -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                <div class="flex flex-col gap-2">
-                    <label for="estadoId" class="text-sm font-medium text-gray-600">Estado</label>
-                    <p-select formControlName="estadoId" placeholder="Selecione o estado" [options]="states"
-                        optionLabel="nome" optionValue="id" [showClear]="true" [filter]="true" filterBy="nome"
-                        appendTo="body" styleClass="w-full" [style]="{'width':'100%'}">
-                    </p-select>
+            <!-- Feriados Regionais (Multiple Groups) -->
+            <div class="flex flex-col gap-4 mt-4 border-t pt-4">
+                <div class="flex justify-between items-center">
+                    <label class="font-semibold text-gray-700 text-sm">Selecione o Estado e Cidade para aplicar Feriados
+                        Regionais:</label>
+                    <button pButton type="button" icon="ki-filled ki-plus" class="p-button-sm p-button-outlined"
+                        (click)="addRegionalGroup()" label="Adicionar Local"></button>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <label for="municipioId" class="text-sm font-medium text-gray-600">Cidade</label>
-                    <p-select formControlName="municipioId" placeholder="Selecione a cidade" [options]="cities"
-                        optionLabel="nome" optionValue="id" [showClear]="true" [filter]="true" filterBy="nome"
-                        appendTo="body" styleClass="w-full" [style]="{'width':'100%'}">
-                    </p-select>
-                </div>
-            </div>
 
-            <!-- Regional Holidays List -->
-            <div *ngIf="regionalHolidays.length > 0"
-                class="ml-6 flex flex-col gap-2 border-l-2 border-gray-200 pl-4 mt-2">
-                <h4 class="text-sm font-semibold text-gray-700">Feriados Regionais</h4>
-                <div class="flex flex-col gap-1.5">
-                    <div *ngFor="let holiday of regionalHolidays" class="flex items-center gap-2">
-                        <p-checkbox [binary]="true" [inputId]="'regional-' + holiday.id"
-                            [checked]="isHolidaySelected(holiday.id)"
-                            (onChange)="toggleHoliday(holiday.id, $event.checked)"></p-checkbox>
-                        <label [for]="'regional-' + holiday.id" class="cursor-pointer select-none text-sm">
-                            {{ holiday.nome }} ({{ holiday.data | date: 'dd/MM' }}) - {{ holiday.tipo }}
-                        </label>
+                <div *ngFor="let group of regionalGroups; let i = index"
+                    class="flex flex-col gap-2 p-3 border border-gray-200 rounded bg-gray-50">
+                    <div class="flex gap-2 items-start">
+                        <!-- Estado -->
+                        <div class="flex-1">
+                            <p-select [options]="states" optionLabel="nome" optionValue="id"
+                                placeholder="Selecione o Estado" [ngModel]="group.estadoId"
+                                [ngModelOptions]="{standalone: true}" (onChange)="onGroupStateChange(i, $event.value)"
+                                styleClass="w-full" [style]="{'width':'100%'}" appendTo="body" [filter]="true"
+                                filterBy="nome" [showClear]="true"></p-select>
+                        </div>
+
+                        <!-- Cidade -->
+                        <div class="flex-1">
+                            <p-select [options]="group.cities" optionLabel="nome" optionValue="id"
+                                placeholder="Selecione a Cidade" [ngModel]="group.municipioId"
+                                [ngModelOptions]="{standalone: true}" (onChange)="onGroupCityChange(i, $event.value)"
+                                [disabled]="!group.estadoId" styleClass="w-full" [style]="{'width':'100%'}"
+                                appendTo="body" [filter]="true" filterBy="nome" [showClear]="true"></p-select>
+                        </div>
+
+                        <!-- Remove Button -->
+                        <button pButton type="button" icon="ki-filled ki-minus"
+                            class="p-button-danger p-button-text p-button-sm mt-1" (click)="removeRegionalGroup(i)"
+                            pTooltip="Remover este local"></button>
                     </div>
+
+                    <!-- Holidays List for this Group -->
+                    <div *ngIf="group.holidays.length > 0" class="ml-2 flex flex-col gap-1.5 mt-2">
+                        <div *ngFor="let holiday of group.holidays" class="flex items-center gap-2">
+                            <p-checkbox [binary]="true" [inputId]="'regional-' + i + '-' + holiday.id"
+                                [ngModel]="isHolidaySelected(holiday.id)" [ngModelOptions]="{standalone: true}"
+                                (onChange)="toggleHoliday(holiday.id, $event.checked)"></p-checkbox>
+                            <label [for]="'regional-' + i + '-' + holiday.id"
+                                class="cursor-pointer select-none text-sm">
+                                {{ holiday.nome }} ({{ holiday.data | date: 'dd/MM' }}) - {{ holiday.tipo }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div *ngIf="regionalGroups.length === 0" class="text-sm text-gray-500 italic text-center py-2">
+                    Nenhum local regional adicionado. Clique em "Adicionar Local" para selecionar feriados estaduais ou
+                    municipais.
                 </div>
             </div>
         </div>

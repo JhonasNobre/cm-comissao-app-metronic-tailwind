@@ -10,6 +10,8 @@ export interface Holiday extends BaseEntity {
     name: string;
     date: Date;
     type: HolidayType;
-    stateCode?: string; // UF
-    city?: string; // Município
+    stateCode?: string; // UF (Deprecated)
+    city?: string; // Município (Deprecated)
+    estadoId?: string;
+    municipioId?: string;
 }

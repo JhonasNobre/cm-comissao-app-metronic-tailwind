@@ -54,15 +54,22 @@ export class UserScheduleTabComponent implements OnInit {
         // Sync local state with 'ativo' control
         this.hasRestricaoHorario = restricaoGroup?.get('ativo')?.value === true;
 
-        // Initialize cities if state is present
+        // Initialize cities and holidays if state is present
         const stateId = restricaoGroup?.get('estadoId')?.value;
-        if (this.hasRestricaoHorario && stateId) {
-            this.loadCities(stateId);
+        if (this.hasRestricaoHorario) {
+            this.loadNationalHolidays();
+            if (stateId) {
+                this.loadCities(stateId);
+                this.loadRegionalHolidays(stateId);
+            }
         }
 
         // Listen to active changes to toggle UI
         restricaoGroup?.get('ativo')?.valueChanges.subscribe(isActive => {
             this.hasRestricaoHorario = isActive;
+            if (isActive) {
+                this.loadNationalHolidays();
+            }
         });
 
         // Listen to state changes to load cities and regional holidays
@@ -79,7 +86,15 @@ export class UserScheduleTabComponent implements OnInit {
     }
 
     loadStates(): void {
-        this.stateService.list().subscribe(data => this.states = data);
+        this.stateService.list().subscribe(data => {
+            this.states = data;
+            // Retry loading regional holidays if state is selected
+            const restricaoGroup = this.parentForm.get('restricaoHorario');
+            const stateId = restricaoGroup?.get('estadoId')?.value;
+            if (this.hasRestricaoHorario && stateId) {
+                this.loadRegionalHolidays(stateId);
+            }
+        });
     }
 
     loadCities(stateId: string): void {
@@ -92,6 +107,12 @@ export class UserScheduleTabComponent implements OnInit {
                 this.nationalHolidays = holidays;
                 // Check if all national holidays are already selected
                 this.updateAllNationalHolidaysCheckbox();
+
+                // If any national holiday is selected, show the list
+                const hasSelected = this.nationalHolidays.some(h => this.isHolidaySelected(h.id));
+                if (hasSelected) {
+                    this.showNationalHolidays = true;
+                }
             }
         });
     }

@@ -46,7 +46,7 @@
                 <div *ngIf="nationalHolidays.length > 0" class="flex flex-col gap-1.5 mt-2">
                     <div *ngFor="let holiday of nationalHolidays" class="flex items-center gap-2">
                         <p-checkbox [binary]="true" [inputId]="'holiday-' + holiday.id"
-                            [checked]="isHolidaySelected(holiday.id)"
+                            [ngModel]="isHolidaySelected(holiday.id)" [ngModelOptions]="{standalone: true}"
                             (onChange)="toggleHoliday(holiday.id, $event.checked)"></p-checkbox>
                         <label [for]="'holiday-' + holiday.id" class="cursor-pointer select-none text-sm">
                             {{ holiday.nome }} ({{ holiday.data | date: 'dd/MM' }})
@@ -84,7 +84,7 @@
                 <div class="flex flex-col gap-1.5">
                     <div *ngFor="let holiday of regionalHolidays" class="flex items-center gap-2">
                         <p-checkbox [binary]="true" [inputId]="'regional-' + holiday.id"
-                            [checked]="isHolidaySelected(holiday.id)"
+                            [ngModel]="isHolidaySelected(holiday.id)" [ngModelOptions]="{standalone: true}"
                             (onChange)="toggleHoliday(holiday.id, $event.checked)"></p-checkbox>
                         <label [for]="'regional-' + holiday.id" class="cursor-pointer select-none text-sm">
                             {{ holiday.nome }} ({{ holiday.data | date: 'dd/MM' }}) - {{ holiday.tipo }}

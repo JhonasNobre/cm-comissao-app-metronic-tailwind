@@ -211,7 +211,21 @@ export class UserFormComponent implements OnInit {
                     });
 
                     // Logic to populate FormArray is now expected to be handled by the child or we prepopulate here?
-                    // WE MUST prepopulate here because the child displays what's in the form.
+                    // Populate feriadosIds FormArray
+                    const feriadosIdsArray = this.form.get('restricaoHorario.feriadosIds') as any; // FormArray
+                    while (feriadosIdsArray.length !== 0) {
+                        feriadosIdsArray.removeAt(0);
+                    }
+                    if (user.restricaoHorario.feriadosIds) {
+                        user.restricaoHorario.feriadosIds.forEach((id: string) => {
+                            feriadosIdsArray.push(this.fb.control(id));
+                        });
+                    } else if (user.restricaoHorario.feriadosDetalhados) {
+                        user.restricaoHorario.feriadosDetalhados.forEach((f: any) => {
+                            feriadosIdsArray.push(this.fb.control(f.id));
+                        });
+                    }
+
                     // The child reads 'restricaoHorario.horarios' FormArray.
                     // So we must push into it here.
                     const horariosArray = this.form.get('restricaoHorario.horarios') as any; // FormArray

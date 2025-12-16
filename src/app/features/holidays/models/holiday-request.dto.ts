@@ -8,6 +8,8 @@ export interface CreateHolidayRequest {
     tipo: number; // 1 = Nacional, 2 = Estadual, 3 = Municipal
     estadoUF?: string;
     municipio?: string;
+    estadoId?: string;
+    municipioId?: string;
 }
 
 /**
@@ -20,4 +22,6 @@ export interface UpdateHolidayRequest {
     tipo: number; // 1 = Nacional, 2 = Estadual, 3 = Municipal
     estadoUF?: string;
     municipio?: string;
+    estadoId?: string;
+    municipioId?: string;
 }

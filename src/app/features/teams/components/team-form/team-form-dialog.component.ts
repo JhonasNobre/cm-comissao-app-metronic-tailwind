@@ -53,6 +53,12 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
     states: any[] = [];
     cities: any[] = [];
 
+    // Holiday selection properties
+    nationalHolidays: Holiday[] = [];
+    regionalHolidays: Holiday[] = [];
+    allNationalHolidaysSelected = false;
+    showNationalHolidays = false;
+
     diasSemanaOptions: any[] = [];
 
     protected override onInitDialog(data: any): void {
@@ -94,13 +100,18 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
 
         restricaoGroup?.get('ativo')?.valueChanges.subscribe(isActive => {
             this.hasRestricaoHorario = isActive;
+            if (isActive) {
+                this.loadNationalHolidays();
+            }
         });
 
         restricaoGroup?.get('estadoId')?.valueChanges.subscribe(stateId => {
             if (stateId) {
                 this.loadCities(stateId);
+                this.loadRegionalHolidays(stateId);
             } else {
                 this.cities = [];
+                this.regionalHolidays = [];
                 restricaoGroup?.get('municipioId')?.setValue(null);
             }
         });
@@ -119,13 +130,29 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
             this.hasRestricaoHorario = true;
             this.form.get('restricaoHorario')?.patchValue({
                 ativo: true,
-                feriadosIds: data.restricaoHorario.feriadosIds || [],
+
                 estadoId: data.restricaoHorario.estadoId,
                 municipioId: data.restricaoHorario.municipioId
             });
 
+            // Populate FeriadosIds FormArray manually
+            const feriadosIdsArray = this.feriadosIds;
+            while (feriadosIdsArray.length !== 0) {
+                feriadosIdsArray.removeAt(0);
+            }
+            if (data.restricaoHorario.feriadosIds) {
+                data.restricaoHorario.feriadosIds.forEach((id: string) => {
+                    feriadosIdsArray.push(this.formBuilder.control(id));
+                });
+            } else if (data.restricaoHorario.feriadosDetalhados) {
+                data.restricaoHorario.feriadosDetalhados.forEach((f: any) => {
+                    feriadosIdsArray.push(this.formBuilder.control(f.id));
+                });
+            }
+
             if (data.restricaoHorario.estadoId) {
                 this.loadCities(data.restricaoHorario.estadoId);
+                this.loadRegionalHolidays(data.restricaoHorario.estadoId);
             }
 
             if (data.restricaoHorario?.horarios) {
@@ -150,7 +177,7 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
             perfilAcessoId: [null],
             restricaoHorario: this.formBuilder.group({
                 ativo: [false],
-                feriadosIds: this.fb.array([]),
+                feriadosIds: this.formBuilder.array([]),
                 estadoId: [null],
                 municipioId: [null],
                 horarios: this.formBuilder.array([])
@@ -181,7 +208,14 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
     }
 
     loadStates(): void {
-        this.stateService.list().subscribe(data => this.states = data);
+        this.stateService.list().subscribe(data => {
+            this.states = data;
+            // Retry loading regional holidays if state is selected
+            const stateId = this.form.get('restricaoHorario.estadoId')?.value;
+            if (this.hasRestricaoHorario && stateId) {
+                this.loadRegionalHolidays(stateId);
+            }
+        });
     }
 
     loadCities(stateId: string): void {
@@ -242,6 +276,104 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
         });
     }
 
+    get feriadosIds(): FormArray {
+        return this.form.get('restricaoHorario.feriadosIds') as FormArray;
+    }
+
+    loadNationalHolidays(): void {
+        this.holidayService.listNationalHolidays().subscribe({
+            next: (holidays) => {
+                this.nationalHolidays = holidays;
+                this.updateAllNationalHolidaysCheckbox();
+
+                const hasSelected = this.nationalHolidays.some(h => this.isHolidaySelected(h.id));
+                if (hasSelected) {
+                    this.showNationalHolidays = true;
+                }
+            }
+        });
+    }
+
+    loadRegionalHolidays(stateId: string): void {
+        const state = this.states.find(s => s.id === stateId);
+        if (!state) return;
+
+        this.holidayService.listRegionalHolidays(state.uf).subscribe({
+            next: (holidays) => {
+                this.regionalHolidays = holidays;
+            }
+        });
+    }
+
+    toggleShowNationalHolidays(): void {
+        this.showNationalHolidays = !this.showNationalHolidays;
+
+        if (this.showNationalHolidays && this.nationalHolidays.length === 0) {
+            this.loadNationalHolidays();
+        }
+    }
+
+    toggleAllNationalHolidays(checked: boolean): void {
+        this.allNationalHolidaysSelected = checked;
+        const feriadosArray = this.feriadosIds;
+
+        if (checked) {
+            this.nationalHolidays.forEach(holiday => {
+                const exists = feriadosArray.controls.some(
+                    control => control.value === holiday.id
+                );
+                if (!exists) {
+                    feriadosArray.push(this.formBuilder.control(holiday.id));
+                }
+            });
+        } else {
+            const nationalIds = this.nationalHolidays.map(h => h.id);
+            for (let i = feriadosArray.length - 1; i >= 0; i--) {
+                if (nationalIds.includes(feriadosArray.at(i).value)) {
+                    feriadosArray.removeAt(i);
+                }
+            }
+        }
+    }
+
+    toggleHoliday(holidayId: string, checked: boolean): void {
+        const feriadosArray = this.feriadosIds;
+
+        if (checked) {
+            const exists = feriadosArray.controls.some(
+                control => control.value === holidayId
+            );
+            if (!exists) {
+                feriadosArray.push(this.formBuilder.control(holidayId));
+            }
+        } else {
+            const index = feriadosArray.controls.findIndex(
+                control => control.value === holidayId
+            );
+            if (index !== -1) {
+                feriadosArray.removeAt(index);
+            }
+        }
+
+        if (this.showNationalHolidays) {
+            this.updateAllNationalHolidaysCheckbox();
+        }
+    }
+
+    isHolidaySelected(holidayId: string): boolean {
+        return this.feriadosIds.controls.some(
+            control => control.value === holidayId
+        );
+    }
+
+    private updateAllNationalHolidaysCheckbox(): void {
+        const selectedNationalCount = this.nationalHolidays.filter(
+            h => this.isHolidaySelected(h.id)
+        ).length;
+
+        this.allNationalHolidaysSelected = selectedNationalCount === this.nationalHolidays.length && this.nationalHolidays.length > 0;
+    }
+
     toggleRestricaoHorario(event: any): void {
         const isChecked = event.checked;
         this.hasRestricaoHorario = isChecked;
@@ -251,11 +383,19 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
 
         if (!isChecked) {
             this.form.get('restricaoHorario')?.patchValue({
-                feriadosIds: [],
                 estadoId: null,
                 municipioId: null
             });
+            // Clear feriados
+            const feriadosArray = this.feriadosIds;
+            while (feriadosArray.length !== 0) {
+                feriadosArray.removeAt(0);
+            }
             this.clearHorarios();
+
+            // Reset UI state
+            this.showNationalHolidays = false;
+            this.allNationalHolidaysSelected = false;
         } else if (this.horarios.length === 0) {
             this.addHorario();
         }

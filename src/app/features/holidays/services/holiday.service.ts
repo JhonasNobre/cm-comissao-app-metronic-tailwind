@@ -51,7 +51,9 @@ export class HolidayService extends BaseService {
             date: new Date(Number(response.data.split('-')[0]), Number(response.data.split('-')[1]) - 1, Number(response.data.split('-')[2])),
             type: HolidayService.mapTipoToHolidayType(response.tipo),
             stateCode: response.estadoUF,
-            city: response.municipio
+            city: response.municipio,
+            estadoId: response.estadoId,
+            municipioId: response.municipioId
         } as Holiday;
     }
 
@@ -101,7 +103,9 @@ export class HolidayService extends BaseService {
             data: dateValue.toISOString().split('T')[0],
             tipo: HolidayService.mapHolidayTypeToTipo(holiday.type),
             estadoUF: holiday.stateCode,
-            municipio: holiday.city
+            municipio: holiday.city,
+            estadoId: holiday.estadoId,
+            municipioId: holiday.municipioId
         };
     }
 
@@ -127,7 +131,9 @@ export class HolidayService extends BaseService {
             data: dateValue.toISOString().split('T')[0],
             tipo: HolidayService.mapHolidayTypeToTipo(holiday.type),
             estadoUF: holiday.stateCode,
-            municipio: holiday.city
+            municipio: holiday.city,
+            estadoId: holiday.estadoId,
+            municipioId: holiday.municipioId
         };
     }
 }

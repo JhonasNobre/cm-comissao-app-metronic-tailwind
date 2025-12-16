@@ -39,6 +39,15 @@ export class ProfileScheduleTabComponent implements OnInit, OnDestroy {
     @Input() hasRestricaoHorario: boolean = false;
     @Input() diasSemanaOptions: any[] = [];
 
+    private _pendingInitialHolidays: Holiday[] = [];
+    @Input() set initialHolidays(holidays: Holiday[]) {
+        if (this.states.length > 0) {
+            this.processInitialHolidays(holidays);
+        } else {
+            this._pendingInitialHolidays = holidays;
+        }
+    }
+
     @Output() restricaoHorarioToggle = new EventEmitter<boolean>();
     @Output() addHorarioClick = new EventEmitter<void>();
     @Output() removeHorarioClick = new EventEmitter<number>();
@@ -47,8 +56,19 @@ export class ProfileScheduleTabComponent implements OnInit, OnDestroy {
     cities: City[] = [];
 
     // Holiday selection properties
+    // Holiday selection properties
     nationalHolidays: Holiday[] = [];
-    regionalHolidays: Holiday[] = [];
+
+    // Multi-regional groups
+    regionalGroups: {
+        id: number;
+        estadoId: string | null;
+        municipioId: string | null;
+        cities: City[];
+        holidays: Holiday[];
+        loading: boolean;
+    }[] = [];
+
     allNationalHolidaysSelected = false;
     showNationalHolidays = false;
 
@@ -98,6 +118,64 @@ export class ProfileScheduleTabComponent implements OnInit, OnDestroy {
     loadStates(): void {
         this.stateService.list().subscribe(states => {
             this.states = states;
+            if (this._pendingInitialHolidays.length > 0) {
+                this.processInitialHolidays(this._pendingInitialHolidays);
+                this._pendingInitialHolidays = [];
+            }
+        });
+    }
+
+    private processInitialHolidays(holidays: Holiday[]): void {
+        // Filter only regional holidays
+        const regional = holidays.filter(h => h.tipo !== 'Nacional');
+        if (regional.length === 0) return;
+
+        // Group by UF and Municipio
+        const groups = new Map<string, Holiday[]>();
+
+        regional.forEach(h => {
+            // Create a unique key. If municipio is null, use just UF.
+            const key = `${h.estadoUF || ''}|${h.municipio || ''}`;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key)!.push(h);
+        });
+
+        groups.forEach((groupHolidays, key) => {
+            const [uf, ibge] = key.split('|');
+
+            if (!uf) return;
+
+            // Find State ID
+            const state = this.states.find(s => s.uf === uf);
+            if (!state) return;
+
+            // Create group
+            const groupIndex = this.regionalGroups.length;
+            this.regionalGroups.push({
+                id: Date.now() + Math.random(),
+                estadoId: state.id,
+                municipioId: null, // Will fetch below
+                cities: [],
+                holidays: [],
+                loading: true
+            });
+
+            const group = this.regionalGroups[groupIndex];
+
+            // Load cities to find Municipio ID
+            this.stateService.listCities(state.id).subscribe(cities => {
+                group.cities = cities;
+
+                if (ibge) {
+                    const city = cities.find(c => c.codigoIbge.toString() === ibge);
+                    if (city) {
+                        group.municipioId = city.id;
+                    }
+                }
+
+                this.loadHolidaysForGroup(groupIndex);
+                // Also ensure groupHolidays are checked (they should be via feriadosIds formArray anyway)
+            });
         });
     }
 
@@ -128,13 +206,67 @@ export class ProfileScheduleTabComponent implements OnInit, OnDestroy {
         });
     }
 
-    loadRegionalHolidays(stateId: string): void {
-        const state = this.states.find(s => s.id === stateId);
+    addRegionalGroup(): void {
+        this.regionalGroups.push({
+            id: Date.now(),
+            estadoId: null,
+            municipioId: null,
+            cities: [],
+            holidays: [],
+            loading: false
+        });
+    }
+
+    removeRegionalGroup(index: number): void {
+        this.regionalGroups.splice(index, 1);
+    }
+
+    onGroupStateChange(groupIndex: number, stateId: string): void {
+        const group = this.regionalGroups[groupIndex];
+        group.estadoId = stateId;
+        group.municipioId = null;
+        group.cities = [];
+        group.holidays = [];
+
+        if (stateId) {
+            this.stateService.listCities(stateId).subscribe(cities => {
+                group.cities = cities;
+            });
+
+            // Load regional holidays immediately when state changes (or wait for city?)
+            // Usually regional holidays depend on State. Municipal ones depend on City.
+            // We can load State holidays now.
+            this.loadHolidaysForGroup(groupIndex);
+        }
+    }
+
+    onGroupCityChange(groupIndex: number, cityId: string): void {
+        const group = this.regionalGroups[groupIndex];
+        group.municipioId = cityId;
+        this.loadHolidaysForGroup(groupIndex);
+    }
+
+    loadHolidaysForGroup(groupIndex: number): void {
+        const group = this.regionalGroups[groupIndex];
+        if (!group.estadoId) return;
+
+        const state = this.states.find(s => s.id === group.estadoId);
         if (!state) return;
 
+        group.loading = true;
+
+        // Hypothetical service method that supports filtering by city too if needed
+        // For now, listRegionalHolidays returns holidays for the state.
+        // If we want municipal holidays, the service needs to support it.
+        // Assuming listRegionalHolidays(uf) returns state holidays.
+        // We might need to filter manually or update service.
         this.holidayService.listRegionalHolidays(state.uf).subscribe({
             next: (holidays) => {
-                this.regionalHolidays = holidays;
+                group.holidays = holidays;
+                group.loading = false;
+            },
+            error: () => {
+                group.loading = false;
             }
         });
     }

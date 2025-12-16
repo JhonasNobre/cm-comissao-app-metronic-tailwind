@@ -11,6 +11,7 @@ import { HolidayFormService } from '../../services/holiday-form.service';
 import { FormItemBase } from '../../../../shared/components/ui/dynamic-form/models/form-item-base';
 import { Observable } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { HolidayFormDialogComponent } from '../holiday-form/holiday-form-dialog.component';
 
 @Component({
     selector: 'app-holiday-list',
@@ -133,5 +134,27 @@ export class HolidayListComponent extends BaseListComponent<Holiday> implements 
         this.loadData({});
         // Recarregar os dados chamando o método de carregamento
         this.load();
+    }
+
+    override openDialog(object?: Holiday): void {
+        const ref = this.dialogService.open(HolidayFormDialogComponent, {
+            data: {
+                holiday: object
+            },
+            header: object?.id ? 'Editar Feriado' : 'Novo Feriado',
+            width: '500px',
+            contentStyle: { overflow: 'auto' },
+            baseZIndex: 10000,
+            maximizable: false,
+            modal: true
+        });
+
+        if (ref) {
+            ref.onClose.subscribe((result: { form: Holiday }) => {
+                if (result && result.form) {
+                    this.handleSave(result.form, object?.id);
+                }
+            });
+        }
     }
 }

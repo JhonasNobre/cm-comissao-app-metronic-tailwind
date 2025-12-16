@@ -35,8 +35,8 @@
             <p-tabpanel value="2">
                 <app-profile-schedule-tab [form]="$any(form.get('restricaoHorario'))"
                     [hasRestricaoHorario]="hasRestricaoHorario" [diasSemanaOptions]="diasSemanaOptions"
-                    (restricaoHorarioToggle)="toggleRestricaoHorario($event)" (addHorarioClick)="addHorario()"
-                    (removeHorarioClick)="removeHorario($event)">
+                    [initialHolidays]="initialHolidays" (restricaoHorarioToggle)="toggleRestricaoHorario($event)"
+                    (addHorarioClick)="addHorario()" (removeHorarioClick)="removeHorario($event)">
                 </app-profile-schedule-tab>
             </p-tabpanel>
         </p-tabpanels>

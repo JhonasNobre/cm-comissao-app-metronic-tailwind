@@ -51,6 +51,8 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
 
     diasSemanaOptions: any[] = [];
 
+    initialHolidays: any[] = [];
+
     scopeOptions = [
         { label: 'Dados do Usuário', value: 'DADOS_USUARIO' },
         { label: 'Dados da Equipe', value: 'DADOS_EQUIPE' },
@@ -116,8 +118,6 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
 
         const restricaoHorario = this.hasRestricaoHorario ? { ...formValue.restricaoHorario } : null;
 
-
-
         return {
             ...formValue,
             restricaoHorario: restricaoHorario,
@@ -126,7 +126,6 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
     }
 
     protected override onSave(data: any): void {
-        // Custom validation for permissions
         const hasPermissions = this.permissionRows.some(r => r.canCreate || r.canRead || r.canUpdate || r.canDelete || r.canApprove || r.canPrint);
         if (!hasPermissions) {
             this.showWarn('Selecione ao menos uma permissão.');
@@ -174,6 +173,11 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
 
         if (data.restricaoHorario) {
             this.hasRestricaoHorario = true;
+
+            if (data.restricaoHorario.feriadosDetalhados) {
+                this.initialHolidays = data.restricaoHorario.feriadosDetalhados;
+            }
+
             this.form.get('restricaoHorario')?.patchValue({
                 feriadosIds: data.restricaoHorario.feriadosIds || [],
                 estadoId: data.restricaoHorario.estadoId,
@@ -282,7 +286,5 @@ export class AccessProfileFormComponent extends BaseFormComponent<any> {
     }
 
     onPermissionsChange(updatedPermissions: any[]): void {
-        // O array permissionRows já é atualizado via two-way binding
-        // Este método pode ser usado para validações futuras se necessário
     }
 }
