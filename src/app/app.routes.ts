@@ -78,5 +78,9 @@ export const routes: Routes = [
     path: 'auth/login',
     loadComponent: () => import('./features/auth/components/login/login.component').then(m => m.LoginComponent)
   },
+  {
+    path: 'auth/change-password',
+    loadComponent: () => import('./features/auth/components/change-password/change-password.component').then(m => m.ChangePasswordComponent)
+  },
   { path: '**', redirectTo: 'error/404' }
 ];

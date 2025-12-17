@@ -98,9 +98,9 @@
 
                             <div class="flex flex-col gap-2">
                                 <label class="font-semibold text-gray-700">Role (Keycloak)</label>
-                                <div class="p-3 bg-gray-100 rounded border border-gray-300 text-gray-600">
-                                    {{ getRoleLabel(form.get('role')?.value) || 'Sem role definida' }}
-                                </div>
+                                <p-select [options]="keycloakRoleOptions" formControlName="role" optionLabel="label"
+                                    optionValue="value" styleClass="w-full" [style]="{'width':'100%'}" appendTo="body"
+                                    placeholder="Selecione uma role"></p-select>
                             </div>
 
                             <div class="flex flex-col gap-2">

@@ -292,8 +292,10 @@ export class UserFormComponent implements OnInit {
 
         if (this.isEditMode && this.userId) {
             // Remove fields that shouldn't be sent on update (email/cpf are generally immutable here)
-            const { cpf, email, senha, ...updatePayload } = payload;
+            const { cpf, email, senha, ...updatePayload } = formValue;
             updatePayload.id = this.userId;
+            // Map legacy fields if needed for update
+            // ...
 
             this.service.update(updatePayload, this.userId).subscribe({
                 next: () => {
@@ -306,13 +308,28 @@ export class UserFormComponent implements OnInit {
                 }
             });
         } else {
-            this.service.create(payload).subscribe({
+            // CREATE: Map to CreateUserAdminCommand
+            const createPayload = {
+                nome: formValue.nomeCompleto,
+                email: formValue.email,
+                password: formValue.senha,
+                cpf: formValue.cpf,
+                telefone: formValue.telefone,
+                roles: [formValue.role], // Keycloak expects array or specific prop
+                empresaIds: formValue.empresaIds,
+                // Extra fields not yet in command but kept for future or specific handlers if expanded
+                // equipeIds: formValue.equipeIds,
+                // perfilAcessoId: formValue.perfilAcessoId
+            };
+
+            this.service.create(createPayload).subscribe({
                 next: () => {
                     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Usuário criado com sucesso' });
                     setTimeout(() => this.router.navigate(['/users']), 1000);
                 },
-                error: () => {
-                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao criar usuário' });
+                error: (err) => {
+                    console.error('Erro ao criar usuário:', err);
+                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao criar usuário. Verifique os dados.' });
                     this.loading = false;
                 }
             });

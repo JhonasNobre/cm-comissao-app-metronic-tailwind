@@ -19,16 +19,13 @@ export interface UserListDTO {
 }
 
 export interface UserCreateDTO {
-    nomeCompleto: string;
+    nome: string;
     cpf: string;
     email: string;
     telefone: string;
-    senha: string;
+    password: string;
     empresaIds: string[];
-    role: string; // Keycloak role
-    tipoUsuario: UserRole;
-    restricaoHorario?: any;
-    equipeIds?: string[];
+    roles: string[];
 }
 
 export interface UserUpdateDTO {
