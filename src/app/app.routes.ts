@@ -66,8 +66,8 @@ export const routes: Routes = [
       // Configurações e Erro
       {
         path: 'config/integracoes',
-        loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent),
-        data: { title: 'Integrações', description: 'Configurações de integração em breve.', icon: 'pi pi-cog', status: 200 }
+        loadComponent: () => import('./features/imobtech-integration/components/configuration-form/configuration-form.component').then(m => m.ConfigurationFormComponent),
+        data: { title: 'Integração Imobtech', description: 'Gerencie a integração com o sistema Imobtech.', icon: 'pi pi-cog', status: 200 }
       },
       { path: 'error/404', loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent), data: { status: 404, title: ' Página não encontrada' } },
 

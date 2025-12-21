@@ -1,0 +1,126 @@
+<div class="kt-container-fluid">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">
+                Integrações
+            </h1>
+            <span class="text-gray-600 text-sm">Gerencie as integrações com sistemas externos.</span>
+        </div>
+    </div>
+</div>
+
+<div class="kt-container-fluid">
+    <div class="grid gap-5 lg:gap-7.5">
+        <div class="kt-card">
+            <div class="kt-card-body">
+                <p-toast></p-toast>
+
+                <p-tabs value="imobtech">
+                    <p-tablist>
+                        <p-tab value="imobtech">Imobtech</p-tab>
+                        <p-tab value="uau">UAU</p-tab>
+                    </p-tablist>
+
+                    <p-tabpanels>
+                        <!-- IMOBTECH TAB -->
+                        <p-tabpanel value="imobtech">
+                            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5 mt-4">
+
+                                <div class="flex items-center gap-4 border-b pb-4">
+                                    <p-checkbox formControlName="habilitado" [binary]="true"
+                                        inputId="habilitado"></p-checkbox>
+                                    <div class="flex flex-col">
+                                        <label for="habilitado"
+                                            class="font-semibold text-gray-800 cursor-pointer">Habilitar Integração
+                                            Imobtech</label>
+                                        <span class="text-sm text-gray-500">Ative para permitir a sincronização com a
+                                            Imobtech.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Dropdown de Modo (Homologação/Produção) -->
+                                <div *ngIf="form.get('habilitado')?.value" class="flex flex-col gap-2 animate-fade-in">
+                                    <label class="font-semibold text-gray-700 required">Ambiente</label>
+                                    <p-select formControlName="modo" [options]="modoOptions" optionLabel="label"
+                                        optionValue="value" placeholder="Selecione o ambiente"
+                                        styleClass="w-full md:w-1/2"></p-select>
+                                    <small class="text-gray-500">Escolha o ambiente da integração (Homologação ou
+                                        Produção).</small>
+                                </div>
+
+                                <div *ngIf="form.get('habilitado')?.value" class="flex flex-col gap-4 animate-fade-in">
+                                    <h3 class="text-lg font-semibold text-gray-800">Credenciais de Acesso</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                                        <div class="flex flex-col gap-2">
+                                            <label class="font-semibold text-gray-700 required">Client ID</label>
+                                            <input type="text" pInputText formControlName="clientId" class="w-full"
+                                                placeholder="Insira o Client ID" />
+                                            <small
+                                                *ngIf="form.get('clientId')?.invalid && form.get('clientId')?.touched"
+                                                class="text-red-500">
+                                                Client ID é obrigatório.
+                                            </small>
+                                        </div>
+
+                                        <div class="flex flex-col gap-2">
+                                            <label class="font-semibold text-gray-700">Client Secret</label>
+                                            <p-password formControlName="clientSecret" [toggleMask]="true"
+                                                [feedback]="false" styleClass="w-full" inputStyleClass="w-full"
+                                                placeholder="************"></p-password>
+                                            <small class="text-gray-500">Preencha apenas para alterar.</small>
+                                        </div>
+
+                                        <div class="flex flex-col gap-2">
+                                            <label class="font-semibold text-gray-700 required">Username</label>
+                                            <input type="text" pInputText formControlName="username" class="w-full"
+                                                placeholder="Usuário da API" />
+                                            <small
+                                                *ngIf="form.get('username')?.invalid && form.get('username')?.touched"
+                                                class="text-red-500">
+                                                Username é obrigatório.
+                                            </small>
+                                        </div>
+
+                                        <div class="flex flex-col gap-2">
+                                            <label class="font-semibold text-gray-700">Password</label>
+                                            <p-password formControlName="password" [toggleMask]="true"
+                                                [feedback]="false" styleClass="w-full" inputStyleClass="w-full"
+                                                placeholder="************"></p-password>
+                                            <small class="text-gray-500">Preencha apenas para alterar.</small>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end gap-3 pt-5 mt-4 border-t border-gray-200">
+                                    <button type="button" class="kt-btn kt-btn-light" (click)="onCancel()">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" class="kt-btn kt-btn-primary"
+                                        [disabled]="form.invalid || loading">
+                                        <i *ngIf="!loading" class="ki-filled ki-check"></i>
+                                        <span *ngIf="loading"
+                                            class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                                        Salvar Alterações
+                                    </button>
+                                </div>
+                            </form>
+                        </p-tabpanel>
+
+                        <!-- UAU TAB -->
+                        <p-tabpanel value="uau">
+                            <div class="flex flex-col items-center justify-center p-10 text-center text-gray-500">
+                                <i class="ki-filled ki-rocket text-4xl mb-4 text-primary"></i>
+                                <h3 class="text-lg font-semibold text-gray-800">Integração UAU</h3>
+                                <p class="mb-4">A integração com o sistema UAU estará disponível em breve.</p>
+                                <button pButton label="Habilitar Prévia" class="p-button-outlined" disabled></button>
+                            </div>
+                        </p-tabpanel>
+                    </p-tabpanels>
+                </p-tabs>
+
+            </div>
+        </div>
+    </div>
+</div>

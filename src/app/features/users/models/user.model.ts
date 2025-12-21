@@ -1,11 +1,46 @@
+// Enums para permissões
+export enum EAcao {
+    CRIAR = 'CRIAR',
+    LER = 'LER',
+    ATUALIZAR = 'ATUALIZAR',
+    EXCLUIR = 'EXCLUIR'
+}
+
+export enum ENivelAcesso {
+    DADOS_USUARIO = 'DADOS_USUARIO',
+    DADOS_EQUIPE = 'DADOS_EQUIPE',
+    TODOS = 'TODOS',
+    NEGADO = 'NEGADO'
+}
+
+// Interface para permissão detalhada
+export interface PermissaoDetalhadaDto {
+    recursoId: string;
+    recursoNome: string;
+    acao: EAcao;
+    nivelAcesso: ENivelAcesso;
+}
+
+// Interface para input de permissão
+export interface PermissaoRecursoInput {
+    recursoId: string;
+    acao: EAcao;
+    nivelAcesso: ENivelAcesso;
+}
+
 export interface User {
     id: string;
     nomeCompleto: string;
     email: string;
     inativo: boolean;
     tipoUsuario: UserRole;
-    restricaoHorario?: any; // Define specific type if needed later
+    restricaoHorario?: any;
     equipeIds?: string[];
+    perfilAcessoId?: string;
+    // Novos campos: Permissões individuais
+    permissoesIndividuais?: PermissaoDetalhadaDto[];
+    limiteDescontoMaximoIndividual?: number;
+    quantidadeMaximaReservasIndividual?: number;
     criadoEm: Date;
 }
 
@@ -19,13 +54,14 @@ export interface UserListDTO {
 }
 
 export interface UserCreateDTO {
-    nome: string;
+    nomeCompleto: string;
     cpf: string;
     email: string;
     telefone: string;
-    password: string;
+    senha: string;
     empresaIds: string[];
-    roles: string[];
+    role: string;
+    perfilAcessoId?: string;
 }
 
 export interface UserUpdateDTO {
@@ -38,6 +74,10 @@ export interface UserUpdateDTO {
     restricaoHorario?: any;
     equipeIds?: string[];
     empresaIds?: string[];
+    // Novos campos: Permissões individuais
+    permissoesIndividuais?: PermissaoRecursoInput[];
+    limiteDescontoMaximoIndividual?: number;
+    quantidadeMaximaReservasIndividual?: number;
 }
 
 export enum UserRole {
