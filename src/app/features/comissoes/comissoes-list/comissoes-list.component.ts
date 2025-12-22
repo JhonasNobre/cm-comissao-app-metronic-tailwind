@@ -43,61 +43,89 @@ export class ComissoesListComponent implements OnInit {
     private authService = inject(AuthService);
     private router = inject(Router);
 
-    comissoes: Comissao[] = [];
-    loading = false;
-    totalRecords = 0;
-    columns: ColumnHeader<Comissao>[] = [];
+    activeTab: 'pendentes' | 'historico' = 'pendentes';
 
-    filtros: ComissaoFiltros = {
+    // Pendentes
+    pendentes: any[] = []; // ComissaoPendente
+    totalRecordsPendentes = 0;
+    columnsPendentes: ColumnHeader<any>[] = [];
+    filtrosPendentes = {
         pagina: 1,
         tamanhoPagina: 10,
-        idEmpresa: undefined
+        idEmpresa: undefined as string | undefined,
+        termoBusca: ''
     };
 
-    // Modal Rejeição
+    // Histórico
+    historico: any[] = []; // ComissaoHistorico
+    totalRecordsHistorico = 0;
+    columnsHistorico: ColumnHeader<any>[] = [];
+    filtrosHistorico = {
+        pagina: 1,
+        tamanhoPagina: 10,
+        idEmpresa: undefined as string | undefined,
+        dataInicio: undefined as Date | undefined,
+        dataFim: undefined as Date | undefined
+    };
+
+    loading = false;
+    saving = false;
+
+    // Modal Rejeição (mantido apenas por compatibilidade por enquanto, ajustar conforme regra de negócio)
     rejeicaoVisible = false;
     motivoRejeicao = '';
-    comissaoEmEdicao: Comissao | null = null;
-    saving = false;
+    comissaoEmEdicao: any | null = null;
 
     ngOnInit() {
         this.initializeColumns();
 
         this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
-            if (ids.length > 0) {
-                this.filtros.idEmpresa = ids[0];
-                this.loadComissoes();
+            const idEmpresa = ids.length > 0 ? ids[0] : undefined;
+            this.filtrosPendentes.idEmpresa = idEmpresa;
+            this.filtrosHistorico.idEmpresa = idEmpresa;
+
+            if (idEmpresa) {
+                this.loadData();
             } else {
-                this.comissoes = [];
-                this.totalRecords = 0;
+                this.pendentes = [];
+                this.historico = [];
             }
         });
     }
 
+    setActiveTab(tab: 'pendentes' | 'historico') {
+        this.activeTab = tab;
+        // Não chamamos loadData() aqui porque a mudança de aba (via *ngIf) recria o componente p-table,
+        // o que dispara automaticamente o evento (lazyLoad), chamando a função de carregar dados.
+    }
+
+    loadData() {
+        if (this.activeTab === 'pendentes') {
+            this.loadPendentes();
+        } else {
+            this.loadHistorico();
+        }
+    }
+
     private initializeColumns(): void {
-        this.columns = [
+        // Colunas Pendentes
+        this.columnsPendentes = [
+            { field: 'numeroParcela', header: 'Nº Parcela', sortable: true },
+            { field: 'produto', header: 'Produto', sortable: true },
+            { field: 'imovel', header: 'Imóvel', sortable: true },
+            { field: 'nome', header: 'Nome', sortable: true },
+            { field: 'cargo', header: 'Cargo', sortable: true },
             {
-                field: 'nomeEstrutura',
-                header: 'Estrutura',
-                sortable: true
-            },
-            {
-                field: 'valorBase',
-                header: 'Base Cálculo',
+                field: 'valor',
+                header: 'Valor',
                 formatter: (v) => `R$ ${v?.toFixed(2) || '0.00'}`,
                 sortable: true
             },
             {
-                field: 'valorTotalComissao',
-                header: 'Comissão Total',
-                formatter: (v) => `R$ ${v?.toFixed(2) || '0.00'}`,
-                sortable: true
-            },
-            {
-                field: 'criadoEm',
-                header: 'Data Geração',
+                field: 'dataPrevista',
+                header: 'Data Prevista',
                 pipe: 'date',
-                pipeArgs: 'dd/MM/yyyy HH:mm',
+                pipeArgs: 'dd/MM/yyyy',
                 sortable: true
             },
             {
@@ -106,119 +134,93 @@ export class ComissoesListComponent implements OnInit {
                 displayAs: 'badge',
                 badgeSeverityMap: {
                     'Pendente': 'warning',
-                    'Aprovada': 'success',
-                    'Rejeitada': 'danger',
-                    'Paga': 'info'
-                },
-                formatter: (v) => {
-                    // A API retorna string (ex: "Pendente"), então apenas retornamos o valor
-                    if (typeof v === 'string') return v;
-
-                    const labels: Record<number, string> = {
-                        [EStatusComissao.Pendente]: 'Pendente',
-                        [EStatusComissao.Aprovada]: 'Aprovada',
-                        [EStatusComissao.Rejeitada]: 'Rejeitada',
-                        [EStatusComissao.Paga]: 'Paga'
-                    };
-                    return labels[v] || 'Desconhecido';
+                    'Bloqueado': 'danger',
+                    'Liberado': 'success',
+                    'Pagar': 'info'
                 }
             }
         ];
+
+        // Colunas Histórico
+        this.columnsHistorico = [
+            {
+                field: 'periodo',
+                header: 'Período',
+                pipe: 'date',
+                pipeArgs: 'MM/yyyy',
+                sortable: true
+            },
+            {
+                field: 'valorFaturado',
+                header: 'Valor Faturado',
+                formatter: (v) => `R$ ${v?.toFixed(2) || '0.00'}`,
+                sortable: true
+            },
+            { field: 'qtdParcelasFaturadas', header: 'Qtd (Parc)', sortable: true },
+            {
+                field: 'valorRecebido',
+                header: 'Valor Recebido',
+                formatter: (v) => `R$ ${v?.toFixed(2) || '0.00'}`,
+                sortable: true,
+                styleClass: 'text-green-500 font-bold' // Exemplo de estilo customizado se suportado
+            },
+            { field: 'qtdParcelasRecebidas', header: 'Qtd (Parc)', sortable: true },
+            {
+                field: 'valorAReceber',
+                header: 'Valor a Receber',
+                formatter: (v) => `R$ ${v?.toFixed(2) || '0.00'}`,
+                sortable: true,
+                styleClass: 'text-blue-500 font-bold'
+            },
+            { field: 'qtdParcelasAReceber', header: 'Qtd (Parc)', sortable: true },
+        ];
     }
 
-    onLazyLoad(event: { page: number; rows: number }) {
-        this.filtros.pagina = event.page + 1;
-        this.filtros.tamanhoPagina = event.rows;
-        this.loadComissoes();
-    }
-
-    loadComissoes() {
-        if (!this.filtros.idEmpresa) return;
+    loadPendentes() {
+        if (!this.filtrosPendentes.idEmpresa) return;
 
         this.loading = true;
-        this.comissaoService.getAll(this.filtros).subscribe({
-            next: (result) => {
-                this.comissoes = result.items;
-                this.totalRecords = result.totalItems;
+        this.comissaoService.getPendentes(this.filtrosPendentes).subscribe({
+            next: (res) => {
+                this.pendentes = res.items;
+                this.totalRecordsPendentes = res.totalItems;
                 this.loading = false;
-            },
-            error: (error) => {
-                console.error('Erro ao carregar comissões:', error);
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Erro',
-                    detail: 'Falha ao carregar comissões'
-                });
-                this.loading = false;
-            }
-        });
-    }
-
-    onAprovar(comissao: Comissao) {
-        this.confirmationService.confirm({
-            message: `Tem certeza que deseja aprovar a comissão de R$ ${comissao.valorTotalComissao}?`,
-            header: 'Aprovar Comissão',
-            icon: 'pi pi-check-circle',
-            acceptLabel: 'Sim, Aprovar',
-            rejectLabel: 'Cancelar',
-            accept: () => {
-                const currentUser = this.authService.currentUserValue;
-                if (!currentUser) {
-                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Usuário não autenticado' });
-                    return;
-                }
-
-                this.comissaoService.aprovar(comissao.id, currentUser.id).subscribe({
-                    next: () => {
-                        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Comissão aprovada!' });
-                        this.loadComissoes();
-                    },
-                    error: (err) => {
-                        console.error(err);
-                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao aprovar comissão' });
-                    }
-                });
-            }
-        });
-    }
-
-    onRejeitar(comissao: Comissao) {
-        this.comissaoEmEdicao = comissao;
-        this.motivoRejeicao = '';
-        this.rejeicaoVisible = true;
-    }
-
-    confirmarRejeicao() {
-        if (!this.comissaoEmEdicao || !this.motivoRejeicao) return;
-
-        const currentUser = this.authService.currentUserValue;
-        if (!currentUser) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Usuário não autenticado' });
-            return;
-        }
-
-        this.saving = true;
-        this.comissaoService.rejeitar(this.comissaoEmEdicao.id, currentUser.id, this.motivoRejeicao).subscribe({
-            next: () => {
-                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Comissão rejeitada!' });
-                this.rejeicaoVisible = false;
-                this.loadComissoes();
-                this.saving = false;
             },
             error: (err) => {
                 console.error(err);
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao rejeitar comissão' });
-                this.saving = false;
+                this.loading = false;
             }
         });
     }
 
-    isPendente(comissao: Comissao): boolean {
-        // Aceita tanto número (1) quanto string vinda da API ("Pendente")
-        return comissao.status == EStatusComissao.Pendente || comissao.status === 'Pendente' as any;
+    loadHistorico() {
+        if (!this.filtrosHistorico.idEmpresa) return;
+
+        this.loading = true;
+        this.comissaoService.getHistorico(this.filtrosHistorico).subscribe({
+            next: (res) => {
+                this.historico = res.items;
+                this.totalRecordsHistorico = res.totalItems;
+                this.loading = false;
+            },
+            error: (err) => {
+                console.error(err);
+                this.loading = false;
+            }
+        });
     }
 
-    onRowSelect(comissao: Comissao) {
-        this.router.navigate(['/comissoes/detalhes', comissao.id]);
+    onLazyLoadPendentes(event: any) {
+        // GenericPTable emits { page: number (0-indexed), rows: number, filter: string }
+        this.filtrosPendentes.pagina = event.page + 1;
+        this.filtrosPendentes.tamanhoPagina = event.rows;
+        this.loadPendentes();
+    }
+
+    onLazyLoadHistorico(event: any) {
+        // GenericPTable emits { page: number (0-indexed), rows: number, filter: string }
+        this.filtrosHistorico.pagina = event.page + 1;
+        this.filtrosHistorico.tamanhoPagina = event.rows;
+        this.loadHistorico();
     }
 }

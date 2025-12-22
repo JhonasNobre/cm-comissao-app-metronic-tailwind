@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseService } from '../../../shared/services/base/base.service';
-import { Comissao, ComissaoFiltros, GerarComissaoCommand, DashboardStats } from '../models/comissao.model';
+import { Comissao, ComissaoFiltros, GerarComissaoCommand, DashboardStats, ComissaoPendente, ComissaoPendentesFiltros, ComissaoHistorico, ComissaoHistoricoFiltros } from '../models/comissao.model';
 import { PagedResult } from '../models/estrutura-comissao.model';
 
 @Injectable({
@@ -17,6 +17,16 @@ export class ComissaoService extends BaseService {
     getAll(filtros: ComissaoFiltros): Observable<PagedResult<Comissao>> {
         const params = this.buildHttpParams(filtros);
         return this.http.get<PagedResult<Comissao>>(this.baseUrl, { params });
+    }
+
+    getPendentes(filtros: ComissaoPendentesFiltros): Observable<PagedResult<ComissaoPendente>> {
+        const params = this.buildHttpParams(filtros);
+        return this.http.get<PagedResult<ComissaoPendente>>(`${this.baseUrl}/pendentes`, { params });
+    }
+
+    getHistorico(filtros: ComissaoHistoricoFiltros): Observable<PagedResult<ComissaoHistorico>> {
+        const params = this.buildHttpParams(filtros);
+        return this.http.get<PagedResult<ComissaoHistorico>>(`${this.baseUrl}/historico`, { params });
     }
 
     getById(id: string): Observable<Comissao> {
