@@ -2,6 +2,8 @@
     <!-- Área de conteúdo rolável -->
     <div class="flex-1 overflow-y-auto pr-2 flex flex-col gap-5">
 
+
+
         <!-- Nome da Equipe -->
         <div class="flex flex-col gap-2">
             <label for="nome" class="font-semibold text-gray-700">{{ 'teams.form.name' | transloco }}</label>
@@ -111,6 +113,71 @@
             </div>
         </div>
     </div>
+
+    <p-divider></p-divider>
+
+    <!-- Gestão de Grupos -->
+    <div class="flex flex-col gap-3 pb-4">
+        <div class="flex justify-between items-center">
+            <h3 class="font-semibold text-gray-700 m-0">{{ 'teams.form.groups' | transloco }}</h3>
+            <button type="button" class="kt-btn kt-btn-sm kt-btn-primary" (click)="openNewGroup()">
+                <i class="ki-filled ki-plus"></i>
+                {{ 'teams.form.add_group' | transloco }}
+            </button>
+        </div>
+
+        <div *ngIf="groups.length === 0"
+            class="text-center p-4 bg-gray-50 rounded border border-gray-200 text-gray-500 text-sm italic">
+            {{ 'teams.form.no_groups' | transloco }}
+        </div>
+
+        <div *ngFor="let group of groups"
+            class="flex justify-between items-center bg-white p-3 rounded border border-gray-200 shadow-sm">
+            <div class="flex flex-col">
+                <span class="font-medium text-gray-800">{{ group.nome }}</span>
+                <span class="text-xs text-gray-500" *ngIf="group.descricao">{{ group.descricao }}</span>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" class="btn btn-icon btn-sm btn-light-primary" (click)="editGroup(group)"
+                    pTooltip="{{ 'general.singular.edit' | transloco }}" tooltipPosition="top">
+                    <i class="ki-filled ki-pencil"></i>
+                </button>
+                <button type="button" class="btn btn-icon btn-sm btn-light-danger" (click)="deleteGroup(group)"
+                    pTooltip="{{ 'general.singular.delete' | transloco }}" tooltipPosition="top">
+                    <i class="ki-filled ki-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Group Dialog -->
+    <p-dialog [(visible)]="displayGroupDialog"
+        [header]="(isNewGroup ? 'teams.form.new_group' : 'teams.form.edit_group') | transloco" [modal]="true"
+        [style]="{width: '450px'}" [appendTo]="'body'">
+        <div class="flex flex-col gap-4 pt-2">
+            <div class="flex flex-col gap-2">
+                <label for="groupName" class="font-semibold text-gray-700">{{ 'teams.form.group_name' | transloco
+                    }}</label>
+                <input pInputText id="groupName" [(ngModel)]="currentGroup.nome" [ngModelOptions]="{standalone: true}"
+                    class="w-full" required autofocus />
+                <small class="text-red-500" *ngIf="submittedGroup && !currentGroup.nome">{{
+                    'general.validation.required' | transloco }}</small>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="groupDesc" class="font-semibold text-gray-700">{{ 'teams.form.group_desc' | transloco
+                    }}</label>
+                <textarea pInputText id="groupDesc" [(ngModel)]="currentGroup.descricao"
+                    [ngModelOptions]="{standalone: true}" class="w-full" rows="3"></textarea>
+            </div>
+        </div>
+        <ng-template pTemplate="footer">
+            <button type="button" class="kt-btn kt-btn-light" (click)="cancelGroup()">{{ 'SHARED.COMMON.CANCEL' |
+                transloco }}</button>
+            <button type="button" class="kt-btn kt-btn-primary" (click)="saveGroup()">{{ 'general.singular.save' |
+                transloco }}</button>
+        </ng-template>
+    </p-dialog>
 
     <!-- Rodapé com Ações (Fixo) -->
     <div class="flex justify-end gap-3 pt-5 mt-4 border-t border-gray-200">

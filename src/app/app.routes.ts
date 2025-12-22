@@ -36,6 +36,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/comissoes/comissoes-list/comissoes-list.component').then(m => m.ComissoesListComponent)
       },
       {
+        path: 'admin/comissoes',
+        loadComponent: () => import('./features/comissoes/comissoes-admin-list/comissoes-admin-list.component').then(m => m.ComissoesAdminListComponent)
+      },
+      {
         path: 'comissoes/detalhes/:id',
         loadComponent: () => import('./features/comissoes/detalhes/comissao-detalhes.component').then(m => m.ComissaoDetalhesComponent)
       },

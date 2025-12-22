@@ -15,6 +15,7 @@ import { PasswordModule } from 'primeng/password';
 import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { UserService } from '../../services/user.service';
+import { TeamGroupService } from '../../../teams/services/team-group.service';
 import { AccessProfileService } from '../../../access-profiles/services/access-profile.service';
 import { TeamService } from '../../../teams/services/team.service';
 import { CompanyService } from '../../../companies/services/company.service';
@@ -58,6 +59,8 @@ export class UserFormComponent implements OnInit {
     private messageService = inject(MessageService);
     private systemService = inject(SystemService);
     private confirmationService = inject(AppConfirmationService);
+    private teamGroupService = inject(TeamGroupService);
+
 
     form!: FormGroup;
     isEditMode = false;
@@ -81,12 +84,53 @@ export class UserFormComponent implements OnInit {
     // Permissões individuais
     resources: any[] = [];
     permissionRows: any[] = [];
+    rowGroupOptions: any[][] = [];
+
 
     scopeOptions = [
         { label: 'Dados do Usuário', value: 'DADOS_USUARIO' },
         { label: 'Dados da Equipe', value: 'DADOS_EQUIPE' },
         { label: 'Todos', value: 'TODOS' }
     ];
+
+    get equipes(): FormArray {
+        return this.form.get('equipes') as FormArray;
+    }
+
+    addEquipe(): void {
+        const equipeGroup = this.fb.group({
+            equipeId: [null, Validators.required],
+            grupoEquipeId: [{ value: null, disabled: true }, Validators.required]
+        });
+        this.equipes.push(equipeGroup);
+        this.rowGroupOptions.push([]);
+    }
+
+    removeEquipe(index: number): void {
+        this.equipes.removeAt(index);
+        this.rowGroupOptions.splice(index, 1);
+    }
+
+    onTeamSelectionChange(index: number): void {
+        const row = this.equipes.at(index);
+        const equipeId = row.get('equipeId')?.value;
+
+        // Reset group when team changes
+        const groupControl = row.get('grupoEquipeId');
+        groupControl?.setValue(null);
+
+        if (!equipeId) {
+            groupControl?.disable();
+        } else {
+            groupControl?.enable();
+            this.teamGroupService.listByTeam(equipeId).subscribe({
+                next: (groups) => {
+                    this.rowGroupOptions[index] = groups.map(g => ({ label: g.nome, value: g.id }));
+                },
+                error: (err) => console.error('Erro ao carregar grupos', err)
+            });
+        }
+    }
 
     getRoleLabel(value: string): string {
         const role = this.keycloakRoleOptions.find(r => r.value === value);
@@ -120,7 +164,8 @@ export class UserFormComponent implements OnInit {
             perfilAcessoId: [null],
             tipoUsuario: [null, [Validators.required]],
             empresaIds: [[], [Validators.required]],
-            equipeIds: [[]],
+            equipes: this.fb.array([]),
+
             // Novos campos de alçada individual
             limiteDescontoMaximoIndividual: [null],
             quantidadeMaximaReservasIndividual: [null],
@@ -220,12 +265,10 @@ export class UserFormComponent implements OnInit {
     private loadResources(): void {
         this.profileService.listResources().subscribe({
             next: (recursos: any[]) => {
-                console.log('📦 Recursos carregados da API:', recursos);
                 this.resources = recursos;
                 this.initPermissionRows();
             },
             error: (error) => {
-                console.error('❌ Erro ao carregar recursos:', error);
                 this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar recursos' });
             }
         });
@@ -293,14 +336,60 @@ export class UserFormComponent implements OnInit {
                     role: user.role,
                     perfilAcessoId: user.perfilAcessoId,
                     empresaIds: user.empresaIds || [],
-                    equipeIds: user.equipeIds || [],
                     limiteDescontoMaximoIndividual: user.limiteDescontoMaximoIndividual,
                     quantidadeMaximaReservasIndividual: user.quantidadeMaximaReservasIndividual
                 });
 
-                console.log('📊 Permissões individuais do usuário:', user.permissoesIndividuais);
-                console.log('💰 Limite de desconto individual:', user.limiteDescontoMaximoIndividual);
-                console.log('🏠 Quantidade máxima de reservas:', user.quantidadeMaximaReservasIndividual);
+                // Populate Equipes FormArray
+                while (this.equipes.length !== 0) {
+                    this.equipes.removeAt(0);
+                }
+                this.rowGroupOptions = [];
+
+                if (user.equipes && user.equipes.length > 0) {
+                    user.equipes.forEach((eq: any, index: number) => {
+                        this.addEquipe();
+                        const row = this.equipes.at(index);
+
+                        // Patch initial values
+                        row.patchValue({
+                            equipeId: eq.equipeId,
+                            grupoEquipeId: eq.grupoEquipeId // This might be ignored if options aren't ready
+                        });
+
+                        // Enable control if teamId is present
+                        if (eq.equipeId) {
+                            row.get('grupoEquipeId')?.enable();
+                        }
+
+                        // Load groups asynchronously
+                        if (eq.equipeId) {
+                            this.teamGroupService.listByTeam(eq.equipeId).subscribe({
+                                next: (groups) => {
+                                    // Update options with new reference to trigger change detection
+                                    const currentOptions = [...this.rowGroupOptions];
+                                    currentOptions[index] = groups.map(g => ({ label: g.nome, value: g.id }));
+                                    this.rowGroupOptions = currentOptions;
+
+                                    // Re-patch value ensuring it persists after options load
+                                    if (eq.grupoEquipeId) {
+                                        // Slight delay ensures the UI has updated with options before setting value
+                                        setTimeout(() => {
+                                            row.get('grupoEquipeId')?.setValue(eq.grupoEquipeId);
+                                        }, 0);
+                                    }
+                                },
+                                error: (err) => console.error('Erro ao carregar grupos no edit', err)
+                            });
+                        }
+                    });
+                } else if (user.equipeIds && user.equipeIds.length > 0) {
+                    user.equipeIds.forEach((id: string, index: number) => {
+                        this.addEquipe();
+                        this.equipes.at(index).patchValue({ equipeId: id });
+                        this.onTeamSelectionChange(index);
+                    });
+                }
 
                 // Mapear permissões individuais
                 if (user.permissoesIndividuais && user.permissoesIndividuais.length > 0) {
@@ -405,7 +494,7 @@ export class UserFormComponent implements OnInit {
                 empresaIds: formValue.empresaIds,
                 perfilAcessoId: formValue.perfilAcessoId,
                 tipoUsuario: formValue.tipoUsuario,
-                equipeIds: formValue.equipeIds || [],
+                equipes: formValue.equipes || [],
                 restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null,
                 permissoesIndividuais: permissoesIndividuais.length > 0 ? permissoesIndividuais : undefined,
                 limiteDescontoMaximoIndividual: formValue.limiteDescontoMaximoIndividual,

@@ -1,0 +1,53 @@
+<div class="kt-container-fluid">
+  <div class="flex flex-col gap-5 pb-5">
+
+    <!-- Header & Breadcrumbs -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold text-gray-900">Comissões</h1>
+        <div class="text-sm text-gray-500">Dashboard / Comissões</div>
+      </div>
+
+      <button pButton label="Liberar Comissão" icon="pi pi-check" class="p-button-primary p-button-sm"
+        [disabled]="selectedItems.length === 0" (click)="onLiberarSelecionadas()">
+      </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card p-4 flex flex-col gap-4">
+      <!-- Linha 1: Busca Geral -->
+      <div class="flex gap-4">
+        <span class="p-input-icon-left flex-1">
+          <i class="pi pi-search"></i>
+          <input pInputText [(ngModel)]="filtros.termoBusca" (ngModelChange)="onSearchChange()"
+            placeholder="Buscar por imóvel, cliente ou corretor..." class="w-full p-inputtext-sm">
+        </span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="kt-container-fluid">
+  <div class="card-body pt-0">
+
+    <!-- Tabela de Comissões -->
+    <app-generic-p-table [tableData]="comissoesFiltered" [columnDefinition]="columns"
+      [totalRecords]="comissoesFiltered.length" [rows]="10" [serverSidePagination]="false" [enableSelection]="true"
+      [(selection)]="selectedItems">
+
+      <!-- Custom Actions (Menu de 3 pontos) -->
+      <ng-template #customActions let-item>
+        <button pButton pRipple icon="pi pi-cog" class="p-button-text p-button-sm p-button-rounded"
+          (click)="menu.toggle($event)">
+        </button>
+        <p-menu #menu [popup]="true" [model]="getMenuItems(item)">
+        </p-menu>
+      </ng-template>
+    </app-generic-p-table>
+
+  </div>
+</div>
+
+<p-confirmDialog [style]="{width: '450px'}" rejectButtonStyleClass="p-button-text"></p-confirmDialog>
+<p-toast></p-toast>

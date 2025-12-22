@@ -28,6 +28,12 @@ export interface PermissaoRecursoInput {
     nivelAcesso: ENivelAcesso;
 }
 
+// Interface para input de equipe + grupo
+export interface UsuarioEquipeInput {
+    equipeId: string;
+    grupoEquipeId: string;
+}
+
 export interface User {
     id: string;
     nomeCompleto: string;
@@ -35,7 +41,7 @@ export interface User {
     inativo: boolean;
     tipoUsuario: UserRole;
     restricaoHorario?: any;
-    equipeIds?: string[];
+    equipes?: UsuarioEquipeInput[]; // Alterado de equipeIds
     perfilAcessoId?: string;
     // Novos campos: Permissões individuais
     permissoesIndividuais?: PermissaoDetalhadaDto[];
@@ -50,7 +56,7 @@ export interface UserListDTO {
     email: string;
     ativo: boolean;
     perfil?: string;
-    equipes: string[];
+    equipes: string[]; // Manter string[] para listagem simples ou atualizar se o backend mudou
 }
 
 export interface UserCreateDTO {
@@ -62,6 +68,7 @@ export interface UserCreateDTO {
     empresaIds: string[];
     role: string;
     perfilAcessoId?: string;
+    equipes?: UsuarioEquipeInput[]; // Novo campo
 }
 
 export interface UserUpdateDTO {
@@ -72,7 +79,7 @@ export interface UserUpdateDTO {
     perfilAcessoId?: string;
     tipoUsuario: UserRole;
     restricaoHorario?: any;
-    equipeIds?: string[];
+    equipes?: UsuarioEquipeInput[]; // Novo campo
     empresaIds?: string[];
     // Novos campos: Permissões individuais
     permissoesIndividuais?: PermissaoRecursoInput[];
