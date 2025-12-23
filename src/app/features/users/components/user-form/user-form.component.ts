@@ -161,7 +161,7 @@ export class UserFormComponent implements OnInit {
             telefone: ['', [Validators.required]],
             senha: ['', [Validators.required, Validators.minLength(8)]],
             role: ['', [Validators.required]], // Keycloak Role
-            perfilAcessoId: [null],
+            perfilAcessoIds: [[]],
             tipoUsuario: [null, [Validators.required]],
             empresaIds: [[], [Validators.required]],
             equipes: this.fb.array([]),
@@ -334,7 +334,7 @@ export class UserFormComponent implements OnInit {
                     telefone: user.telefone,
                     tipoUsuario: user.tipoUsuario,
                     role: user.role,
-                    perfilAcessoId: user.perfilAcessoId,
+                    perfilAcessoIds: user.perfilAcessoIds || (user.perfilAcessoId ? [user.perfilAcessoId] : []),
                     empresaIds: user.empresaIds || [],
                     limiteDescontoMaximoIndividual: user.limiteDescontoMaximoIndividual,
                     quantidadeMaximaReservasIndividual: user.quantidadeMaximaReservasIndividual
@@ -492,7 +492,7 @@ export class UserFormComponent implements OnInit {
                 telefone: formValue.telefone,
                 role: formValue.role,
                 empresaIds: formValue.empresaIds,
-                perfilAcessoId: formValue.perfilAcessoId,
+                perfilAcessoIds: formValue.perfilAcessoIds,
                 tipoUsuario: formValue.tipoUsuario,
                 equipes: formValue.equipes || [],
                 restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null,

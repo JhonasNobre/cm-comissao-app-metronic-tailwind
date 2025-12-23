@@ -42,7 +42,7 @@ export interface User {
     tipoUsuario: UserRole;
     restricaoHorario?: any;
     equipes?: UsuarioEquipeInput[]; // Alterado de equipeIds
-    perfilAcessoId?: string;
+    perfilAcessoIds?: string[];
     // Novos campos: Permissões individuais
     permissoesIndividuais?: PermissaoDetalhadaDto[];
     limiteDescontoMaximoIndividual?: number;
@@ -67,7 +67,7 @@ export interface UserCreateDTO {
     senha: string;
     empresaIds: string[];
     role: string;
-    perfilAcessoId?: string;
+    perfilAcessoIds?: string[];
     equipes?: UsuarioEquipeInput[]; // Novo campo
 }
 
@@ -76,7 +76,7 @@ export interface UserUpdateDTO {
     nomeCompleto: string;
     telefone: string;
     role: string;
-    perfilAcessoId?: string;
+    perfilAcessoIds?: string[];
     tipoUsuario: UserRole;
     restricaoHorario?: any;
     equipes?: UsuarioEquipeInput[]; // Novo campo

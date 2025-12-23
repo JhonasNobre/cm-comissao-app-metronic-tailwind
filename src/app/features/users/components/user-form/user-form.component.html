@@ -104,10 +104,11 @@
                             </div>
 
                             <div class="flex flex-col gap-2">
-                                <label class="font-semibold text-gray-700">Perfil de Acesso</label>
-                                <p-select [options]="accessProfiles" formControlName="perfilAcessoId" optionLabel="nome"
-                                    optionValue="id" placeholder="Selecione um perfil" styleClass="w-full"
-                                    [style]="{'width':'100%'}" appendTo="body" [showClear]="true"></p-select>
+                                <label class="font-semibold text-gray-700">Perfis de Acesso</label>
+                                <p-multiSelect [options]="accessProfiles" formControlName="perfilAcessoIds"
+                                    optionLabel="nome" optionValue="id" placeholder="Selecione os perfis"
+                                    [style]="{'width':'100%'}" appendTo="body" [showClear]="true"
+                                    display="chip"></p-multiSelect>
                             </div>
                         </div>
                     </div>
