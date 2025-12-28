@@ -73,6 +73,17 @@ export const routes: Routes = [
         loadComponent: () => import('./features/imobtech-integration/components/configuration-form/configuration-form.component').then(m => m.ConfigurationFormComponent),
         data: { title: 'Integração Imobtech', description: 'Gerencie a integração com o sistema Imobtech.', icon: 'pi pi-cog', status: 200 }
       },
+      // Imobtech Remessas
+      {
+        path: 'imobtech/remessas',
+        loadComponent: () => import('./features/imobtech-integration/components/remessa-list/remessa-list.component').then(m => m.RemessaListComponent),
+        data: { title: 'Remessas Imobtech', description: 'Gerencie remessas e pagamentos Imobtech', icon: 'ki-filled ki-file-sheet', status: 200 }
+      },
+      {
+        path: 'imobtech/diagnostico',
+        loadComponent: () => import('./features/imobtech-integration/pages/imobtech-diagnostic/imobtech-diagnostic.component').then(m => m.ImobtechDiagnosticComponent),
+        data: { title: 'Laboratório Imobtech', description: 'Diagnóstico e teste dos serviços Imobtech', icon: 'pi pi-bolt', status: 200 }
+      },
       { path: 'error/404', loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent), data: { status: 404, title: ' Página não encontrada' } },
 
       { path: 'test', loadComponent: () => import('./features/testing/components/test-page/test-page.component').then(m => m.TestPageComponent) },
