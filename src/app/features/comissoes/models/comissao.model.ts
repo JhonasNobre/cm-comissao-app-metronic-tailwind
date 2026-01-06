@@ -87,14 +87,16 @@ export interface DashboardStats {
 export interface ComissaoPendente {
     id: string;
     idComissao: string;
-    numeroParcela: string;
+    numeroParcela: string; // Ex: "01/30"
+    codigoVenda: string; // Código da venda
+    statusPagamento: string; // Atrasado, A receber, Recebido
     produto: string;
     imovel: string;
     nome: string;
     cargo: string;
     valor: number;
     dataPrevista: Date;
-    status: string;
+    status: string; // Status da parcela: Pendente, Liberada, Bloqueado
 }
 
 export interface ComissaoHistorico {

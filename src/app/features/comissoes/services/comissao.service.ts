@@ -52,4 +52,26 @@ export class ComissaoService extends BaseService {
     getDashboard(): Observable<DashboardStats> {
         return this.http.get<DashboardStats>(`${this.baseUrl}/dashboard`);
     }
+
+    // Ações em parcelas
+    bloquearParcela(idParcela: string, motivo?: string): Observable<any> {
+        return this.http.post(`${this.baseUrl}/parcelas/${idParcela}/bloquear`, {
+            idResponsavel: null,
+            motivo: motivo
+        });
+    }
+
+    cancelarParcela(idParcela: string, motivo: string): Observable<any> {
+        return this.http.post(`${this.baseUrl}/parcelas/${idParcela}/cancelar`, {
+            idResponsavel: 'current-user-id',
+            motivo: motivo
+        });
+    }
+
+    liberarParcelasLote(idsParcelas: string[]): Observable<{ value: number }> {
+        return this.http.post<{ value: number }>(`${this.baseUrl}/parcelas/liberar-lote`, {
+            idsParcelas: idsParcelas,
+            idResponsavel: 'current-user-id'
+        });
+    }
 }

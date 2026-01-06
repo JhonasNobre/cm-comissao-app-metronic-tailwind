@@ -9,6 +9,8 @@ import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { MenuModule } from 'primeng/menu';
+import { TableModule } from 'primeng/table';
 
 import { GenericPTableComponent } from '../../../shared/components/ui/generic-p-table/generic-p-table.component';
 import { ComissaoService } from '../services/comissao.service';
@@ -29,7 +31,9 @@ import { AuthService } from '../../../core/services/auth.service';
         FormsModule,
         TooltipModule,
         ButtonModule,
-        DialogModule
+        DialogModule,
+        MenuModule,
+        TableModule
     ],
     providers: [MessageService, ConfirmationService],
     templateUrl: './comissoes-list.component.html',
@@ -76,6 +80,15 @@ export class ComissoesListComponent implements OnInit {
     motivoRejeicao = '';
     comissaoEmEdicao: any | null = null;
 
+    // Batch selection
+    selectedParcelas: any[] = [];
+
+    // Action menu
+    parcelaEmAcao: any | null = null;
+    showActionMenu = false;
+    motivoCancelamento = '';
+    motivoBloqueio = '';
+
     ngOnInit() {
         this.initializeColumns();
 
@@ -111,6 +124,18 @@ export class ComissoesListComponent implements OnInit {
         // Colunas Pendentes
         this.columnsPendentes = [
             { field: 'numeroParcela', header: 'Nº Parcela', sortable: true },
+            { field: 'codigoVenda', header: 'Código da Venda', sortable: true },
+            {
+                field: 'statusPagamento',
+                header: 'Status de Pagamento',
+                displayAs: 'badge',
+                badgeSeverityMap: {
+                    'Atrasado': 'danger',
+                    'A receber': 'info',
+                    'Recebido': 'success'
+                },
+                sortable: true
+            },
             { field: 'produto', header: 'Produto', sortable: true },
             { field: 'imovel', header: 'Imóvel', sortable: true },
             { field: 'nome', header: 'Nome', sortable: true },
@@ -222,5 +247,159 @@ export class ComissoesListComponent implements OnInit {
         this.filtrosHistorico.pagina = event.page + 1;
         this.filtrosHistorico.tamanhoPagina = event.rows;
         this.loadHistorico();
+    }
+
+    // Action methods
+    onBloquearParcela(parcela: any) {
+        this.confirmationService.confirm({
+            message: `Deseja realmente bloquear a parcela ${parcela.numeroParcela}?`,
+            header: 'Confirmar Bloqueio',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.saving = true;
+                this.comissaoService.bloquearParcela(parcela.id, this.motivoBloqueio).subscribe({
+                    next: () => {
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: 'Parcela bloqueada com sucesso'
+                        });
+                        this.motivoBloqueio = '';
+                        this.loadData();
+                        this.saving = false;
+                    },
+                    error: (err) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: 'Erro ao bloquear parcela'
+                        });
+                        console.error(err);
+                        this.saving = false;
+                    }
+                });
+            }
+        });
+    }
+
+    onLiberarParcela(parcela: any) {
+        this.confirmationService.confirm({
+            message: `Deseja liberar a parcela ${parcela.numeroParcela}?`,
+            header: 'Confirmar Liberação',
+            icon: 'pi pi-check-circle',
+            accept: () => {
+                this.saving = true;
+                this.comissaoService.liberarParcelaManual(parcela.idComissao, parcela.id, 'current-user').subscribe({
+                    next: () => {
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: 'Parcela liberada com sucesso'
+                        });
+                        this.loadData();
+                        this.saving = false;
+                    },
+                    error: (err) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: 'Erro ao liberar parcela'
+                        });
+                        console.error(err);
+                        this.saving = false;
+                    }
+                });
+            }
+        });
+    }
+
+    onCancelarParcela(parcela: any) {
+        this.parcelaEmAcao = parcela;
+        this.confirmationService.confirm({
+            message: 'Digite o motivo do cancelamento:',
+            header: 'Cancelar Parcela',
+            icon: 'pi pi-times-circle',
+            accept: () => {
+                if (!this.motivoCancelamento) {
+                    this.messageService.add({
+                        severity: 'warn',
+                        summary: 'Atenção',
+                        detail: 'É necessário informar o motivo do cancelamento'
+                    });
+                    return;
+                }
+
+                this.saving = true;
+                this.comissaoService.cancelarParcela(parcela.id, this.motivoCancelamento).subscribe({
+                    next: () => {
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: 'Parcela cancelada com sucesso'
+                        });
+                        this.motivoCancelamento = '';
+                        this.parcelaEmAcao = null;
+                        this.loadData();
+                        this.saving = false;
+                    },
+                    error: (err) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: 'Erro ao cancelar parcela'
+                        });
+                        console.error(err);
+                        this.saving = false;
+                    }
+                });
+            },
+            reject: () => {
+                this.motivoCancelamento = '';
+                this.parcelaEmAcao = null;
+            }
+        });
+    }
+
+    onLiberarLote() {
+        if (!this.selectedParcelas || this.selectedParcelas.length === 0) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Atenção',
+                detail: 'Selecione pelo menos uma parcela para liberar'
+            });
+            return;
+        }
+
+        this.confirmationService.confirm({
+            message: `Deseja liberar ${this.selectedParcelas.length} parcela(s) selecionada(s)?`,
+            header: 'Confirmar Liberação em Lote',
+            icon: 'pi pi-check-square',
+            accept: () => {
+                this.saving = true;
+                const ids = this.selectedParcelas.map(p => p.id);
+
+                this.comissaoService.liberarParcelasLote(ids).subscribe({
+                    next: (result) => {
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: `${result.value} parcela(s) liberada(s) com sucesso`
+                        });
+                        this.selectedParcelas = [];
+                        this.loadData();
+                        this.saving = false;
+                    },
+                    error: (err) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: 'Erro ao liberar parcelas em lote'
+                        });
+                        console.error(err);
+                        this.saving = false;
+                    }
+                });
+            }
+        });
     }
 }
