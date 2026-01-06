@@ -11,6 +11,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { MenuModule } from 'primeng/menu';
 import { TableModule } from 'primeng/table';
+import { BadgeModule } from 'primeng/badge';
 
 import { GenericPTableComponent } from '../../../shared/components/ui/generic-p-table/generic-p-table.component';
 import { ComissaoService } from '../services/comissao.service';
@@ -33,7 +34,8 @@ import { AuthService } from '../../../core/services/auth.service';
         ButtonModule,
         DialogModule,
         MenuModule,
-        TableModule
+        TableModule,
+        BadgeModule
     ],
     providers: [MessageService, ConfirmationService],
     templateUrl: './comissoes-list.component.html',
@@ -89,8 +91,11 @@ export class ComissoesListComponent implements OnInit {
     motivoCancelamento = '';
     motivoBloqueio = '';
 
+    menuItems: any[] = [];
+
     ngOnInit() {
         this.initializeColumns();
+        this.initializeMenuItems();
 
         this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
             const idEmpresa = ids.length > 0 ? ids[0] : undefined;
@@ -198,6 +203,27 @@ export class ComissoesListComponent implements OnInit {
                 styleClass: 'text-blue-500 font-bold'
             },
             { field: 'qtdParcelasAReceber', header: 'Qtd (Parc)', sortable: true },
+        ];
+    }
+
+    private initializeMenuItems(): void {
+        this.menuItems = [
+            {
+                label: 'Bloquear Comissão',
+                icon: 'pi pi-lock',
+                command: () => this.onBloquearParcela(this.parcelaEmAcao)
+            },
+            {
+                label: 'Liberar Comissão',
+                icon: 'pi pi-unlock',
+                command: () => this.onLiberarParcela(this.parcelaEmAcao)
+            },
+            {
+                label: 'Cancelar Comissão',
+                icon: 'pi pi-times',
+                command: () => this.onCancelarParcela(this.parcelaEmAcao),
+                styleClass: 'text-red-500'
+            }
         ];
     }
 

@@ -57,82 +57,17 @@
         </app-generic-p-table>
 
         <!-- Tabela Pendentes -->
-        <div *ngIf="activeTab === 'pendentes'">
-            <!-- Botão Liberar em Lote -->
-            <div class="mb-3 flex justify-between items-center" *ngIf="selectedParcelas && selectedParcelas.length > 0">
-                <div class="text-sm text-gray-600">
-                    {{selectedParcelas.length}} parcela(s) selecionada(s)
-                </div>
-                <button pButton label="Liberar Comissão" 
-                        icon="pi pi-check" 
-                        class="p-button-success p-button-sm"
-                        (click)="onLiberarLote()"
-                        [disabled]="saving">
-                </button>
-            </div>
-
-            <app-generic-p-table 
-                [tableData]="pendentes"
-                [columnDefinition]="columnsPendentes" 
-                [totalRecords]="totalRecordsPendentes" 
-                [serverSidePagination]="true"
-                [rows]="10" 
-                [displayCreateAction]="false" 
-                [displayDetailAction]="false"
-                [(selection)]="selectedParcelas"
-                [selectionMode]="'multiple'"
-                (lazyLoad)="onLazyLoadPendentes($event)">
-                
-                <!-- Custom Actions Column -->
-                <ng-template pTemplate="body" let-rowData let-columns="columns">
-                    <tr>
-                        <td>
-                            <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
-                        </td>
-                        <td *ngFor="let col of columns">
-                            <ng-container [ngSwitch]="col.displayAs">
-                                <p-badge *ngSwitchCase="'badge'" 
-                                         [value]="rowData[col.field]" 
-                                         [severity]="col.badgeSeverityMap?.[rowData[col.field]] || 'info'">
-                                </p-badge>
-                                <span *ngSwitchDefault>{{ rowData[col.field] }}</span>
-                            </ng-container>
-                        </td>
-                        <td>
-                            <button pButton 
-                                    type="button" 
-                                    icon="pi pi-ellipsis-v" 
-                                    class="p-button-rounded p-button-text p-button-sm"
-                                    (click)="menu.toggle($event); parcelaEmAcao = rowData">
-                            </button>
-                        </td>
-                    </tr>
-                </ng-template>
-            </app-generic-p-table>
-        </div>
+        <app-generic-p-table *ngIf="activeTab === 'pendentes'" [tableData]="pendentes"
+            [columnDefinition]="columnsPendentes" [totalRecords]="totalRecordsPendentes" [serverSidePagination]="true"
+            [rows]="10" [displayCreateAction]="false" [displayDetailAction]="false"
+            (lazyLoad)="onLazyLoadPendentes($event)">
+        </app-generic-p-table>
 
     </div>
 </div>
 
 <!-- Menu de Ações -->
-<p-menu #menu [popup]="true" [model]="[
-    {
-        label: 'Bloquear Comissão',
-        icon: 'pi pi-lock',
-        command: () => onBloquearParcela(parcelaEmAcao)
-    },
-    {
-        label: 'Liberar Comissão',
-        icon: 'pi pi-unlock',
-        command: () => onLiberarParcela(parcelaEmAcao)
-    },
-    {
-        label: 'Cancelar Comissão',
-        icon: 'pi pi-times',
-        command: () => onCancelarParcela(parcelaEmAcao),
-        styleClass: 'text-red-500'
-    }
-]"></p-menu>
+<p-menu #menu [popup]="true" [model]="menuItems"></p-menu>
 
 <p-confirmDialog [style]="{width: '450px'}" rejectButtonStyleClass="p-button-text"></p-confirmDialog>
 <p-toast></p-toast>
