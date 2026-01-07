@@ -22,6 +22,16 @@
         <app-generic-p-table tableName="company-list" [tableData]="itens" [columnDefinition]="columns" [rows]="10"
             [displayCreateAction]="true" (add)="onAddClick()" [displayEditAction]="true" (edit)="onEditClick($event)"
             [displayDeleteAction]="true" (delete)="onDeleteClick($event)">
+
+            <ng-template #customActions let-item>
+                <button (click)="onUploadLogoClick(item)" class="btn btn-icon btn-sm btn-light-info"
+                    pTooltip="Alterar Logo" tooltipPosition="top">
+                    <i class="ki-filled ki-picture"></i>
+                </button>
+            </ng-template>
+
         </app-generic-p-table>
+
+        <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
     </div>
 </div>

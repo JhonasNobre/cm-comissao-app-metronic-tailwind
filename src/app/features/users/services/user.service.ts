@@ -46,4 +46,14 @@ export class UserService extends BaseService {
     reativar(ids: string[]): Observable<void> {
         return this.http.patch<void>(`${this.baseUrl}/${ids[0]}/reativar`, ids);
     }
+
+    uploadFoto(id: string, file: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post(`${this.baseUrl}/${id}/foto`, formData);
+    }
+
+    getFotoUrl(id: string): string {
+        return `${this.baseUrl}/${id}/foto`;
+    }
 }

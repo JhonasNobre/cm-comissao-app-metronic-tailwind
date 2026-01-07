@@ -24,6 +24,7 @@ export interface Company extends BaseEntity {
         zipCode: string;
     };
     logo?: string;
+    photo?: string; // Mapped for GenericPTable display
     createdAt: Date;
     updatedAt?: Date;
 }

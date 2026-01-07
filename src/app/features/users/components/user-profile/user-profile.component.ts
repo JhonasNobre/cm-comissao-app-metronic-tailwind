@@ -66,4 +66,37 @@ export class UserProfileComponent implements OnInit {
     getStatusBadgeClass(inativo: boolean): string {
         return inativo ? 'kt-badge-danger' : 'kt-badge-success';
     }
+
+    // Photo Upload Logic
+    get photoUrl(): string {
+        if (!this.user) return '';
+        // Adiciona timestamp para evitar cache após atualização
+        return `${this.userService.getFotoUrl(this.user.id)}?t=${this.photoTimestamp}`;
+    }
+
+    photoTimestamp = Date.now();
+    showInitials = false;
+
+    onFileSelected(event: any): void {
+        const file = event.target.files[0];
+        if (file && this.user) {
+            this.loading = true;
+            this.userService.uploadFoto(this.user.id, file).subscribe({
+                next: () => {
+                    this.photoTimestamp = Date.now(); // Força reload da imagem
+                    this.showInitials = false;
+                    this.loading = false;
+                },
+                error: (err) => {
+                    console.error('Erro ao fazer upload da foto', err);
+                    this.error = 'Falha ao atualizar foto de perfil';
+                    this.loading = false;
+                }
+            });
+        }
+    }
+
+    onImgError(): void {
+        this.showInitials = true;
+    }
 }
