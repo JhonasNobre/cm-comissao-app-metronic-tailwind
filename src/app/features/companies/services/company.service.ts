@@ -61,7 +61,7 @@ export class CompanyService extends BaseService {
             status: response.status || 'ACTIVE',
             createdAt: new Date(response.criadoEm || response.createdAt),
             updatedAt: response.atualizadoEm ? new Date(response.atualizadoEm) : undefined,
-            photo: `${this.baseUrl}/${response.id}/logo?t=${Date.now()}` // URL for display
+            photo: response.logo ? `data:image/jpeg;base64,${response.logo}` : `${this.baseUrl}/${response.id}/logo?t=${Date.now()}` // Use Data URI if available, else URL fallback
         } as Company;
     }
 

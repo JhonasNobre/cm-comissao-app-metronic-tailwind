@@ -70,6 +70,7 @@ export class UserProfileComponent implements OnInit {
     // Photo Upload Logic
     get photoUrl(): string {
         if (!this.user) return '';
+        if (this.user.fotoPerfil) return this.user.fotoPerfil;
         // Adiciona timestamp para evitar cache após atualização
         return `${this.userService.getFotoUrl(this.user.id)}?t=${this.photoTimestamp}`;
     }

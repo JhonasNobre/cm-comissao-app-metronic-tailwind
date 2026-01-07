@@ -47,6 +47,7 @@ export interface User {
     permissoesIndividuais?: PermissaoDetalhadaDto[];
     limiteDescontoMaximoIndividual?: number;
     quantidadeMaximaReservasIndividual?: number;
+    fotoPerfil?: string;
     criadoEm: Date;
 }
 
@@ -56,6 +57,7 @@ export interface UserListDTO {
     email: string;
     ativo: boolean;
     perfil?: string;
+    fotoPerfil?: string;
     equipes: string[]; // Manter string[] para listagem simples ou atualizar se o backend mudou
 }
 
