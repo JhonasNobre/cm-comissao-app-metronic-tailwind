@@ -43,6 +43,10 @@ export class CompanyService extends BaseService {
         return this.http.delete<void>(`${this.baseUrl}/${id}`);
     }
 
+    getByExternalAuthId(externalAuthId: string): Observable<any[]> {
+        return this.http.get<any[]>(`${this.baseUrl}/usuario/${externalAuthId}`);
+    }
+
     /**
      * Maps backend response (Portuguese) to frontend model (English)
      */
