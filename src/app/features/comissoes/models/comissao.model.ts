@@ -83,3 +83,43 @@ export interface DashboardStats {
     quantidadePaga: number;
     valorPago: number;
 }
+
+export interface ComissaoPendente {
+    id: string;
+    idComissao: string;
+    numeroParcela: string; // Ex: "01/30"
+    codigoVenda: string; // Código da venda
+    statusPagamento: string; // Atrasado, A receber, Recebido
+    produto: string;
+    imovel: string;
+    nome: string;
+    cargo: string;
+    valor: number;
+    dataPrevista: Date;
+    status: string; // Status da parcela: Pendente, Liberada, Bloqueado
+}
+
+export interface ComissaoHistorico {
+    periodo: Date;
+    valorFaturado: number;
+    qtdParcelasFaturadas: number;
+    valorRecebido: number;
+    qtdParcelasRecebidas: number;
+    valorAReceber: number;
+    qtdParcelasAReceber: number;
+}
+
+export interface ComissaoPendentesFiltros {
+    pagina: number;
+    tamanhoPagina: number;
+    idEmpresa?: string;
+    termoBusca?: string;
+}
+
+export interface ComissaoHistoricoFiltros {
+    pagina: number;
+    tamanhoPagina: number;
+    idEmpresa?: string;
+    dataInicio?: Date;
+    dataFim?: Date;
+}

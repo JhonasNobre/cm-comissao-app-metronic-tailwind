@@ -1,11 +1,53 @@
+// Enums para permissões
+export enum EAcao {
+    CRIAR = 'CRIAR',
+    LER = 'LER',
+    ATUALIZAR = 'ATUALIZAR',
+    EXCLUIR = 'EXCLUIR'
+}
+
+export enum ENivelAcesso {
+    DADOS_USUARIO = 'DADOS_USUARIO',
+    DADOS_EQUIPE = 'DADOS_EQUIPE',
+    TODOS = 'TODOS',
+    NEGADO = 'NEGADO'
+}
+
+// Interface para permissão detalhada
+export interface PermissaoDetalhadaDto {
+    recursoId: string;
+    recursoNome: string;
+    acao: EAcao;
+    nivelAcesso: ENivelAcesso;
+}
+
+// Interface para input de permissão
+export interface PermissaoRecursoInput {
+    recursoId: string;
+    acao: EAcao;
+    nivelAcesso: ENivelAcesso;
+}
+
+// Interface para input de equipe + grupo
+export interface UsuarioEquipeInput {
+    equipeId: string;
+    grupoEquipeId: string;
+}
+
 export interface User {
     id: string;
     nomeCompleto: string;
     email: string;
     inativo: boolean;
     tipoUsuario: UserRole;
-    restricaoHorario?: any; // Define specific type if needed later
-    equipeIds?: string[];
+    restricaoHorario?: any;
+    equipes?: UsuarioEquipeInput[]; // Alterado de equipeIds
+    perfilAcessoIds?: string[];
+    // Novos campos: Permissões individuais
+    permissoesIndividuais?: PermissaoDetalhadaDto[];
+    limiteDescontoMaximoIndividual?: number;
+    quantidadeMaximaReservasIndividual?: number;
+    fotoPerfil?: string;
     criadoEm: Date;
 }
 
@@ -15,7 +57,8 @@ export interface UserListDTO {
     email: string;
     ativo: boolean;
     perfil?: string;
-    equipes: string[];
+    fotoPerfil?: string;
+    equipes: string[]; // Manter string[] para listagem simples ou atualizar se o backend mudou
 }
 
 export interface UserCreateDTO {
@@ -25,10 +68,9 @@ export interface UserCreateDTO {
     telefone: string;
     senha: string;
     empresaIds: string[];
-    role: string; // Keycloak role
-    tipoUsuario: UserRole;
-    restricaoHorario?: any;
-    equipeIds?: string[];
+    role: string;
+    perfilAcessoIds?: string[];
+    equipes?: UsuarioEquipeInput[]; // Novo campo
 }
 
 export interface UserUpdateDTO {
@@ -36,11 +78,15 @@ export interface UserUpdateDTO {
     nomeCompleto: string;
     telefone: string;
     role: string;
-    perfilAcessoId?: string;
+    perfilAcessoIds?: string[];
     tipoUsuario: UserRole;
     restricaoHorario?: any;
-    equipeIds?: string[];
+    equipes?: UsuarioEquipeInput[]; // Novo campo
     empresaIds?: string[];
+    // Novos campos: Permissões individuais
+    permissoesIndividuais?: PermissaoRecursoInput[];
+    limiteDescontoMaximoIndividual?: number;
+    quantidadeMaximaReservasIndividual?: number;
 }
 
 export enum UserRole {

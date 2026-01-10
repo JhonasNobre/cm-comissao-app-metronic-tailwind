@@ -65,6 +65,13 @@ export class AuthService {
     }
 
     /**
+     * Atualiza a senha no primeiro acesso (quando obrigatório pelo Keycloak)
+     */
+    changePasswordFirstAccess(credentials: any): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/change-password-first-access`, credentials);
+    }
+
+    /**
      * Salva o token e atualiza o estado
      */
     private setSession(token: string, refreshToken?: string): void {

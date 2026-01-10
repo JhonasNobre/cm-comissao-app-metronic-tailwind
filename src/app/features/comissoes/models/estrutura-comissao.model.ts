@@ -34,6 +34,16 @@ export interface EstruturaComissaoNivel {
     percentual?: number;
     valorFixo?: number;
     ordemExibicao?: number;
+    parentId?: string;
+    membros: EstruturaComissaoMembro[];
+}
+
+export interface EstruturaComissaoMembro {
+    id: string;
+    idNivel: string;
+    usuarioId?: string;
+    equipeId?: string;
+    nome: string;
 }
 
 // DTOs para requests
@@ -62,6 +72,14 @@ export interface CreateEstruturaComissaoNivelRequest {
     tipoValor: number;
     percentual?: number;
     valorFixo?: number;
+    parentId?: string;
+    membros: CreateEstruturaComissaoMembroRequest[];
+}
+
+export interface CreateEstruturaComissaoMembroRequest {
+    nome: string;
+    usuarioId?: string;
+    equipeId?: string;
 }
 
 export interface UpdateEstruturaComissaoRequest extends CreateEstruturaComissaoRequest {

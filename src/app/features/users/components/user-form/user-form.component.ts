@@ -12,14 +12,16 @@ import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 import { DividerModule } from 'primeng/divider';
 import { PasswordModule } from 'primeng/password';
+import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { UserService } from '../../services/user.service';
+import { TeamGroupService } from '../../../teams/services/team-group.service';
 import { AccessProfileService } from '../../../access-profiles/services/access-profile.service';
 import { TeamService } from '../../../teams/services/team.service';
 import { CompanyService } from '../../../companies/services/company.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SystemService } from '../../../../core/services/system.service';
-import { UserRole } from '../../models/user.model';
+import { UserRole, EAcao, ENivelAcesso, PermissaoRecursoInput, PermissaoDetalhadaDto } from '../../models/user.model';
 import { AppConfirmationService } from '../../../../shared/services/confirmation.service';
 
 @Component({
@@ -39,7 +41,8 @@ import { AppConfirmationService } from '../../../../shared/services/confirmation
         CardModule,
         ToastModule,
         DividerModule,
-        PasswordModule
+        PasswordModule,
+        TableModule
     ],
     providers: [MessageService],
     templateUrl: './user-form.component.html'
@@ -56,6 +59,8 @@ export class UserFormComponent implements OnInit {
     private messageService = inject(MessageService);
     private systemService = inject(SystemService);
     private confirmationService = inject(AppConfirmationService);
+    private teamGroupService = inject(TeamGroupService);
+
 
     form!: FormGroup;
     isEditMode = false;
@@ -76,6 +81,57 @@ export class UserFormComponent implements OnInit {
     keycloakRoleOptions: any[] = [];
     diasSemanaOptions: any[] = [];
 
+    // Permissões individuais
+    resources: any[] = [];
+    permissionRows: any[] = [];
+    rowGroupOptions: any[][] = [];
+
+
+    scopeOptions = [
+        { label: 'Dados do Usuário', value: 'DADOS_USUARIO' },
+        { label: 'Dados da Equipe', value: 'DADOS_EQUIPE' },
+        { label: 'Todos', value: 'TODOS' }
+    ];
+
+    get equipes(): FormArray {
+        return this.form.get('equipes') as FormArray;
+    }
+
+    addEquipe(): void {
+        const equipeGroup = this.fb.group({
+            equipeId: [null, Validators.required],
+            grupoEquipeId: [{ value: null, disabled: true }, Validators.required]
+        });
+        this.equipes.push(equipeGroup);
+        this.rowGroupOptions.push([]);
+    }
+
+    removeEquipe(index: number): void {
+        this.equipes.removeAt(index);
+        this.rowGroupOptions.splice(index, 1);
+    }
+
+    onTeamSelectionChange(index: number): void {
+        const row = this.equipes.at(index);
+        const equipeId = row.get('equipeId')?.value;
+
+        // Reset group when team changes
+        const groupControl = row.get('grupoEquipeId');
+        groupControl?.setValue(null);
+
+        if (!equipeId) {
+            groupControl?.disable();
+        } else {
+            groupControl?.enable();
+            this.teamGroupService.listByTeam(equipeId).subscribe({
+                next: (groups) => {
+                    this.rowGroupOptions[index] = groups.map(g => ({ label: g.nome, value: g.id }));
+                },
+                error: (err) => console.error('Erro ao carregar grupos', err)
+            });
+        }
+    }
+
     getRoleLabel(value: string): string {
         const role = this.keycloakRoleOptions.find(r => r.value === value);
         return role ? role.label : value;
@@ -87,6 +143,7 @@ export class UserFormComponent implements OnInit {
         this.loadTeams();
         this.loadCompanies();
         this.loadSystemOptions();
+        this.loadResources();
         this.checkEditMode();
     }
 
@@ -104,10 +161,14 @@ export class UserFormComponent implements OnInit {
             telefone: ['', [Validators.required]],
             senha: ['', [Validators.required, Validators.minLength(8)]],
             role: ['', [Validators.required]], // Keycloak Role
-            perfilAcessoId: [null],
+            perfilAcessoIds: [[]],
             tipoUsuario: [null, [Validators.required]],
             empresaIds: [[], [Validators.required]],
-            equipeIds: [[]],
+            equipes: this.fb.array([]),
+
+            // Novos campos de alçada individual
+            limiteDescontoMaximoIndividual: [null],
+            quantidadeMaximaReservasIndividual: [null],
             restricaoHorario: this.fb.group({
                 bloquearEmFeriadosNacionais: [false],
                 ufFeriados: [''],
@@ -201,6 +262,43 @@ export class UserFormComponent implements OnInit {
         });
     }
 
+    private loadResources(): void {
+        this.profileService.listResources().subscribe({
+            next: (recursos: any[]) => {
+                this.resources = recursos;
+                this.initPermissionRows();
+            },
+            error: (error) => {
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar recursos' });
+            }
+        });
+    }
+
+    private initPermissionRows(): void {
+        this.permissionRows = this.resources.map(res => ({
+            recursoId: res.id,
+            recursoNome: res.nome,
+            canCreate: false,
+            canRead: false,
+            canUpdate: false,
+            canDelete: false,
+            scope: 'DADOS_USUARIO'
+        }));
+    }
+
+    private mapPermissionsToRows(permissions: PermissaoDetalhadaDto[]): void {
+        permissions.forEach(p => {
+            const row = this.permissionRows.find(r => r.recursoId === p.recursoId);
+            if (row) {
+                if (p.acao === 'CRIAR') row.canCreate = true;
+                if (p.acao === 'LER') row.canRead = true;
+                if (p.acao === 'ATUALIZAR') row.canUpdate = true;
+                if (p.acao === 'EXCLUIR') row.canDelete = true;
+                row.scope = p.nivelAcesso;
+            }
+        });
+    }
+
     private loadCompanies(): void {
         this.companyService.list().subscribe({
             next: (data) => this.companies = data,
@@ -236,10 +334,67 @@ export class UserFormComponent implements OnInit {
                     telefone: user.telefone,
                     tipoUsuario: user.tipoUsuario,
                     role: user.role,
-                    perfilAcessoId: user.perfilAcessoId,
+                    perfilAcessoIds: user.perfilAcessoIds || (user.perfilAcessoId ? [user.perfilAcessoId] : []),
                     empresaIds: user.empresaIds || [],
-                    equipeIds: user.equipeIds || []
+                    limiteDescontoMaximoIndividual: user.limiteDescontoMaximoIndividual,
+                    quantidadeMaximaReservasIndividual: user.quantidadeMaximaReservasIndividual
                 });
+
+                // Populate Equipes FormArray
+                while (this.equipes.length !== 0) {
+                    this.equipes.removeAt(0);
+                }
+                this.rowGroupOptions = [];
+
+                if (user.equipes && user.equipes.length > 0) {
+                    user.equipes.forEach((eq: any, index: number) => {
+                        this.addEquipe();
+                        const row = this.equipes.at(index);
+
+                        // Patch initial values
+                        row.patchValue({
+                            equipeId: eq.equipeId,
+                            grupoEquipeId: eq.grupoEquipeId // This might be ignored if options aren't ready
+                        });
+
+                        // Enable control if teamId is present
+                        if (eq.equipeId) {
+                            row.get('grupoEquipeId')?.enable();
+                        }
+
+                        // Load groups asynchronously
+                        if (eq.equipeId) {
+                            this.teamGroupService.listByTeam(eq.equipeId).subscribe({
+                                next: (groups) => {
+                                    // Update options with new reference to trigger change detection
+                                    const currentOptions = [...this.rowGroupOptions];
+                                    currentOptions[index] = groups.map(g => ({ label: g.nome, value: g.id }));
+                                    this.rowGroupOptions = currentOptions;
+
+                                    // Re-patch value ensuring it persists after options load
+                                    if (eq.grupoEquipeId) {
+                                        // Slight delay ensures the UI has updated with options before setting value
+                                        setTimeout(() => {
+                                            row.get('grupoEquipeId')?.setValue(eq.grupoEquipeId);
+                                        }, 0);
+                                    }
+                                },
+                                error: (err) => console.error('Erro ao carregar grupos no edit', err)
+                            });
+                        }
+                    });
+                } else if (user.equipeIds && user.equipeIds.length > 0) {
+                    user.equipeIds.forEach((id: string, index: number) => {
+                        this.addEquipe();
+                        this.equipes.at(index).patchValue({ equipeId: id });
+                        this.onTeamSelectionChange(index);
+                    });
+                }
+
+                // Mapear permissões individuais
+                if (user.permissoesIndividuais && user.permissoesIndividuais.length > 0) {
+                    this.mapPermissionsToRows(user.permissoesIndividuais);
+                }
 
                 this.isProtected = user.isProtected;
                 this.isInactive = user.inativo;
@@ -292,8 +447,21 @@ export class UserFormComponent implements OnInit {
 
         if (this.isEditMode && this.userId) {
             // Remove fields that shouldn't be sent on update (email/cpf are generally immutable here)
-            const { cpf, email, senha, ...updatePayload } = payload;
+            const { cpf, email, senha, ...updatePayload } = formValue;
             updatePayload.id = this.userId;
+
+            // Construir array de permissões individuais
+            const permissoesIndividuais: PermissaoRecursoInput[] = [];
+            this.permissionRows.forEach(row => {
+                if (row.canCreate) permissoesIndividuais.push({ recursoId: row.recursoId, acao: EAcao.CRIAR, nivelAcesso: row.scope });
+                if (row.canRead) permissoesIndividuais.push({ recursoId: row.recursoId, acao: EAcao.LER, nivelAcesso: row.scope });
+                if (row.canUpdate) permissoesIndividuais.push({ recursoId: row.recursoId, acao: EAcao.ATUALIZAR, nivelAcesso: row.scope });
+                if (row.canDelete) permissoesIndividuais.push({ recursoId: row.recursoId, acao: EAcao.EXCLUIR, nivelAcesso: row.scope });
+            });
+
+            updatePayload.permissoesIndividuais = permissoesIndividuais.length > 0 ? permissoesIndividuais : undefined;
+
+            console.log('📤 Enviando permissões individuais:', permissoesIndividuais);
 
             this.service.update(updatePayload, this.userId).subscribe({
                 next: () => {
@@ -306,13 +474,43 @@ export class UserFormComponent implements OnInit {
                 }
             });
         } else {
-            this.service.create(payload).subscribe({
+            // CREATE MODE
+            // Construir array de permissões individuais
+            const permissoesIndividuais: PermissaoRecursoInput[] = [];
+            this.permissionRows.forEach(row => {
+                if (row.canCreate) permissoesIndividuais.push({ recursoId: row.recursoId, acao: EAcao.CRIAR, nivelAcesso: row.scope });
+                if (row.canRead) permissoesIndividuais.push({ recursoId: row.recursoId, acao: EAcao.LER, nivelAcesso: row.scope });
+                if (row.canUpdate) permissoesIndividuais.push({ recursoId: row.recursoId, acao: EAcao.ATUALIZAR, nivelAcesso: row.scope });
+                if (row.canDelete) permissoesIndividuais.push({ recursoId: row.recursoId, acao: EAcao.EXCLUIR, nivelAcesso: row.scope });
+            });
+
+            const createPayload: any = {
+                nomeCompleto: formValue.nomeCompleto,
+                email: formValue.email,
+                senha: formValue.senha,
+                cpf: formValue.cpf,
+                telefone: formValue.telefone,
+                role: formValue.role,
+                empresaIds: formValue.empresaIds,
+                perfilAcessoIds: formValue.perfilAcessoIds,
+                tipoUsuario: formValue.tipoUsuario,
+                equipes: formValue.equipes || [],
+                restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null,
+                permissoesIndividuais: permissoesIndividuais.length > 0 ? permissoesIndividuais : undefined,
+                limiteDescontoMaximoIndividual: formValue.limiteDescontoMaximoIndividual,
+                quantidadeMaximaReservasIndividual: formValue.quantidadeMaximaReservasIndividual
+            };
+
+            console.log('📤 Create payload:', createPayload);
+
+            this.service.create(createPayload).subscribe({
                 next: () => {
                     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Usuário criado com sucesso' });
                     setTimeout(() => this.router.navigate(['/users']), 1000);
                 },
-                error: () => {
-                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao criar usuário' });
+                error: (err) => {
+                    console.error('Erro ao criar usuário:', err);
+                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao criar usuário. Verifique os dados.' });
                     this.loading = false;
                 }
             });

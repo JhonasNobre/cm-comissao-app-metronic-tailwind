@@ -43,6 +43,14 @@ export class LoginComponent {
             error: (err) => {
                 console.error('Login error:', err);
                 this.loading = false;
+
+                if (err.status === 403 && err.error?.error === 'password_change_required') {
+                    this.router.navigate(['/auth/change-password'], {
+                        queryParams: { email: this.credentials.username }
+                    });
+                    return;
+                }
+
                 if (err.status === 401) {
                     this.error = 'Usuário ou senha inválidos';
                 } else {

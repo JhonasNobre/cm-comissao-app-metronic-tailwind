@@ -1,0 +1,144 @@
+<div class="kt-container-fluid">
+  <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+    <div class="flex flex-col justify-center gap-2">
+      <h1 class="text-xl font-medium leading-none text-mono">
+        Remessas Imobtech
+      </h1>
+      <span class="text-sm text-gray-600">
+        Gerencie e acompanhe as remessas de pagamento do Imobtech
+      </span>
+    </div>
+    <div class="flex items-center gap-2.5">
+      <button class="kt-btn kt-btn-primary" (click)="onAdd()">
+        <i class="ki-filled ki-plus"></i>
+        Nova Remessa
+      </button>
+      <button class="kt-btn kt-btn-warning" (click)="abrirReprogramar()">
+        <i class="ki-filled ki-calendar"></i>
+        Reprogramar Vencimento
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="kt-container-fluid">
+  <div class="grid gap-5 lg:gap-7.5">
+    <app-generic-p-table tableName="remessas-imobtech-list" [tableData]="remessas" [columnDefinition]="columns"
+      [rows]="20" [displayCreateAction]="false" [displayDetailAction]="true" [displayEditAction]="false"
+      [displayDeleteAction]="false" (detail)="onViewDetails($event)">
+    </app-generic-p-table>
+  </div>
+</div>
+
+<!-- Modal Detalhes -->
+<p-dialog header="Detalhes da Remessa" [(visible)]="detailVisible" [modal]="true" [style]="{width: '600px'}"
+  [draggable]="false" [resizable]="false">
+
+  <ng-template pTemplate="content">
+    <div *ngIf="loadingDetails" class="flex justify-center py-8">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+    </div>
+
+    <div *ngIf="!loadingDetails && selectedRemessa" class="flex flex-col gap-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-semibold text-gray-600">ID Interno</label>
+          <p class="text-base">{{ selectedRemessa.id }}</p>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-gray-600">ID Venda Interna</label>
+          <p class="text-base">#{{ selectedRemessa.idVendaInterna }}</p>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-gray-600">Imobtech Remessa ID</label>
+          <p class="text-base">{{ selectedRemessa.imobtechRemessaId || 'N/A' }}</p>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-gray-600">Status</label>
+          <p>
+            <span
+              class="kt-badge kt-badge-{{ getStatusSeverity(selectedRemessa.statusDescricao) }} kt-badge-outline rounded-[30px]">
+              <span class="kt-badge-dot size-1.5"></span>
+              {{ selectedRemessa.statusDescricao }}
+            </span>
+          </p>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-gray-600">Data de Envio</label>
+          <p class="text-base">{{ selectedRemessa.dataEnvio ? (selectedRemessa.dataEnvio | date:'dd/MM/yyyy HH:mm:ss') :
+            'Não enviado' }}</p>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-gray-600">Data de Processamento</label>
+          <p class="text-base">{{ selectedRemessa.dataProcessamento ? (selectedRemessa.dataProcessamento |
+            date:'dd/MM/yyyy HH:mm:ss') : 'Não processado' }}</p>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-gray-600">Tentativas</label>
+          <p class="text-base">{{ selectedRemessa.tentativasReprocessamento }}</p>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-gray-600">Valor Total</label>
+          <p class="text-base font-semibold text-green-600">{{ selectedRemessa.valorTotal | currency:'BRL' }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="selectedRemessa.mensagemErro" class="mt-4">
+        <label class="text-sm font-semibold text-red-600">Mensagem de Erro</label>
+        <div class="bg-red-50 border border-red-200 rounded p-3 mt-2">
+          <p class="text-sm text-red-800">{{ selectedRemessa.mensagemErro }}</p>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Fechar" icon="pi pi-times" class="p-button-text" (click)="closeDetailModal()"></button>
+    <button *ngIf="selectedRemessa && selectedRemessa.statusDescricao === 'Erro'" pButton label="Reprocessar"
+      icon="pi pi-refresh" class="p-button-warning" (click)="reprocessar(selectedRemessa.id)"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Componente Criar Remessa -->
+<app-criar-remessa-form></app-criar-remessa-form>
+
+<!-- Modal Reprogramar Vencimento -->
+<p-dialog header="Reprogramar Vencimento" [(visible)]="reprogramarVisible" [modal]="true" [style]="{width: '500px'}"
+  [draggable]="false" [resizable]="false">
+
+  <ng-template pTemplate="content">
+    <div class="flex flex-col gap-4">
+      <div>
+        <label for="idParcela" class="block text-sm font-semibold text-gray-700 mb-2">
+          ID da Parcela
+        </label>
+        <input id="idParcela" type="number" pInputText [(ngModel)]="idParcelaInput" placeholder="Ex: 12345"
+          class="w-full" />
+        <small class="text-gray-500">Digite o ID interno da parcela que deseja reprogramar</small>
+      </div>
+
+      <div>
+        <label for="novaData" class="block text-sm font-semibold text-gray-700 mb-2">
+          Nova Data de Vencimento
+        </label>
+        <input id="novaData" type="date" pInputText [(ngModel)]="novaDataVencimento" class="w-full" />
+        <small class="text-gray-500">Selecione a nova data de vencimento</small>
+      </div>
+
+      <div class="bg-blue-50 border border-blue-200 rounded p-3">
+        <div class="flex gap-2">
+          <i class="pi pi-info-circle text-blue-600"></i>
+          <p class="text-sm text-blue-700">
+            Esta operação altera a data de vencimento do boleto/parcela no Imobtech.
+          </p>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="fecharReprogramar()"></button>
+    <button pButton label="Confirmar" icon="pi pi-check" class="p-button-warning" [loading]="reprogramandoLoading"
+      [disabled]="!idParcelaInput || !novaDataVencimento" (click)="confirmarReprogramar()"></button>
+  </ng-template>
+</p-dialog>

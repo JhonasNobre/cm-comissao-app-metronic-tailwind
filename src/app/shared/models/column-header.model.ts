@@ -80,7 +80,7 @@ export interface ColumnHeader<T> {
     optional?: boolean;
     /** Se a coluna opcional deve vir selecionada por padrão. */
     defaultSelected?: boolean;
-    
+
     /** Estilos CSS em linha para a coluna (ex: 'min-width: 150px;'). */
     style?: string;
     /** A ordem de exibição da coluna. */
@@ -88,6 +88,10 @@ export interface ColumnHeader<T> {
     /** Se a coluna deve ter um filtro no cabeçalho. */
     filter?: boolean;
     /** Se a coluna pode ser ordenada. */
+    /** Se a coluna pode ser ordenada. */
     sortable?: boolean;
+
+    /** Classe CSS customizada para a célula (ex: 'text-green-500'). */
+    styleClass?: string;
 }
 

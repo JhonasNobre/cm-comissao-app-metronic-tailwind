@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CompanyService } from '../../services/company.service';
@@ -10,6 +10,8 @@ import { BaseListComponent } from '../../../../shared/components/base/base-list/
 import { CompanyFormService } from '../../services/company-form.service';
 import { FormItemBase } from '../../../../shared/components/ui/dynamic-form/models/form-item-base';
 import { Observable } from 'rxjs';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
     selector: 'app-company-list',
@@ -18,13 +20,15 @@ import { Observable } from 'rxjs';
         CommonModule,
         RouterModule,
         GenericPTableComponent,
-        ConfirmDialogModule
+        ConfirmDialogModule,
+        TooltipModule
     ],
     templateUrl: './company-list.component.html'
 })
 export class CompanyListComponent extends BaseListComponent<Company> implements OnInit {
     private companyService = inject(CompanyService);
     private companyFormService = inject(CompanyFormService);
+    protected override notificationService = inject(NotificationService);
 
     protected storageKey = 'company-list-search';
     columns: ColumnHeader<Company>[] = [];
@@ -36,6 +40,7 @@ export class CompanyListComponent extends BaseListComponent<Company> implements 
 
     private initializeColumns(): void {
         this.columns = [
+            { field: 'photo', header: 'Logo', sortable: false },
             { field: 'name', header: 'Razão Social' },
             { field: 'cnpj', header: 'CNPJ' }
         ];
@@ -76,5 +81,32 @@ export class CompanyListComponent extends BaseListComponent<Company> implements 
 
     onDeleteClick(company: Company): void {
         this.onRemover(company);
+    }
+
+    // Logic for Logo Upload
+    @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+    currentLogoCompany: Company | null = null;
+
+    onUploadLogoClick(company: Company): void {
+        this.currentLogoCompany = company;
+        this.fileInput.nativeElement.click();
+    }
+
+    onFileSelected(event: any): void {
+        const file = event.target.files[0];
+        if (file && this.currentLogoCompany) {
+            this.companyService.uploadLogo(this.currentLogoCompany.id.toString(), file).subscribe({
+                next: () => {
+                    this.notificationService.success('Sucesso', 'Logo atualizado com sucesso!');
+                    this.load(); // Reload table
+                },
+                error: (err) => {
+                    this.notificationService.error('Erro', 'Falha ao atualizar logo.');
+                    console.error(err);
+                }
+            });
+        }
+        // Reset input
+        event.target.value = '';
     }
 }

@@ -77,7 +77,14 @@
             "day": "Dia",
             "start": "Início",
             "end": "Fim",
-            "add_time": "Adicionar Horário"
+            "add_time": "Adicionar Horário",
+            "groups": "Grupos da Equipe",
+            "add_group": "Adicionar Grupo",
+            "no_groups": "Nenhum grupo cadastrado nesta equipe.",
+            "group_name": "Nome do Grupo",
+            "group_desc": "Descrição do Grupo",
+            "new_group": "Novo Grupo",
+            "edit_group": "Editar Grupo"
         }
     },
     "access_profile": {

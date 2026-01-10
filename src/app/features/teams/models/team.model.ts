@@ -22,6 +22,7 @@ export interface TeamCreateDTO {
     nome: string;
     perfilAcessoId?: string;
     restricaoHorario?: any;
+    groups?: any[];
 }
 
 export interface TeamUpdateDTO {
@@ -29,4 +30,5 @@ export interface TeamUpdateDTO {
     nome: string;
     perfilAcessoId?: string;
     restricaoHorario?: any;
+    groups?: any[];
 }

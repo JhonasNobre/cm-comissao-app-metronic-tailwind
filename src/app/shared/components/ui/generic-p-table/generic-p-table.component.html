@@ -117,7 +117,7 @@
                             </ng-template>
 
                             <ng-template #defaultTextCell>
-                                <span>{{ getFormattedValue(rowData, col) }}</span>
+                                <span [ngClass]="col.styleClass || ''">{{ getFormattedValue(rowData, col) }}</span>
                             </ng-template>
                         </ng-template>
                     </td>

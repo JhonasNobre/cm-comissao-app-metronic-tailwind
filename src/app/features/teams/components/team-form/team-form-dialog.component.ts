@@ -7,11 +7,14 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { InputMaskModule } from 'primeng/inputmask';
 import { DividerModule } from 'primeng/divider';
+import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { TranslocoModule } from '@jsverse/transloco';
 import { BaseFormDialogComponent } from '../../../../shared/components/base/base-form/base-form-dialog.component';
 import { TeamCreateDTO, TeamUpdateDTO } from '../../models/team.model';
 import { AccessProfileService } from '../../../access-profiles/services/access-profile.service';
 import { AccessProfile } from '../../../access-profiles/models/access-profile.model';
+import { TeamGroupService, GrupoEquipe } from '../../services/team-group.service';
 
 @Component({
     selector: 'app-team-form-dialog',
@@ -26,17 +29,27 @@ import { AccessProfile } from '../../../access-profiles/models/access-profile.mo
         SelectModule,
         InputMaskModule,
         DividerModule,
-        TranslocoModule
+        TranslocoModule,
+        DialogModule,
+        TooltipModule
     ],
     templateUrl: './team-form-dialog.component.html'
 })
 export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateDTO | TeamUpdateDTO> {
     private accessProfileService = inject(AccessProfileService);
+    private teamGroupService = inject(TeamGroupService);
 
     accessProfiles: AccessProfile[] = [];
     hasRestricaoHorario = false;
 
     diasSemanaOptions: any[] = [];
+
+    // Configurações de Grupos
+    groups: GrupoEquipe[] = [];
+    displayGroupDialog: boolean = false;
+    currentGroup: GrupoEquipe = { id: '', nome: '', idEquipe: '' };
+    isNewGroup: boolean = false;
+    submittedGroup: boolean = false;
 
     protected override onInitDialog(data: any): void {
         this.diasSemanaOptions = [
@@ -57,6 +70,8 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
                 nome: data.nome,
                 perfilAcessoId: data.perfilAcessoId
             });
+
+            this.loadGroups(data.id);
 
             if (data.restricaoHorario) {
                 this.hasRestricaoHorario = true;
@@ -97,7 +112,8 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
         const formValue = this.form.getRawValue();
         return {
             ...formValue,
-            restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null
+            restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null,
+            groups: this.groups // Adiciona grupos ao resultado para processamento posterior se necessário
         };
     }
 
@@ -178,5 +194,101 @@ export class TeamFormDialogComponent extends BaseFormDialogComponent<TeamCreateD
         } else if (this.horarios.length === 0) {
             this.addHorario();
         }
+    }
+
+    // --- Métodos de Gestão de Grupos ---
+
+    loadGroups(teamId: string): void {
+        this.teamGroupService.listByTeam(teamId).subscribe({
+            next: (data) => this.groups = data,
+            error: (err: any) => console.error('Erro ao carregar grupos', err)
+        });
+    }
+
+    openNewGroup() {
+        this.currentGroup = { id: '', nome: '', idEquipe: this.form.get('id')?.value || '' };
+        this.submittedGroup = false;
+        this.isNewGroup = true;
+        this.displayGroupDialog = true;
+    }
+
+    editGroup(group: GrupoEquipe) {
+        this.currentGroup = { ...group };
+        this.submittedGroup = false;
+        this.isNewGroup = false;
+        this.displayGroupDialog = true;
+    }
+
+    deleteGroup(group: GrupoEquipe) {
+        // Se a equipe já existe (tem ID), deleta direto na API
+        const teamId = this.form.get('id')?.value;
+        if (teamId) {
+            this.teamGroupService.delete(group.id).subscribe({
+                next: () => {
+                    this.groups = this.groups.filter(g => g.id !== group.id);
+                },
+                error: (err: any) => console.error('Erro ao deletar grupo', err)
+            });
+        } else {
+            // Se a equipe é nova, apenas deleta da lista local
+            this.groups = this.groups.filter(g => g !== group);
+        }
+    }
+
+    saveGroup() {
+        this.submittedGroup = true;
+
+        if (!this.currentGroup.nome?.trim()) {
+            return;
+        }
+
+        const teamId = this.form.get('id')?.value;
+
+        // Se estamos editando uma equipe existente
+        if (teamId) {
+            if (this.isNewGroup) {
+                const payload = { ...this.currentGroup, idEquipe: teamId };
+                this.teamGroupService.create(payload).subscribe({
+                    next: (newId: string) => {
+                        this.currentGroup.id = newId;
+                        this.groups.push(this.currentGroup);
+                        this.displayGroupDialog = false;
+                        this.groups = [...this.groups]; // Refresh UI
+                    },
+                    error: (err: any) => console.error('Erro ao criar grupo', err)
+                });
+            } else {
+                this.teamGroupService.update(this.currentGroup, this.currentGroup.id).subscribe({
+                    next: () => {
+                        const index = this.groups.findIndex(g => g.id === this.currentGroup.id);
+                        if (index !== -1) {
+                            this.groups[index] = this.currentGroup;
+                        }
+                        this.displayGroupDialog = false;
+                        this.groups = [...this.groups]; // Refresh UI
+                    },
+                    error: (err: any) => console.error('Erro ao atualizar grupo', err)
+                });
+            }
+        }
+        // Se estamos criando uma equipe nova (dados apenas em memória)
+        else {
+            if (this.isNewGroup) {
+                // Gera ID temporário para manipulação local
+                this.currentGroup.id = 'temp-' + new Date().getTime();
+                this.groups.push(this.currentGroup);
+            } else {
+                const index = this.groups.findIndex(g => g.id === this.currentGroup.id);
+                if (index !== -1) {
+                    this.groups[index] = this.currentGroup;
+                }
+            }
+            this.displayGroupDialog = false;
+            this.groups = [...this.groups];
+        }
+    }
+
+    cancelGroup() {
+        this.displayGroupDialog = false;
     }
 }

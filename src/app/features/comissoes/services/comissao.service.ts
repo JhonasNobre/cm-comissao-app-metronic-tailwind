@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseService } from '../../../shared/services/base/base.service';
-import { Comissao, ComissaoFiltros, GerarComissaoCommand, DashboardStats } from '../models/comissao.model';
+import { Comissao, ComissaoFiltros, GerarComissaoCommand, DashboardStats, ComissaoPendente, ComissaoPendentesFiltros, ComissaoHistorico, ComissaoHistoricoFiltros } from '../models/comissao.model';
 import { PagedResult } from '../models/estrutura-comissao.model';
 
 @Injectable({
@@ -17,6 +17,16 @@ export class ComissaoService extends BaseService {
     getAll(filtros: ComissaoFiltros): Observable<PagedResult<Comissao>> {
         const params = this.buildHttpParams(filtros);
         return this.http.get<PagedResult<Comissao>>(this.baseUrl, { params });
+    }
+
+    getPendentes(filtros: ComissaoPendentesFiltros): Observable<PagedResult<ComissaoPendente>> {
+        const params = this.buildHttpParams(filtros);
+        return this.http.get<PagedResult<ComissaoPendente>>(`${this.baseUrl}/pendentes`, { params });
+    }
+
+    getHistorico(filtros: ComissaoHistoricoFiltros): Observable<PagedResult<ComissaoHistorico>> {
+        const params = this.buildHttpParams(filtros);
+        return this.http.get<PagedResult<ComissaoHistorico>>(`${this.baseUrl}/historico`, { params });
     }
 
     getById(id: string): Observable<Comissao> {
@@ -41,5 +51,27 @@ export class ComissaoService extends BaseService {
 
     getDashboard(): Observable<DashboardStats> {
         return this.http.get<DashboardStats>(`${this.baseUrl}/dashboard`);
+    }
+
+    // Ações em parcelas
+    bloquearParcela(idParcela: string, motivo?: string): Observable<any> {
+        return this.http.post(`${this.baseUrl}/parcelas/${idParcela}/bloquear`, {
+            idResponsavel: null,
+            motivo: motivo
+        });
+    }
+
+    cancelarParcela(idParcela: string, motivo: string): Observable<any> {
+        return this.http.post(`${this.baseUrl}/parcelas/${idParcela}/cancelar`, {
+            idResponsavel: 'current-user-id',
+            motivo: motivo
+        });
+    }
+
+    liberarParcelasLote(idsParcelas: string[]): Observable<{ value: number }> {
+        return this.http.post<{ value: number }>(`${this.baseUrl}/parcelas/liberar-lote`, {
+            idsParcelas: idsParcelas,
+            idResponsavel: 'current-user-id'
+        });
     }
 }

@@ -1,9 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, switchMap, forkJoin, of, map } from 'rxjs';
 import { TeamService } from '../../services/team.service';
 import { TeamListDTO, TeamCreateDTO, TeamUpdateDTO } from '../../models/team.model';
+import { TeamGroupService } from '../../services/team-group.service';
 import { GenericPTableComponent } from '../../../../shared/components/ui/generic-p-table/generic-p-table.component';
 import { ColumnHeader } from '../../../../shared/models/column-header.model';
 import { BaseListComponent } from '../../../../shared/components/base/base-list/base-list.component';
@@ -23,6 +24,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 })
 export class TeamListComponent extends BaseListComponent<TeamListDTO> {
     private teamService = inject(TeamService);
+    private teamGroupService = inject(TeamGroupService);
 
     protected storageKey = 'teams-list';
 
@@ -42,7 +44,30 @@ export class TeamListComponent extends BaseListComponent<TeamListDTO> {
     }
 
     protected override onAdd(object: TeamListDTO): Observable<any> {
-        return this.teamService.create(object as unknown as TeamCreateDTO);
+        const teamDto = object as unknown as TeamCreateDTO;
+        const groups = teamDto.groups;
+
+        return this.teamService.create(teamDto).pipe(
+            switchMap((response: any) => {
+                // Tenta extrair o ID da resposta
+                let teamId = response;
+                if (response && response.data) {
+                    teamId = response.data;
+                } else if (response && response.id) {
+                    teamId = response.id;
+                }
+
+                if (groups && groups.length > 0 && typeof teamId === 'string') {
+                    const groupObservables = groups.map((g: any) => {
+                        return this.teamGroupService.create({ ...g, idEquipe: teamId });
+                    });
+                    // Aguarda todos os grupos serem criados e retorna a resposta original (ou processada)
+                    return forkJoin(groupObservables).pipe(map(() => response));
+                }
+
+                return of(response);
+            })
+        );
     }
 
     protected override onEdit(object: TeamListDTO, id: string): Observable<any> {

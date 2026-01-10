@@ -17,20 +17,20 @@ export class CompanyService extends BaseService {
     list(params?: any): Observable<Company[]> {
         const httpParams = this.buildHttpParams(params);
         return this.http.get<any[]>(`${this.baseUrl}`, { params: httpParams }).pipe(
-            map(companies => companies.map(this.mapResponseToModel))
+            map(companies => companies.map(c => this.mapResponseToModel(c)))
         );
     }
 
     get(id: string): Observable<Company> {
         return this.http.get<any>(`${this.baseUrl}/${id}`).pipe(
-            map(this.mapResponseToModel)
+            map(c => this.mapResponseToModel(c))
         );
     }
 
     create(company: Company): Observable<Company> {
         const request: CreateCompanyRequest = this.mapModelToCreateRequest(company);
         return this.http.post<any>(`${this.baseUrl}`, request).pipe(
-            map(this.mapResponseToModel)
+            map(c => this.mapResponseToModel(c))
         );
     }
 
@@ -41,6 +41,10 @@ export class CompanyService extends BaseService {
 
     delete(id: string): Observable<void> {
         return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    }
+
+    getByExternalAuthId(externalAuthId: string): Observable<any[]> {
+        return this.http.get<any[]>(`${this.baseUrl}/usuario/${externalAuthId}`);
     }
 
     /**
@@ -56,7 +60,8 @@ export class CompanyService extends BaseService {
             phone: response.telefone,
             status: response.status || 'ACTIVE',
             createdAt: new Date(response.criadoEm || response.createdAt),
-            updatedAt: response.atualizadoEm ? new Date(response.atualizadoEm) : undefined
+            updatedAt: response.atualizadoEm ? new Date(response.atualizadoEm) : undefined,
+            photo: response.logo ? `data:image/jpeg;base64,${response.logo}` : `${this.baseUrl}/${response.id}/logo?t=${Date.now()}` // Use Data URI if available, else URL fallback
         } as Company;
     }
 
@@ -78,5 +83,14 @@ export class CompanyService extends BaseService {
             nome: company.name,
             cnpj: company.cnpj
         };
+    }
+    uploadLogo(id: string, file: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post(`${this.baseUrl}/${id}/logo`, formData);
+    }
+
+    getLogoUrl(id: string): string {
+        return `${this.baseUrl}/${id}/logo`;
     }
 }

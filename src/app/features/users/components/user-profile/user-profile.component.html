@@ -35,12 +35,26 @@
         <div class="kt-card kt-card-grid">
             <div class="kt-card-content p-8">
                 <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
-                    <!-- Avatar (Initials) -->
-                    <div class="kt-avatar size-24 shrink-0">
-                        <div
-                            class="rounded-full bg-primary text-white flex items-center justify-center text-3xl font-bold">
-                            {{ user.nomeCompleto.charAt(0).toUpperCase() }}
+                    <!-- Avatar (Image or Initials) -->
+                    <div class="kt-avatar size-24 shrink-0 relative group">
+                        <ng-container *ngIf="!showInitials; else initials">
+                             <img [src]="photoUrl" 
+                                  (error)="onImgError()" 
+                                  class="w-full h-full rounded-full object-cover" 
+                                  alt="Profile Photo">
+                        </ng-container>
+                        <ng-template #initials>
+                            <div class="w-full h-full rounded-full bg-primary text-white flex items-center justify-center text-3xl font-bold">
+                                {{ user.nomeCompleto.charAt(0).toUpperCase() }}
+                            </div>
+                        </ng-template>
+
+                        <!-- Upload Button (Overlay) -->
+                        <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                             (click)="fileInput.click()">
+                            <i class="ki-filled ki-pencil text-white text-xl"></i>
                         </div>
+                        <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
                     </div>
 
                     <!-- User Info -->
