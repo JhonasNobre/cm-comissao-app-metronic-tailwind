@@ -36,6 +36,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/comissoes/comissoes-list/comissoes-list.component').then(m => m.ComissoesListComponent)
       },
       {
+        path: 'comissoes/parcelas',
+        loadComponent: () => import('./features/comissoes/parcelas-list/parcelas-list.component').then(m => m.ParcelasListComponent)
+      },
+      {
         path: 'admin/comissoes',
         loadComponent: () => import('./features/comissoes/comissoes-admin-list/comissoes-admin-list.component').then(m => m.ComissoesAdminListComponent)
       },

@@ -3,23 +3,30 @@
     <div class="flex flex-wrap items-center justify-between gap-5 pb-5">
         <div class="flex flex-col gap-1">
             <div class="flex items-center gap-3">
-                <button pButton pRipple icon="pi pi-arrow-left" class="p-button-text p-button-rounded"
-                    (click)="voltar()"></button>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-0">
-                    Detalhes da Comissão
-                </h1>
-                <p-tag [value]="getStatusLabel(comissao.status)"
-                    [severity]="getStatusSeverity(comissao.status)"></p-tag>
+                <button pButton pRipple type="button" label="Voltar" icon="pi pi-arrow-left"
+                    class="p-button-text p-button-secondary" (click)="voltar()"></button>
+                <div class="flex flex-col">
+                    <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-0">
+                        Detalhes da Comissão
+                    </h1>
+                    <span class="text-sm text-gray-500">Comissões / Detalhes / {{comissao.id}}</span>
+                </div>
+                <p-tag [value]="getStatusLabel(comissao.status)" [severity]="getStatusSeverity(comissao.status)"
+                    class="ml-2"></p-tag>
             </div>
-            <span class="text-gray-500 ml-12">ID: {{comissao.id}}</span>
         </div>
 
-        <div class="flex gap-2" *ngIf="comissao.status === EStatusComissao.Pendente">
+        <div class="flex gap-2">
             <!-- Botões de Ação -->
-            <button pButton pRipple label="Aprovar" icon="pi pi-check" class="p-button-success"
-                (click)="aprovar()"></button>
-            <button pButton pRipple label="Rejeitar" icon="pi pi-times" class="p-button-danger p-button-outlined"
-                (click)="rejeitar()"></button>
+            <button pButton pRipple label="Imprimir" icon="pi pi-print" class="p-button-secondary p-button-outlined"
+                (click)="print()"></button>
+
+            <ng-container *ngIf="comissao.status === EStatusComissao.Pendente">
+                <button pButton pRipple label="Aprovar" icon="pi pi-check" class="p-button-success"
+                    (click)="aprovar()"></button>
+                <button pButton pRipple label="Rejeitar" icon="pi pi-times" class="p-button-danger p-button-outlined"
+                    (click)="rejeitar()"></button>
+            </ng-container>
         </div>
     </div>
 

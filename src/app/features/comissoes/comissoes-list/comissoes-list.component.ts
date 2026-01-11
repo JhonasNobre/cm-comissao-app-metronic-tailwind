@@ -275,6 +275,29 @@ export class ComissoesListComponent implements OnInit {
         this.loadHistorico();
     }
 
+    onDetail(event: any) {
+        if (event.idComissao) {
+            this.router.navigate(['/comissoes/detalhes', event.idComissao]);
+        } else if (event.periodo) {
+            // Histórico: Navegar para lista de parcelas filtrada pelo mês
+            const dataInicio = new Date(event.periodo);
+            const ano = dataInicio.getFullYear();
+            const mes = dataInicio.getMonth();
+            const dataFim = new Date(ano, mes + 1, 0); // Último dia do mês
+
+            this.router.navigate(['/comissoes/parcelas'], {
+                queryParams: {
+                    dataInicio: dataInicio.toISOString(),
+                    dataFim: dataFim.toISOString()
+                }
+            });
+        } else if (event.id) {
+            // Fallback se idComissao não existir (ex: Historico pode ser a comissão em si)
+            this.router.navigate(['/comissoes/detalhes', event.id]);
+        }
+    }
+
+    // Action methods
     // Action methods
     onBloquearParcela(parcela: any) {
         this.confirmationService.confirm({
@@ -283,7 +306,7 @@ export class ComissoesListComponent implements OnInit {
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
                 this.saving = true;
-                this.comissaoService.bloquearParcela(parcela.id, this.motivoBloqueio).subscribe({
+                this.comissaoService.bloquearParcela(parcela.id, parcela.idComissao, this.motivoBloqueio).subscribe({
                     next: () => {
                         this.messageService.add({
                             severity: 'success',
@@ -294,7 +317,7 @@ export class ComissoesListComponent implements OnInit {
                         this.loadData();
                         this.saving = false;
                     },
-                    error: (err) => {
+                    error: (err: any) => {
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Erro',
@@ -325,7 +348,7 @@ export class ComissoesListComponent implements OnInit {
                         this.loadData();
                         this.saving = false;
                     },
-                    error: (err) => {
+                    error: (err: any) => {
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Erro',
@@ -342,8 +365,8 @@ export class ComissoesListComponent implements OnInit {
     onCancelarParcela(parcela: any) {
         this.parcelaEmAcao = parcela;
         this.confirmationService.confirm({
-            message: 'Digite o motivo do cancelamento:',
-            header: 'Cancelar Parcela',
+            message: 'Isso cancelará TODA a comissão desta parcela. Digite o motivo:',
+            header: 'Cancelar Comissão',
             icon: 'pi pi-times-circle',
             accept: () => {
                 if (!this.motivoCancelamento) {
@@ -356,23 +379,23 @@ export class ComissoesListComponent implements OnInit {
                 }
 
                 this.saving = true;
-                this.comissaoService.cancelarParcela(parcela.id, this.motivoCancelamento).subscribe({
+                this.comissaoService.cancelarComissao(parcela.idComissao, this.motivoCancelamento, 'current-user').subscribe({
                     next: () => {
                         this.messageService.add({
                             severity: 'success',
                             summary: 'Sucesso',
-                            detail: 'Parcela cancelada com sucesso'
+                            detail: 'Comissão cancelada com sucesso'
                         });
                         this.motivoCancelamento = '';
                         this.parcelaEmAcao = null;
                         this.loadData();
                         this.saving = false;
                     },
-                    error: (err) => {
+                    error: (err: any) => {
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Erro',
-                            detail: 'Erro ao cancelar parcela'
+                            detail: 'Erro ao cancelar comissão'
                         });
                         console.error(err);
                         this.saving = false;
@@ -404,18 +427,18 @@ export class ComissoesListComponent implements OnInit {
                 this.saving = true;
                 const ids = this.selectedParcelas.map(p => p.id);
 
-                this.comissaoService.liberarParcelasLote(ids).subscribe({
-                    next: (result) => {
+                this.comissaoService.liberarParcelasEmMassa(ids, 'current-user').subscribe({
+                    next: (result: any) => {
                         this.messageService.add({
                             severity: 'success',
                             summary: 'Sucesso',
-                            detail: `${result.value} parcela(s) liberada(s) com sucesso`
+                            detail: `Parcela(s) liberada(s) com sucesso`
                         });
                         this.selectedParcelas = [];
                         this.loadData();
                         this.saving = false;
                     },
-                    error: (err) => {
+                    error: (err: any) => {
                         this.messageService.add({
                             severity: 'error',
                             summary: 'Erro',

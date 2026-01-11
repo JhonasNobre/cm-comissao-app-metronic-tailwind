@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseService } from '../../../shared/services/base/base.service';
-import { Comissao, ComissaoFiltros, GerarComissaoCommand, DashboardStats, ComissaoPendente, ComissaoPendentesFiltros, ComissaoHistorico, ComissaoHistoricoFiltros } from '../models/comissao.model';
+import { Comissao, ComissaoFiltros, GerarComissaoCommand, DashboardStats, ComissaoPendente, ComissaoPendentesFiltros, ComissaoHistorico, ComissaoHistoricoFiltros, ParcelaComissaoGridDto, LiberarParcelasEmMassaRequest } from '../models/comissao.model';
 import { PagedResult } from '../models/estrutura-comissao.model';
 
 @Injectable({
@@ -27,6 +27,11 @@ export class ComissaoService extends BaseService {
     getHistorico(filtros: ComissaoHistoricoFiltros): Observable<PagedResult<ComissaoHistorico>> {
         const params = this.buildHttpParams(filtros);
         return this.http.get<PagedResult<ComissaoHistorico>>(`${this.baseUrl}/historico`, { params });
+    }
+
+    getParcelasPaginado(filtros: any): Observable<PagedResult<ParcelaComissaoGridDto>> {
+        const params = this.buildHttpParams(filtros);
+        return this.http.get<PagedResult<ParcelaComissaoGridDto>>(`${this.baseUrl}/parcelas`, { params });
     }
 
     getById(id: string): Observable<Comissao> {
@@ -54,24 +59,34 @@ export class ComissaoService extends BaseService {
     }
 
     // Ações em parcelas
-    bloquearParcela(idParcela: string, motivo?: string): Observable<any> {
-        return this.http.post(`${this.baseUrl}/parcelas/${idParcela}/bloquear`, {
-            idResponsavel: null,
+    // Ações em parcelas
+    bloquearParcela(idParcela: string, idComissao: string, motivo: string): Observable<any> {
+        return this.http.patch(`${this.baseUrl}/parcelas/${idParcela}/bloquear`, {
+            idComissao: idComissao,
             motivo: motivo
         });
     }
 
-    cancelarParcela(idParcela: string, motivo: string): Observable<any> {
-        return this.http.post(`${this.baseUrl}/parcelas/${idParcela}/cancelar`, {
-            idResponsavel: 'current-user-id',
-            motivo: motivo
+    desbloquearParcela(idParcela: string, idComissao: string): Observable<any> {
+        return this.http.patch(`${this.baseUrl}/parcelas/${idParcela}/desbloquear`, {
+            idComissao: idComissao
         });
     }
 
-    liberarParcelasLote(idsParcelas: string[]): Observable<{ value: number }> {
-        return this.http.post<{ value: number }>(`${this.baseUrl}/parcelas/liberar-lote`, {
-            idsParcelas: idsParcelas,
-            idResponsavel: 'current-user-id'
+    liberarParcelasEmMassa(idsParcelas: string[], idResponsavel: string): Observable<any> {
+        const request: LiberarParcelasEmMassaRequest = {
+            idsParcelas,
+            idResponsavel
+        };
+        return this.http.post(`${this.baseUrl}/parcelas/liberar-em-massa`, request);
+    }
+
+    cancelarComissao(id: string, motivo: string, idResponsavel: string): Observable<any> {
+        return this.http.delete(`${this.baseUrl}/${id}/cancelar`, {
+            body: {
+                motivo,
+                idResponsavel
+            }
         });
     }
 }

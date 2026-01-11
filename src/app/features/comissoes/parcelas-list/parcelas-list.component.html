@@ -1,0 +1,177 @@
+<div class="card p-0">
+    <p-toast></p-toast>
+    <p-confirmDialog header="Confirmação" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+
+    <!-- Header Section -->
+    <div class="p-6 pb-0">
+        <div class="flex flex-col gap-5">
+            <!-- Breadcrumb & Title -->
+            <div class="flex justify-between items-start">
+                <div class="flex flex-col gap-1">
+                    <h1 class="text-xl font-bold text-gray-900">Comissões</h1>
+                    <span class="text-sm text-gray-500">Dashboard / Comissões</span>
+                </div>
+                <p-button label="Liberar Comissão" styleClass="p-button-primary bg-primary"
+                    [disabled]="!selectedParcelas.length" (onClick)="liberarSelecionadas()"></p-button>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex flex-col gap-4">
+                <!-- Search -->
+                <div class="w-full relative">
+                    <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input pInputText type="text" [(ngModel)]="filtroTermo" (ngModelChange)="onTermoBuscaChange($event)"
+                        placeholder="Buscar por imóvel, cliente ou corretor..."
+                        class="w-full pl-11 py-3 rounded-xl border-gray-200 bg-white" />
+                </div>
+
+                <!-- Dropdowns Row -->
+                <div class="flex flex-wrap items-center gap-4">
+                    <!-- Periodo -->
+                    <div class="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100">
+                        <i class="pi pi-calendar text-gray-400"></i>
+                        <p-datePicker [(ngModel)]="filtroDataInicio" (onSelect)="onFilterChange()" placeholder="Período"
+                            selectionMode="range" [hideOnDateTimeSelect]="true" dateFormat="dd/mm/yy" [showIcon]="false"
+                            styleClass="p-inputtext-sm border-0 bg-transparent shadow-none w-48"></p-datePicker>
+                    </div>
+
+                    <!-- Products -->
+                    <div class="flex items-center gap-2 cursor-not-allowed opacity-50">
+                        <span class="text-xs font-medium text-gray-500">Produto</span>
+                        <span class="text-xs font-bold text-gray-700">Mostrar tudo</span>
+                        <i class="pi pi-chevron-down text-xs text-gray-400"></i>
+                    </div>
+
+                    <!-- Equipe (Placeholder) -->
+                    <div class="flex items-center gap-2 cursor-not-allowed opacity-50">
+                        <span class="text-xs font-medium text-gray-500">Equipe</span>
+                        <span class="text-xs font-bold text-gray-700">Mostrar tudo</span>
+                        <i class="pi pi-chevron-down text-xs text-gray-400"></i>
+                    </div>
+
+                    <!-- Cidade (Placeholder) -->
+                    <div class="flex items-center gap-2 cursor-not-allowed opacity-50">
+                        <span class="text-xs font-medium text-gray-500">Cidade</span>
+                        <span class="text-xs font-bold text-gray-700">Mostrar tudo</span>
+                        <i class="pi pi-chevron-down text-xs text-gray-400"></i>
+                    </div>
+
+                    <!-- Cargos (Placeholder) -->
+                    <div class="flex items-center gap-2 cursor-not-allowed opacity-50">
+                        <span class="text-xs font-medium text-gray-500">Cargos</span>
+                        <span class="text-xs font-bold text-gray-700">Mostrar tudo</span>
+                        <i class="pi pi-chevron-down text-xs text-gray-400"></i>
+                    </div>
+
+                    <!-- Status Pagamento -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-medium text-gray-500">Status de pagamento</span>
+                        <p-select [options]="statusPagamentoOptions" [(ngModel)]="filtroStatusPagamento"
+                            (onChange)="onFilterChange()" placeholder="Mostrar tudo"
+                            styleClass="p-select-sm border-0 bg-transparent shadow-none font-bold text-gray-700"></p-select>
+                    </div>
+
+                    <!-- Status Parcela -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-medium text-gray-500">Status da parcela</span>
+                        <p-select [options]="statusParcelaOptions" [(ngModel)]="filtroStatusParcela"
+                            (onChange)="onFilterChange()" placeholder="Mostrar tudo"
+                            styleClass="p-select-sm border-0 bg-transparent shadow-none font-bold text-gray-700"></p-select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="p-6 pt-2">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 mt-6">Comissões Pendentes</h2>
+
+        <p-table #dt [value]="parcelas" [lazy]="true" (onLazyLoad)="loadParcelas($event)" [totalRecords]="totalRecords"
+            [loading]="loading" [rows]="10" [paginator]="true" [rowsPerPageOptions]="[10, 25, 50]"
+            [(selection)]="selectedParcelas" selectionMode="multiple" dataKey="id"
+            styleClass="p-datatable-sm p-datatable-gridlines-none">
+
+            <ng-template pTemplate="header">
+                <tr class="text-xs text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                    <th style="width: 3rem"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
+                    <th class="font-medium">Nº da Parcela</th>
+                    <th class="font-medium">Código da Venda</th>
+                    <th class="font-medium">Status de Pagamento</th>
+                    <th class="font-medium">Produto</th>
+                    <th class="font-medium">Imóvel</th>
+                    <th class="font-medium">Nome</th>
+                    <th class="font-medium">Cargo</th>
+                    <th class="font-medium text-right">Valor</th>
+                    <th class="font-medium text-center">Data Prevista</th>
+                    <th class="font-medium text-center">Status da Parcela</th>
+                    <th class="font-medium text-center">Ações</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-parcela>
+                <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                    <td><p-tableCheckbox [value]="parcela" [disabled]="parcela.statusParcela !== 1"></p-tableCheckbox>
+                    </td>
+                    <td class="text-sm font-bold ml-2">
+                        <span class="bg-gray-50 text-gray-500 px-2 py-1 rounded">{{ parcela.numeroParcela }}</span>
+                    </td>
+                    <td class="text-sm text-gray-500">{{ parcela.codigoVenda }}</td>
+                    <td>
+                        <p-tag [value]="parcela.statusPagamento"
+                            [severity]="parcela.statusPagamento === 'Recebido' ? 'success' : (parcela.statusPagamento === 'Atrasado' ? 'danger' : 'info')"
+                            styleClass="text-xs font-bold uppercase"></p-tag>
+                    </td>
+                    <td class="text-sm text-gray-600 font-medium">{{ parcela.produto }}</td>
+                    <td class="text-sm text-gray-500">{{ parcela.imovel }}</td>
+                    <td class="text-sm text-gray-800 font-bold">{{ parcela.nome }}</td>
+                    <td class="text-sm text-gray-500">{{ parcela.cargo }}</td>
+                    <td class="text-sm text-gray-800 font-bold text-right">{{ parcela.valor | currency:'BRL' }}</td>
+                    <td class="text-sm text-gray-500 text-center">{{ parcela.dataPrevista | date:'dd/MM/yyyy' }}</td>
+                    <td class="text-center">
+                        <p-tag [value]="getStatusLabel(parcela.statusParcela)"
+                            [severity]="getStatusSeverity(parcela.statusParcela)"
+                            styleClass="uppercase text-[10px] px-2 py-1"></p-tag>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon btn-sm btn-light-primary w-8 h-8 rounded-full"
+                            (click)="actionMenu.toggle($event)">
+                            <i class="pi pi-ellipsis-v text-sm"></i>
+                        </button>
+                        <p-menu #actionMenu [model]="getActions(parcela)" [popup]="true" appendTo="body"></p-menu>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <!-- Dialog Bloqueio -->
+    <p-dialog header="Bloquear Parcela" [(visible)]="displayBloqueioDialog" [modal]="true" [style]="{width: '400px'}">
+        <div class="flex flex-col gap-4">
+            <label class="font-bold">Motivo do Bloqueio</label>
+            <textarea pTextarea [(ngModel)]="motivoBloqueio" rows="5" class="w-full"></textarea>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Cancelar" icon="pi pi-times" (onClick)="displayBloqueioDialog = false"
+                styleClass="p-button-text"></p-button>
+            <p-button label="Bloquear" icon="pi pi-lock" (onClick)="confirmarBloqueio()" styleClass="p-button-danger"
+                [disabled]="!motivoBloqueio"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Dialog Cancelamento -->
+    <p-dialog header="Cancelar Comissão" [(visible)]="displayCancelamentoDialog" [modal]="true"
+        [style]="{width: '400px'}">
+        <div class="flex flex-col gap-4">
+            <label class="font-bold">Motivo do Cancelamento</label>
+            <p class="text-sm text-red-500">Atenção: Esta ação cancelará toda a comissão e suas parcelas.</p>
+            <textarea pTextarea [(ngModel)]="motivoCancelamento" rows="5" class="w-full"></textarea>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Voltar" icon="pi pi-times" (onClick)="displayCancelamentoDialog = false"
+                styleClass="p-button-text"></p-button>
+            <p-button label="Confirmar Cancelamento" icon="pi pi-check" (onClick)="confirmarCancelamento()"
+                styleClass="p-button-danger" [disabled]="!motivoCancelamento"></p-button>
+        </ng-template>
+    </p-dialog>
+</div>

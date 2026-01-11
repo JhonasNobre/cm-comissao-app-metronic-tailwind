@@ -145,6 +145,11 @@ export class ComissaoDetalhesComponent implements OnInit {
         this.rejeicaoVisible = true;
     }
 
+    print() {
+        window.print();
+    }
+
+
     confirmarRejeicao() {
         if (!this.comissao || !this.motivoRejeicao) return;
 

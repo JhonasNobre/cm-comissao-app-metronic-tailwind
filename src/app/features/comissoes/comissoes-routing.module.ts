@@ -28,6 +28,13 @@ const routes: Routes = [
                 (m) => m.EstruturaFormComponent
             ),
     },
+    {
+        path: 'parcelas',
+        loadComponent: () =>
+            import('./parcelas-list/parcelas-list.component').then(
+                (m) => m.ParcelasListComponent
+            ),
+    },
 ];
 
 @NgModule({

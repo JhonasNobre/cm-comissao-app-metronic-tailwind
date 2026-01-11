@@ -9,7 +9,8 @@ export enum EStatusParcela {
     Pendente = 1,
     Liberada = 2,
     Paga = 3,
-    Cancelada = 4
+    Cancelada = 4,
+    Bloqueada = 5
 }
 
 export interface ItemComissao {
@@ -122,4 +123,34 @@ export interface ComissaoHistoricoFiltros {
     idEmpresa?: string;
     dataInicio?: Date;
     dataFim?: Date;
+}
+
+export interface ParcelaComissaoGridDto {
+    id: string;
+    idComissao: string;
+    numeroParcela: string;
+    codigoVenda: string;
+    statusPagamento: string;
+    produto: string;
+    imovel: string;
+    nome: string;
+    cargo: string;
+    valor: number;
+    dataPrevista: Date;
+    statusParcela: EStatusParcela;
+}
+
+export interface BloquearParcelaRequest {
+    motivo: string;
+    idComissao: string;
+}
+
+export interface LiberarParcelasEmMassaRequest {
+    idsParcelas: string[];
+    idResponsavel: string;
+}
+
+export interface CancelarComissaoRequest {
+    motivo: string;
+    idResponsavel: string;
 }

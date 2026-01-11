@@ -40,12 +40,22 @@ export class AuthService {
      */
     private checkToken(): void {
         const token = this.getAccessToken();
+        const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+
         if (token) {
             if (this.isTokenExpired(token)) {
-                this.logout();
+                // Se expirado mas tem refresh token, tenta renovar
+                if (refreshToken) {
+                    this.refreshToken().subscribe({
+                        error: () => this.logout()
+                    });
+                } else {
+                    this.logout();
+                }
             } else {
                 this.isAuthenticatedSubject.next(true);
                 this.updateCurrentUser(token);
+                this.scheduleTokenRefresh(token); // Re-agendar timer!
             }
         }
     }
@@ -294,7 +304,7 @@ export class AuthService {
 
         if (refreshTime > 0) {
             this.tokenRefreshTimer = setTimeout(() => {
-                this.refreshToken();
+                this.refreshToken().subscribe();
             }, refreshTime);
         }
     }
@@ -312,25 +322,28 @@ export class AuthService {
     /**
      * Renova o access token usando o refresh token
      */
-    private refreshToken(): void {
+    /**
+     * Renova o access token usando o refresh token
+     */
+    private refreshToken(): Observable<LoginResponse | null> {
         const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
         if (!refreshToken) {
             this.logout();
-            return;
+            return of(null);
         }
 
-        this.http.post<LoginResponse>(`${environment.apiUrl}/authentication/refresh`, { RefreshToken: refreshToken })
+        return this.http.post<LoginResponse>(`${environment.apiUrl}/authentication/refresh`, { RefreshToken: refreshToken })
             .pipe(
                 catchError(error => {
                     console.error('Failed to refresh token', error);
                     this.logout();
                     return of(null);
+                }),
+                tap(response => {
+                    if (response && response.access_token) {
+                        this.setSession(response.access_token, response.refresh_token);
+                    }
                 })
-            )
-            .subscribe(response => {
-                if (response && response.access_token) {
-                    this.setSession(response.access_token, response.refresh_token);
-                }
-            });
+            );
     }
 }

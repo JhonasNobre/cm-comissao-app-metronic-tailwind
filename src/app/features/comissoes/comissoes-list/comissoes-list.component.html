@@ -52,15 +52,15 @@
         <!-- Tabela Histórico -->
         <app-generic-p-table *ngIf="activeTab === 'historico'" [tableData]="historico"
             [columnDefinition]="columnsHistorico" [totalRecords]="totalRecordsHistorico" [serverSidePagination]="true"
-            [rows]="10" [displayCreateAction]="false" [displayDetailAction]="false"
-            (lazyLoad)="onLazyLoadHistorico($event)">
+            [rows]="10" [displayCreateAction]="false" [displayDetailAction]="true"
+            (lazyLoad)="onLazyLoadHistorico($event)" (detail)="onDetail($event)">
         </app-generic-p-table>
 
         <!-- Tabela Pendentes -->
         <app-generic-p-table *ngIf="activeTab === 'pendentes'" [tableData]="pendentes"
             [columnDefinition]="columnsPendentes" [totalRecords]="totalRecordsPendentes" [serverSidePagination]="true"
-            [rows]="10" [displayCreateAction]="false" [displayDetailAction]="false"
-            (lazyLoad)="onLazyLoadPendentes($event)">
+            [rows]="10" [displayCreateAction]="false" [displayDetailAction]="true"
+            (lazyLoad)="onLazyLoadPendentes($event)" (detail)="onDetail($event)">
         </app-generic-p-table>
 
     </div>
