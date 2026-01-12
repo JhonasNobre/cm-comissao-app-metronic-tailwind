@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { User, UserRole } from '../../models/user.model';
+import { User } from '../../models/user.model';
 import { UserService } from '../../services/user.service';
 
 @Component({
@@ -54,14 +54,7 @@ export class UserProfileComponent implements OnInit {
         this.router.navigate(['/users']);
     }
 
-    getRoleBadgeClass(role: UserRole): string {
-        switch (role) {
-            case UserRole.ADMINISTRADOR: return 'kt-badge-danger';
-            case UserRole.COLABORADOR: return 'kt-badge-info';
-            case UserRole.CLIENTE: return 'kt-badge-success';
-            default: return 'kt-badge-secondary';
-        }
-    }
+
 
     getStatusBadgeClass(inativo: boolean): string {
         return inativo ? 'kt-badge-danger' : 'kt-badge-success';

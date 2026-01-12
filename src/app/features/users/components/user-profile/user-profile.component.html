@@ -38,20 +38,19 @@
                     <!-- Avatar (Image or Initials) -->
                     <div class="kt-avatar size-24 shrink-0 relative group">
                         <ng-container *ngIf="!showInitials; else initials">
-                             <img [src]="photoUrl" 
-                                  (error)="onImgError()" 
-                                  class="w-full h-full rounded-full object-cover" 
-                                  alt="Profile Photo">
+                            <img [src]="photoUrl" (error)="onImgError()" class="w-full h-full rounded-full object-cover"
+                                alt="Profile Photo">
                         </ng-container>
                         <ng-template #initials>
-                            <div class="w-full h-full rounded-full bg-primary text-white flex items-center justify-center text-3xl font-bold">
+                            <div
+                                class="w-full h-full rounded-full bg-primary text-white flex items-center justify-center text-3xl font-bold">
                                 {{ user.nomeCompleto.charAt(0).toUpperCase() }}
                             </div>
                         </ng-template>
 
                         <!-- Upload Button (Overlay) -->
                         <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                             (click)="fileInput.click()">
+                            (click)="fileInput.click()">
                             <i class="ki-filled ki-pencil text-white text-xl"></i>
                         </div>
                         <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
@@ -63,11 +62,7 @@
                         <p class="text-lg text-secondary-foreground mb-4">{{ user.email }}</p>
 
                         <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-                            <span
-                                [class]="'kt-badge kt-badge-outline rounded-[30px] ' + getRoleBadgeClass(user.tipoUsuario)">
-                                <span class="kt-badge-dot size-1.5"></span>
-                                {{ user.tipoUsuario }}
-                            </span>
+
                             <span
                                 [class]="'kt-badge kt-badge-outline rounded-[30px] ' + getStatusBadgeClass(user.inativo)">
                                 <span class="kt-badge-dot size-1.5"></span>
@@ -81,20 +76,7 @@
 
         <!-- Info Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <!-- Role Card -->
-            <div class="kt-card">
-                <div class="kt-card-content">
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center justify-center size-12 rounded-lg bg-primary/10">
-                            <i class="ki-filled ki-shield-tick text-primary text-2xl"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm text-secondary-foreground">Role</p>
-                            <p class="text-lg font-semibold">{{ user.tipoUsuario }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             <!-- Status Card -->
             <div class="kt-card">

@@ -20,6 +20,7 @@ import { AccessProfileService } from '../../../access-profiles/services/access-p
 import { TeamService } from '../../../teams/services/team.service';
 import { CompanyService } from '../../../companies/services/company.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { EmpresaSelectorService } from '../../../../core/services/empresa-selector.service';
 import { SystemService } from '../../../../core/services/system.service';
 import { UserRole, EAcao, ENivelAcesso, PermissaoRecursoInput, PermissaoDetalhadaDto } from '../../models/user.model';
 import { AppConfirmationService } from '../../../../shared/services/confirmation.service';
@@ -54,6 +55,7 @@ export class UserFormComponent implements OnInit {
     private teamService = inject(TeamService);
     private companyService = inject(CompanyService);
     private authService = inject(AuthService);
+    private empresaSelectorService = inject(EmpresaSelectorService);
     private router = inject(Router);
     private route = inject(ActivatedRoute);
     private messageService = inject(MessageService);
@@ -77,8 +79,7 @@ export class UserFormComponent implements OnInit {
         return this.authService.isGestor() || this.authService.isAdmin();
     }
 
-    userRoleOptions: any[] = [];
-    keycloakRoleOptions: any[] = [];
+
     diasSemanaOptions: any[] = [];
 
     // Permissões individuais
@@ -132,10 +133,7 @@ export class UserFormComponent implements OnInit {
         }
     }
 
-    getRoleLabel(value: string): string {
-        const role = this.keycloakRoleOptions.find(r => r.value === value);
-        return role ? role.label : value;
-    }
+
 
     ngOnInit(): void {
         this.initForm();
@@ -148,8 +146,7 @@ export class UserFormComponent implements OnInit {
     }
 
     private loadSystemOptions(): void {
-        this.systemService.getRoles().subscribe(data => this.keycloakRoleOptions = data);
-        this.systemService.getUserTypes().subscribe(data => this.userRoleOptions = data);
+
         this.systemService.getDaysOfWeek().subscribe(data => this.diasSemanaOptions = data);
     }
 
@@ -160,9 +157,9 @@ export class UserFormComponent implements OnInit {
             email: ['', [Validators.required, Validators.email]],
             telefone: ['', [Validators.required]],
             senha: ['', [Validators.required, Validators.minLength(8)]],
-            role: ['', [Validators.required]], // Keycloak Role
+
             perfilAcessoIds: [[]],
-            tipoUsuario: [null, [Validators.required]],
+
             empresaIds: [[], [Validators.required]],
             equipes: this.fb.array([]),
 
@@ -176,6 +173,14 @@ export class UserFormComponent implements OnInit {
                 horarios: this.fb.array([])
             })
         });
+
+        // Auto-selecionar empresa atual se não estiver editando
+        if (!this.isEditMode) {
+            const currentEmpresaId = this.empresaSelectorService.getSelectedEmpresaIds();
+            if (currentEmpresaId && currentEmpresaId.length > 0) {
+                this.form.patchValue({ empresaIds: currentEmpresaId });
+            }
+        }
     }
 
     get horarios(): FormArray {
@@ -332,8 +337,7 @@ export class UserFormComponent implements OnInit {
                     cpf: user.cpf,
                     email: user.email,
                     telefone: user.telefone,
-                    tipoUsuario: user.tipoUsuario,
-                    role: user.role,
+
                     perfilAcessoIds: user.perfilAcessoIds || (user.perfilAcessoId ? [user.perfilAcessoId] : []),
                     empresaIds: user.empresaIds || [],
                     limiteDescontoMaximoIndividual: user.limiteDescontoMaximoIndividual,
@@ -490,10 +494,10 @@ export class UserFormComponent implements OnInit {
                 senha: formValue.senha,
                 cpf: formValue.cpf,
                 telefone: formValue.telefone,
-                role: formValue.role,
+
                 empresaIds: formValue.empresaIds,
                 perfilAcessoIds: formValue.perfilAcessoIds,
-                tipoUsuario: formValue.tipoUsuario,
+
                 equipes: formValue.equipes || [],
                 restricaoHorario: this.hasRestricaoHorario ? formValue.restricaoHorario : null,
                 permissoesIndividuais: permissoesIndividuais.length > 0 ? permissoesIndividuais : undefined,

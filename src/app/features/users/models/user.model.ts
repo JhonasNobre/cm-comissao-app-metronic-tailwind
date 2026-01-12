@@ -68,7 +68,7 @@ export interface UserCreateDTO {
     telefone: string;
     senha: string;
     empresaIds: string[];
-    role: string;
+
     perfilAcessoIds?: string[];
     equipes?: UsuarioEquipeInput[]; // Novo campo
 }
@@ -77,9 +77,9 @@ export interface UserUpdateDTO {
     id: string;
     nomeCompleto: string;
     telefone: string;
-    role: string;
+
     perfilAcessoIds?: string[];
-    tipoUsuario: UserRole;
+
     restricaoHorario?: any;
     equipes?: UsuarioEquipeInput[]; // Novo campo
     empresaIds?: string[];
