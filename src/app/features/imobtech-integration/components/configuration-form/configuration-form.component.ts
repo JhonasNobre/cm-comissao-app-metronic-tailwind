@@ -13,6 +13,8 @@ import { Select } from 'primeng/select';
 import { MessageService } from 'primeng/api';
 import { ImobtechConfigurationService } from '../../services/imobtech-configuration.service';
 import { ImobtechConfiguration, ImobtechConfigurationResponse, ModoImobtech } from '../../models/imobtech-configuration.model';
+import { UauConfigurationService } from '../../../uau-integration/services/uau-configuration.service';
+import { UauConfiguration } from '../../../uau-integration/models/uau-configuration.model';
 
 @Component({
     selector: 'app-configuration-form',
@@ -35,11 +37,14 @@ import { ImobtechConfiguration, ImobtechConfigurationResponse, ModoImobtech } fr
 export class ConfigurationFormComponent implements OnInit {
     private fb = inject(FormBuilder);
     private service = inject(ImobtechConfigurationService);
+    private uauService = inject(UauConfigurationService); // Injected UAU Service
     private messageService = inject(MessageService);
     private router = inject(Router);
 
     form!: FormGroup;
+    uauForm!: FormGroup; // UAU Form
     loading = false;
+    loadingUau = false;
 
     modoOptions = [
         { label: 'Homologação', value: ModoImobtech.Homologacao },
@@ -48,7 +53,9 @@ export class ConfigurationFormComponent implements OnInit {
 
     ngOnInit(): void {
         this.initForm();
+        this.initUauForm();
         this.loadConfiguration();
+        this.loadUauConfiguration();
     }
 
     private initForm(): void {
@@ -76,6 +83,22 @@ export class ConfigurationFormComponent implements OnInit {
         });
     }
 
+    private initUauForm(): void {
+        this.uauForm = this.fb.group({
+            sistemaIntegracao: ['UAU', Validators.required],
+            stringConexao: ['', Validators.required],
+            usuarioClickmenos: ['', Validators.required],
+            senhaClickmenos: [''], // Opcional se já existe
+            urlApiClickmenos: ['', Validators.required],
+            urlApiGraphql: ['', Validators.required],
+
+            urlApi: ['', Validators.required], // API UAU
+            usuarioUau: ['', Validators.required],
+            usuarioActiveDirectory: ['', Validators.required],
+            senhaUau: ['']
+        });
+    }
+
     private loadConfiguration(): void {
         this.loading = true;
         this.service.getConfiguracao().subscribe({
@@ -91,9 +114,37 @@ export class ConfigurationFormComponent implements OnInit {
                 this.loading = false;
             },
             error: (err) => {
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar configurações.' });
+                this.messageService.add({ severity: 'error', summary: 'Erro Imobtech', detail: 'Falha ao carregar configurações Imobtech.' });
                 this.loading = false;
                 console.error(err);
+            }
+        });
+    }
+
+    private loadUauConfiguration(): void {
+        this.loadingUau = true;
+        this.uauService.getCredenciais().subscribe({
+            next: (data) => {
+                this.uauForm.patchValue({
+                    sistemaIntegracao: data.sistemaIntegracao || 'UAU',
+                    stringConexao: data.stringConexao || '',
+                    usuarioClickmenos: data.usuarioClickmenos || '',
+                    urlApiClickmenos: data.urlApiClickmenos || '',
+                    urlApiGraphql: data.urlApiGraphql || '',
+
+                    urlApi: data.urlApi || '',
+                    usuarioUau: data.usuarioUau || '',
+                    usuarioActiveDirectory: data.usuarioActiveDirectory || '',
+
+                    senhaClickmenos: '',
+                    senhaUau: ''
+                });
+                this.loadingUau = false;
+            },
+            error: (err) => {
+                // Silencioso ou warning, pois pode não ter config ainda
+                console.warn('Config UAU não carregada ou inexistente', err);
+                this.loadingUau = false;
             }
         });
     }
@@ -119,19 +170,57 @@ export class ConfigurationFormComponent implements OnInit {
 
         this.service.atualizarConfiguracao(request).subscribe({
             next: () => {
-                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Configurações salvas com sucesso!' });
+                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Configurações Imobtech salvas!' });
                 this.loading = false;
-                this.loadConfiguration(); // Recarrega para confirmar estado
+                this.loadConfiguration();
             },
             error: (err) => {
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao salvar configurações.' });
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao salvar configurações Imobtech.' });
                 this.loading = false;
                 console.error(err);
             }
         });
     }
 
+    onUauSubmit(): void {
+        if (this.uauForm.invalid) {
+            this.uauForm.markAllAsTouched();
+            this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos obrigatórios.' });
+            return;
+        }
+
+        this.loadingUau = true;
+        const formValue = this.uauForm.value;
+
+        const request: UauConfiguration = {
+            sistemaIntegracao: formValue.sistemaIntegracao,
+            stringConexao: formValue.stringConexao,
+            usuarioClickmenos: formValue.usuarioClickmenos,
+            senhaClickmenos: formValue.senhaClickmenos || undefined,
+            urlApiClickmenos: formValue.urlApiClickmenos,
+            urlApiGraphql: formValue.urlApiGraphql,
+            usuarioActiveDirectory: formValue.usuarioActiveDirectory,
+
+            urlApi: formValue.urlApi,
+            usuarioUau: formValue.usuarioUau,
+            senhaUau: formValue.senhaUau || undefined
+        };
+
+        this.uauService.atualizarCredenciais(request).subscribe({
+            next: () => {
+                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Configurações UAU salvas!' });
+                this.loadingUau = false;
+                this.loadUauConfiguration();
+            },
+            error: (err) => {
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao salvar configurações UAU.' });
+                this.loadingUau = false;
+                console.error(err);
+            }
+        });
+    }
+
     onCancel(): void {
-        this.router.navigate(['/']); // Volta para dashboard ou outra página
+        this.router.navigate(['/']);
     }
 }
