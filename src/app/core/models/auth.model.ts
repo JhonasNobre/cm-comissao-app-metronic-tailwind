@@ -9,3 +9,15 @@ export interface LoginResponse {
     token_type?: string;
     refresh_token?: string;
 }
+
+export interface RecoverPasswordRequest {
+    email: string;
+}
+
+export interface ResetPasswordRequest {
+    email: string;
+    token: string;
+    newPassword: string;
+    confirmPassword: string;
+}
+

@@ -346,4 +346,18 @@ export class AuthService {
                 })
             );
     }
+    /**
+     * Solicita a recuperação de senha
+     */
+    recoverPassword(email: string): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/recover-password`, { email });
+    }
+
+    /**
+     * Redefine a senha com o token
+     */
+    resetPassword(data: any): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/reset-password`, data);
+    }
 }
+
