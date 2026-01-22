@@ -1,0 +1,91 @@
+<div class="flex items-center justify-center min-h-screen w-full bg-cover bg-center bg-no-repeat bg-gray-100 dark:bg-gray-900"
+    style="background-image: url('assets/media/images/2600x1600/bg-1.png');">
+    <div class="kt-card max-w-[500px] w-full bg-white dark:bg-gray-800 shadow-lg rounded-xl">
+        <div class="kt-card-content flex flex-col gap-5 p-10">
+            <div class="text-center mb-2.5">
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white leading-none mb-2.5">
+                    Solicite seu Cadastro
+                </h3>
+                <div class="flex items-center justify-center font-medium">
+                    <span class="text-sm text-gray-500 me-1.5">
+                        Preencha o formulário abaixo para solicitar acesso ao ClickMenos.
+                    </span>
+                </div>
+            </div>
+
+            <div *ngIf="success" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <strong class="font-bold">Sucesso! </strong>
+                <span class="block sm:inline">{{ success }}</span>
+            </div>
+
+            <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ error }}</span>
+            </div>
+
+            <form (ngSubmit)="submit()" class="flex flex-col gap-4" *ngIf="!success">
+                
+                <div class="flex gap-4">
+                    <div class="flex flex-col gap-1 w-1/2">
+                        <label class="form-label text-gray-900 dark:text-gray-100 font-medium text-sm">Nome</label>
+                        <input type="text" [(ngModel)]="data.nome" name="nome"
+                            class="kt-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            placeholder="Seu nome" required [disabled]="loading" />
+                    </div>
+                    <div class="flex flex-col gap-1 w-1/2">
+                        <label class="form-label text-gray-900 dark:text-gray-100 font-medium text-sm">Sobrenome</label>
+                        <input type="text" [(ngModel)]="data.sobrenome" name="sobrenome"
+                            class="kt-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            placeholder="Seu sobrenome" required [disabled]="loading" />
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="form-label text-gray-900 dark:text-gray-100 font-medium text-sm">Email</label>
+                    <input type="email" [(ngModel)]="data.email" name="email"
+                        class="kt-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        placeholder="seu.email@exemplo.com" required [disabled]="loading" />
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="form-label text-gray-900 dark:text-gray-100 font-medium text-sm">Título / Assunto</label>
+                    <input type="text" [(ngModel)]="data.titulo" name="titulo"
+                        class="kt-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        placeholder="Ex: Solicitação de acesso Imobiliária X" required [disabled]="loading" />
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="form-label text-gray-900 dark:text-gray-100 font-medium text-sm">Mensagem</label>
+                    <textarea [(ngModel)]="data.mensagem" name="mensagem" rows="4"
+                        class="kt-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none"
+                        placeholder="Descreva o motivo da sua solicitação..." required [disabled]="loading"></textarea>
+                </div>
+
+                <div class="flex flex-col gap-3 mt-2">
+                    <button type="submit" [disabled]="loading"
+                        class="kt-btn kt-btn-primary flex justify-center w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span *ngIf="!loading">Enviar Solicitação</span>
+                        <span *ngIf="loading" class="flex items-center gap-2">
+                            Enviando... <span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        </span>
+                    </button>
+
+                    <a routerLink="/auth/login" class="text-center text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
+                        Voltar para o Login
+                    </a>
+                </div>
+            </form>
+            
+            <div class="text-center mt-2" *ngIf="success">
+                <a routerLink="/auth/login" class="kt-btn flex justify-center w-full py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition-colors">
+                    Voltar para o Login
+                </a>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-xs text-gray-400">
+                    &copy; 2025 ClickMenos. Todos os direitos reservados.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

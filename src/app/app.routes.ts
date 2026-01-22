@@ -109,5 +109,9 @@ export const routes: Routes = [
     path: 'auth/reset-password',
     loadComponent: () => import('./features/auth/components/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
   },
+  {
+    path: 'auth/signup-request',
+    loadComponent: () => import('./features/auth/components/signup-request/signup-request.component').then(m => m.SignupRequestComponent)
+  },
   { path: '**', redirectTo: 'error/404' }
 ];

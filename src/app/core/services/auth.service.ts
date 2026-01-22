@@ -6,6 +6,14 @@ import { environment } from '../../../environments/environment';
 import { LoginRequest, LoginResponse } from '../models/auth.model';
 import { EmpresaSelectorService, EmpresaInfo } from './empresa-selector.service';
 
+export interface SignupRequest {
+    nome: string;
+    sobrenome: string;
+    email: string;
+    titulo: string;
+    mensagem: string;
+}
+
 /**
  * Serviço de autenticação usando API Backend (JWT)
  */
@@ -358,6 +366,13 @@ export class AuthService {
      */
     resetPassword(data: any): Observable<any> {
         return this.http.post(`${environment.apiUrl}/authentication/reset-password`, data);
+    }
+
+    /**
+     * Solicita cadastro de novo usuário
+     */
+    requestSignup(data: SignupRequest): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/signup-request`, data);
     }
 }
 
