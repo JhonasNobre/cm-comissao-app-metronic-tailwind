@@ -10,6 +10,7 @@ export interface SignupRequest {
     nome: string;
     sobrenome: string;
     email: string;
+    telefone: string;
     titulo: string;
     mensagem: string;
 }
@@ -373,6 +374,10 @@ export class AuthService {
      */
     requestSignup(data: SignupRequest): Observable<any> {
         return this.http.post(`${environment.apiUrl}/authentication/signup-request`, data);
+    }
+
+    validateRecoveryCode(email: string, code: string): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/validate-recovery-code`, { email, code });
     }
 }
 

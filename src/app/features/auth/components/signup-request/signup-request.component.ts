@@ -16,6 +16,7 @@ export class SignupRequestComponent {
         nome: '',
         sobrenome: '',
         email: '',
+        telefone: '',
         titulo: '',
         mensagem: ''
     };
@@ -57,6 +58,7 @@ export class SignupRequestComponent {
                     nome: '',
                     sobrenome: '',
                     email: '',
+                    telefone: '',
                     titulo: '',
                     mensagem: ''
                 };
