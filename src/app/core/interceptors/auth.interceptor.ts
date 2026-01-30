@@ -1,5 +1,5 @@
 import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { inject, Injector } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
@@ -12,7 +12,9 @@ import { EmpresaSelectorService } from '../services/empresa-selector.service';
  * Interceptor funcional (Angular 14+)
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-    const authService = inject(AuthService);
+    const injector = inject(Injector);
+    // Lazy load AuthService to avoid Circular Dependency
+    const authService = injector.get(AuthService);
     const empresaSelectorService = inject(EmpresaSelectorService);
     const router = inject(Router);
 

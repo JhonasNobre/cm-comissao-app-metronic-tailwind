@@ -41,7 +41,11 @@ export class AuthService {
         private router: Router,
         private empresaSelectorService: EmpresaSelectorService
     ) {
-        this.checkToken();
+        // Deferir a verificação do token para permitir que o construtor termine
+        // e evitar dependência circular (AuthService -> HttpClient -> Interceptor -> AuthService)
+        setTimeout(() => {
+            this.checkToken();
+        }, 0);
     }
 
     /**
@@ -64,6 +68,7 @@ export class AuthService {
             } else {
                 this.isAuthenticatedSubject.next(true);
                 this.updateCurrentUser(token);
+                this.updateEmpresaSelector(); // Fix: Load companies on startup
                 this.scheduleTokenRefresh(token); // Re-agendar timer!
             }
         }
@@ -241,7 +246,36 @@ export class AuthService {
      */
     private updateEmpresaSelector(): void {
         const empresas = this.getEmpresas();
-        this.empresaSelectorService.setUserEmpresas(empresas);
+
+        if (empresas.length > 0) {
+            this.empresaSelectorService.setUserEmpresas(empresas);
+        } else {
+            console.warn('Nenhuma empresa encontrada no token. Tentando buscar via API...');
+            // Usar endpoint /me/empresas que resolve o ExternalAuthId no backend
+            this.http.get<any[]>(`${environment.apiUrl}/v1/usuarios/me/empresas`)
+                .subscribe({
+                    next: (data) => {
+                        if (data && data.length > 0) {
+                            const empresasApi = data.map(e => ({
+                                id: e.id,
+                                nome: e.nome
+                            }));
+                            this.empresaSelectorService.setUserEmpresas(empresasApi);
+                        } else {
+                            console.warn('Usuário não possui empresas vinculadas na API.');
+                        }
+                    },
+                    error: (err) => console.error('Erro ao buscar empresas do usuário via API', err)
+                });
+        }
+    }
+
+    /**
+     * Obtém o ID do usuário a partir do token (sub)
+     */
+    getUserId(): string | null {
+        const claims = this.getUserInfo();
+        return claims ? claims.sub : null;
     }
 
     /**

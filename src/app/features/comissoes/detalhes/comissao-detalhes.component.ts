@@ -118,8 +118,6 @@ export class ComissaoDetalhesComponent implements OnInit {
         this.comissaoService.getById(id).subscribe({
             next: (data) => {
                 this.comissao = data;
-                console.log('Comissão carregada:', this.comissao);
-                console.log('Documentos recebidos:', this.comissao.documentos);
 
                 // Normalização de Enums
                 if (isNaN(Number(this.comissao.status))) {
