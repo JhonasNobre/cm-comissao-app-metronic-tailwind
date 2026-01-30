@@ -43,9 +43,8 @@ import { VendaImportada } from '../../vendas/models/venda.model';
         AccordionModule,
         FormsModule
     ],
-    providers: [MessageService, ConfirmationService],
-    templateUrl: './comissao-detalhes.component.html',
-    styleUrl: './comissao-detalhes.component.scss'
+    styleUrl: './comissao-detalhes.component.scss',
+    templateUrl: './comissao-detalhes.component.html'
 })
 export class ComissaoDetalhesComponent implements OnInit {
     private comissaoService = inject(ComissaoService);
@@ -72,6 +71,10 @@ export class ComissaoDetalhesComponent implements OnInit {
         { label: 'Outros', value: 0 }
     ];
 
+    // Documentos organizados
+    docsPorCategoria: { [key: number]: ComissaoDocumento[] } = {};
+
+    activeTab: string = '0';
     // Controles de Rejeição
     rejeicaoVisible = false;
     motivoRejeicao = '';
@@ -130,6 +133,9 @@ export class ComissaoDetalhesComponent implements OnInit {
                         }
                     });
                 }
+
+                // Organiza documentos
+                this.organizarDocumentos();
 
                 this.prepareDisplayData();
 
@@ -419,20 +425,27 @@ export class ComissaoDetalhesComponent implements OnInit {
         });
     }
 
-    getDocumentosPorCategoria(categoria: number): any[] {
-        if (!this.comissao?.documentos) return [];
+    getDocumentosPorCategoria(categoria: number): ComissaoDocumento[] {
+        return this.docsPorCategoria[categoria] || [];
+    }
 
-        return this.comissao.documentos.filter(doc => {
+    organizarDocumentos() {
+        this.docsPorCategoria = {
+            0: [], // Outros
+            1: [], // Imobiliária
+            2: [], // Clientes
+            3: []  // Corretores
+        };
+
+        if (!this.comissao?.documentos) return;
+
+        this.comissao.documentos.forEach(doc => {
             const d = doc as any;
             // A API pode retornar como número (1) ou string ("Imobiliaria") devido ao JsonStringEnumConverter
             const docCat = d.categoria !== undefined ? d.categoria : (d.Categoria !== undefined ? d.Categoria : null);
 
-            if (docCat === null || docCat === undefined) {
-                return categoria === 0;
-            }
-
-            // Mapeamento de String para Número
             let numericCat = -1;
+
             if (typeof docCat === 'number') {
                 numericCat = docCat;
             } else if (typeof docCat === 'string') {
@@ -443,34 +456,58 @@ export class ComissaoDetalhesComponent implements OnInit {
                 else if (lowerCat === 'outros') numericCat = 0;
             }
 
-            if (categoria === 0) {
-                return numericCat === 0 || ![1, 2, 3].includes(numericCat);
-            }
-
-            return numericCat === categoria;
-        }).map(doc => {
-            const d = doc as any;
-            return {
-                ...doc,
+            // Normaliza objeto do documento
+            const dNormalizado: ComissaoDocumento = {
                 id: d.id || d.Id,
+                idComissao: d.idComissao || d.IdComissao || this.comissao?.id,
                 nome: d.nome || d.Nome,
+                extensao: d.extensao || d.Extensao || d.tipo || d.Tipo || '',
+                tamanhoBytes: d.tamanhoBytes || d.TamanhoBytes || d.tamanho || d.Tamanho || 0,
+                categoria: numericCat !== -1 ? numericCat : 0,
+                dataEnvio: d.dataEnvio || d.DataEnvio || d.data || d.Data || new Date(),
+                idUsuarioEnvio: d.idUsuarioEnvio || d.IdUsuarioEnvio || d.usuarioEnvioId || d.UsuarioEnvioId || '00000000-0000-0000-0000-000000000000',
+                nomeUsuarioEnvio: d.nomeUsuarioEnvio || d.NomeUsuarioEnvio || 'Não informado',
                 aprovado: d.aprovado ?? d.Aprovado ?? false,
-                nomeUsuarioEnvio: d.nomeUsuarioEnvio || d.nomeusuarioenvio || d.NomeUsuarioEnvio || 'Não informado'
+                dataAprovacao: d.dataAprovacao || d.DataAprovacao,
+                idUsuarioAprovacao: d.idUsuarioAprovacao || d.IdUsuarioAprovacao
             };
+
+            // Adiciona na categoria correta
+            const targetCat = (numericCat === 1 || numericCat === 2 || numericCat === 3) ? numericCat : 0;
+
+            if (!this.docsPorCategoria[targetCat]) {
+                this.docsPorCategoria[targetCat] = [];
+            }
+            this.docsPorCategoria[targetCat].push(dNormalizado);
         });
+
+        console.log('Documentos organizados:', this.docsPorCategoria);
     }
 
     aprovarDocumento(doc: ComissaoDocumento) {
-        if (!this.comissao) return;
+        console.log('Botão de aprovar clicado para documento:', doc);
+        if (!this.comissao) {
+            console.error('Comissão não carregada');
+            return;
+        }
 
-        this.comissaoService.aprovarDocumento(this.comissao.id, doc.id).subscribe({
-            next: () => {
-                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Documento aprovado!' });
-                this.loadDetalhes(this.comissao!.id);
-            },
-            error: (err) => {
-                console.error(err);
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao aprovar' });
+        console.log('Chamando confirmationService.confirm');
+        this.confirmationService.confirm({
+            message: 'Tem certeza que deseja aprovar este documento?',
+            header: 'Confirmar Aprovação',
+            icon: 'pi pi-check',
+            accept: () => {
+                console.log('Confirmação aceita, chamando serviço de aprovação');
+                this.comissaoService.aprovarDocumento(this.comissao!.id, doc.id).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Documento aprovado!' });
+                        this.loadDetalhes(this.comissao!.id);
+                    },
+                    error: (err) => {
+                        console.error(err);
+                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao aprovar' });
+                    }
+                });
             }
         });
     }
@@ -478,14 +515,22 @@ export class ComissaoDetalhesComponent implements OnInit {
     reprovarDocumento(doc: ComissaoDocumento) {
         if (!this.comissao) return;
 
-        this.comissaoService.reprovarDocumento(this.comissao.id, doc.id).subscribe({
-            next: () => {
-                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Documento reprovado!' });
-                this.loadDetalhes(this.comissao!.id);
-            },
-            error: (err) => {
-                console.error(err);
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao reprovar' });
+        this.confirmationService.confirm({
+            message: 'Tem certeza que deseja reprovar este documento?',
+            header: 'Confirmar Reprovação',
+            icon: 'pi pi-times',
+            acceptButtonStyleClass: 'p-button-danger',
+            accept: () => {
+                this.comissaoService.reprovarDocumento(this.comissao!.id, doc.id).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Documento reprovado!' });
+                        this.loadDetalhes(this.comissao!.id);
+                    },
+                    error: (err) => {
+                        console.error(err);
+                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao reprovar' });
+                    }
+                });
             }
         });
     }
