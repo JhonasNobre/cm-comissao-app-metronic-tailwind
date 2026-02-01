@@ -49,7 +49,7 @@ import { MenuItem } from 'primeng/api';
                 <!-- Menu Button -->
                 <button type="button" 
                         class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-                        (click)="toggleMenu($event)"
+                        (click)="menu.toggle($event); $event.stopPropagation()"
                         pTooltip="Opções" tooltipPosition="top">
                     <i class="ki-filled ki-dots-vertical text-sm"></i>
                 </button>

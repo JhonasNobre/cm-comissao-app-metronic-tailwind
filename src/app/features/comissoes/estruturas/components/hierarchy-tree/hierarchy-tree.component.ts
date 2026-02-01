@@ -85,7 +85,7 @@ interface NodePosition {
 export class HierarchyTreeComponent implements OnChanges, AfterViewInit {
     @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
 
-    @Input() data: OrgNode | null = null;
+    @Input() data: OrgNode[] | OrgNode | null = null;
 
     @Output() addSubordinates = new EventEmitter<OrgNode>();
     @Output() removeNode = new EventEmitter<OrgNode>();
@@ -116,29 +116,45 @@ export class HierarchyTreeComponent implements OnChanges, AfterViewInit {
     }
 
     calculateLayout(): void {
-        if (!this.data) {
+        // Normalize data to array
+        const roots = this.normalizeDataToArray();
+
+        if (roots.length === 0) {
             this.positions = [];
             this.lines = [];
             return;
         }
 
-        // Inicialmente expandir todos os nós
-        this.expandAllNodes(this.data);
+        // Expand all nodes in all trees
+        roots.forEach(root => this.expandAllNodes(root));
 
-        // Calcular posições
+        // Calculate positions for each root tree
         this.positions = [];
         this.lines = [];
 
-        const nodeWidths = this.calculateNodeWidths(this.data);
-        this.positionNode(this.data, this.PADDING, this.PADDING, nodeWidths);
+        let currentX = this.PADDING;
+        roots.forEach((root, index) => {
+            const nodeWidths = this.calculateNodeWidths(root);
+            this.positionNode(root, currentX, this.PADDING, nodeWidths);
 
-        // Calcular tamanho do container
+            // Move X position for next tree
+            const treeWidth = nodeWidths.get(root.id) || this.CARD_WIDTH;
+            currentX += treeWidth + this.HORIZONTAL_GAP * 2; // Extra gap between trees
+        });
+
+        // Calculate container size
         if (this.positions.length > 0) {
             const maxX = Math.max(...this.positions.map(p => p.x)) + this.CARD_WIDTH / 2 + this.PADDING;
             const maxY = Math.max(...this.positions.map(p => p.y)) + this.CARD_HEIGHT + this.PADDING;
             this.containerWidth = Math.max(800, maxX);
             this.containerHeight = Math.max(400, maxY);
         }
+    }
+
+    private normalizeDataToArray(): OrgNode[] {
+        if (!this.data) return [];
+        if (Array.isArray(this.data)) return this.data;
+        return [this.data];
     }
 
     private expandAllNodes(node: OrgNode): void {
