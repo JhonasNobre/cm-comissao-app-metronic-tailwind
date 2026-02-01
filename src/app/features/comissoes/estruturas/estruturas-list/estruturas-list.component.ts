@@ -6,22 +6,33 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SelectModule } from 'primeng/select';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { EstruturaComissaoService } from '../../services/estrutura-comissao.service';
 import { EstruturaComissao, EstruturaComissaoFiltros } from '../../models/estrutura-comissao.model';
-import { TipoComissaoLabels, TipoComissao } from '../../models/enums';
+import { TipoComissaoLabels, TipoComissao, RegraLiberacao, TipoRateio } from '../../models/enums';
 import { EmpresaSelectorService } from '../../../../core/services/empresa-selector.service';
 import { GenericPTableComponent } from '../../../../shared/components/ui/generic-p-table/generic-p-table.component';
 import { ColumnHeader } from '../../../../shared/models/column-header.model';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+
+interface SelectOption {
+    label: string;
+    value: any;
+}
 
 @Component({
     selector: 'app-estruturas-list',
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         GenericPTableComponent,
         ToastModule,
-        ConfirmDialogModule
+        ConfirmDialogModule,
+        SelectModule,
+        TooltipModule
     ],
     providers: [ConfirmationService, MessageService, DialogService],
     templateUrl: './estruturas-list.component.html',
@@ -35,24 +46,51 @@ export class EstruturasListComponent implements OnInit {
     private router = inject(Router);
 
     // State
-    estruturas: EstruturaComissao[] = []; // Generic component expects array, not signal of array for tableData
+    estruturas: EstruturaComissao[] = [];
     loading = false;
     totalRecords = 0;
 
     // Columns
     columns: ColumnHeader<EstruturaComissao>[] = [];
 
-    // Filtros
-    filtros: EstruturaComissaoFiltros = {
-        busca: '',
-        ativo: undefined,
-        pagina: 1,
-        tamanhoPagina: 10,
-        idEmpresa: undefined
-    };
+    // Filtros expandidos
+    filtros: EstruturaComissaoFiltros & {
+        idProduto?: string;
+        idEscala?: string;
+        idCidade?: string;
+        idCargo?: string;
+        idUsuario?: string;
+        tipoLiberacao?: number;
+    } = {
+            busca: '',
+            ativo: undefined,
+            pagina: 1,
+            tamanhoPagina: 10,
+            idEmpresa: undefined
+        };
+
+    // Filter options
+    produtoOptions: SelectOption[] = [];
+    escalaOptions: SelectOption[] = [];
+    cidadeOptions: SelectOption[] = [];
+    cargoOptions: SelectOption[] = [];
+    pessoaOptions: SelectOption[] = [];
+    tipoLiberacaoOptions: SelectOption[] = [
+        { label: 'Automático', value: 'automatico' },
+        { label: 'Manual', value: 'manual' }
+    ];
+    statusOptions: SelectOption[] = [
+        { label: 'Ativo', value: true },
+        { label: 'Inativo', value: false }
+    ];
+
+    // Debounce for search
+    private searchSubject = new Subject<string>();
 
     ngOnInit() {
         this.initializeColumns();
+        this.initializeFilterOptions();
+        this.setupSearchDebounce();
 
         // Observar mudanças na empresa selecionada
         this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
@@ -89,9 +127,9 @@ export class EstruturasListComponent implements OnInit {
                 field: 'valorPercentual',
                 header: 'Valor',
                 formatter: (v, item) => {
-                    if (item?.valorPercentual) return `${item.valorPercentual}`;
-                    if (item?.valorFixoInicial) return `${item.valorFixoInicial}`;
-                    return '25';
+                    if (item?.valorPercentual) return `${item.valorPercentual}%`;
+                    if (item?.valorFixoInicial) return `R$ ${item.valorFixoInicial}`;
+                    return '-';
                 }
             },
             {
@@ -99,9 +137,9 @@ export class EstruturasListComponent implements OnInit {
                 header: 'Tipo de Liberação',
                 formatter: (v) => {
                     const labels: Record<number, string> = {
-                        0: 'Diretamente',
-                        1: 'Automática',
-                        2: 'Manual'
+                        [RegraLiberacao.Diretamente]: 'Direta',
+                        [RegraLiberacao.PercentualPago]: 'Automática',
+                        [RegraLiberacao.ParcelasPagas]: 'Manual'
                     };
                     return labels[v] || 'Automática';
                 }
@@ -111,14 +149,47 @@ export class EstruturasListComponent implements OnInit {
                 header: 'Prioridade',
                 formatter: (v) => {
                     const labels: Record<number, string> = {
-                        0: 'Linear',
-                        1: 'Primeiro',
-                        2: 'Último'
+                        [TipoRateio.Linear]: 'Linear',
+                        [TipoRateio.Prioritario]: 'Primeiro'
                     };
                     return labels[v] || 'Linear';
                 }
+            },
+            {
+                field: 'ativo',
+                header: 'Status',
+                formatter: (v: boolean) => v ? '✅ Ativo' : '❌ Inativo'
             }
         ];
+    }
+
+    private initializeFilterOptions(): void {
+        // TODO: Carregar opções dos endpoints quando disponíveis
+        // Por enquanto, vazio para mostrar "Mostrar tudo"
+        this.produtoOptions = [];
+        this.escalaOptions = [];
+        this.cidadeOptions = [];
+        this.cargoOptions = [];
+        this.pessoaOptions = [];
+    }
+
+    private setupSearchDebounce(): void {
+        this.searchSubject.pipe(
+            debounceTime(400),
+            distinctUntilChanged()
+        ).subscribe(() => {
+            this.filtros.pagina = 1;
+            this.loadEstruturas();
+        });
+    }
+
+    onFilterChange(): void {
+        this.filtros.pagina = 1;
+        this.loadEstruturas();
+    }
+
+    onSearchChange(): void {
+        this.searchSubject.next(this.filtros.busca || '');
     }
 
     onLazyLoad(event: { page: number; rows: number; filter: string }) {
@@ -179,6 +250,41 @@ export class EstruturasListComponent implements OnInit {
                             severity: 'error',
                             summary: 'Erro',
                             detail: 'Erro ao excluir estrutura'
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    onToggleStatus(estrutura: EstruturaComissao) {
+        const action = estrutura.ativo ? 'desativar' : 'ativar';
+        const actionLabel = estrutura.ativo ? 'Desativar' : 'Ativar';
+
+        this.confirmationService.confirm({
+            message: `Deseja ${action} a estrutura "${estrutura.nome}"?`,
+            header: `Confirmar ${actionLabel}`,
+            icon: estrutura.ativo ? 'pi pi-times-circle' : 'pi pi-check-circle',
+            acceptButtonStyleClass: estrutura.ativo ? 'p-button-warning' : 'p-button-success',
+            accept: () => {
+                const observable = estrutura.ativo
+                    ? this.estruturaService.desativar(estrutura.id)
+                    : this.estruturaService.ativar(estrutura.id);
+
+                observable.subscribe({
+                    next: () => {
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: `Estrutura ${estrutura.ativo ? 'desativada' : 'ativada'} com sucesso`
+                        });
+                        this.loadEstruturas();
+                    },
+                    error: (_error: unknown) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: `Erro ao ${action} estrutura`
                         });
                     }
                 });

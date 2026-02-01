@@ -74,11 +74,11 @@
                     } @else {
                     <div class="space-y-2">
                         @for (node of treeData; track node.key) {
-                        <div class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer"
+                        <div class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50"
                             [class.bg-yellow-50]="node.type === 'bonus'"
-                            [class.border-yellow-300]="node.type === 'bonus'" (click)="editLevel(node)">
+                            [class.border-yellow-300]="node.type === 'bonus'">
                             <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 cursor-pointer" (click)="editLevel(node)">
                                     <div class="w-8 h-8 rounded-full flex items-center justify-center"
                                         [class.bg-blue-100]="node.type !== 'bonus'"
                                         [class.bg-yellow-100]="node.type === 'bonus'">
@@ -91,6 +91,7 @@
                                     <div>
                                         <p class="text-sm font-medium text-gray-900">{{ node.label }}</p>
                                         <p class="text-xs text-gray-500">
+                                            {{ node.data?.membros?.length || 0 }} membro(s) ·
                                             {{ node.data.tipoValor === TipoValor.Percentual ? (node.data.percentual +
                                             '%') : 'R$ ' + node.data.valorFixo }}
                                         </p>
@@ -111,6 +112,45 @@
                                     </button>
                                 </div>
                             </div>
+                            <!-- Show children levels indented -->
+                            @if (node.children && node.children.length > 0) {
+                            <div class="ml-6 mt-2 space-y-2 border-l-2 border-gray-200 pl-3">
+                                @for (child of node.children; track child.key) {
+                                <div class="border border-gray-200 rounded-lg p-2 hover:bg-gray-50 flex items-center justify-between"
+                                    [class.bg-yellow-50]="child.type === 'bonus'">
+                                    <div class="flex items-center gap-2 cursor-pointer" (click)="editLevel(child)">
+                                        <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <i class="ki-filled ki-people text-xs text-blue-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-medium text-gray-900">{{ child.label }}</p>
+                                            <p class="text-xs text-gray-500">{{ child.data?.membros?.length || 0 }}
+                                                membro(s)</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-1">
+                                        <button type="button"
+                                            class="w-5 h-5 flex items-center justify-center rounded hover:bg-blue-100"
+                                            (click)="$event.stopPropagation(); editLevel(child)">
+                                            <i class="ki-filled ki-pencil text-xs text-blue-600"></i>
+                                        </button>
+                                        <button type="button"
+                                            class="w-5 h-5 flex items-center justify-center rounded hover:bg-red-100"
+                                            (click)="$event.stopPropagation(); deleteLevel(child)">
+                                            <i class="ki-filled ki-trash text-xs text-red-600"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                }
+                            </div>
+                            }
+                            <!-- Add child level button -->
+                            <button type="button"
+                                class="text-blue-600 hover:text-blue-700 text-xs flex items-center gap-1 mt-2"
+                                (click)="$event.stopPropagation(); addChildLevel(node)">
+                                <i class="ki-filled ki-plus text-xs"></i>
+                                <span>Adicionar subnível</span>
+                            </button>
                         </div>
                         }
 
@@ -135,29 +175,71 @@
             <div class="bg-white rounded-lg border border-gray-200 p-5">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                            <span class="text-lg font-semibold text-gray-600">Aa</span>
+                        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <i class="ki-filled ki-people text-lg text-blue-600"></i>
                         </div>
                         <div>
-                            <h3 class="text-base font-semibold text-gray-900">Integrante</h3>
-                            <p class="text-sm text-gray-500">Descrição</p>
+                            <h3 class="text-base font-semibold text-gray-900">Integrantes</h3>
+                            <p class="text-sm text-gray-500">Membros da estrutura</p>
                             <p class="text-xs text-gray-400 flex items-center gap-1 mt-1">
                                 <i class="ki-filled ki-people text-xs"></i>
-                                <span>{{ getTotalMembersCount() }} pessoas</span>
+                                <span>{{ getTotalMembersCount() }} pessoa(s)</span>
                             </p>
                         </div>
                     </div>
                     <button type="button"
-                        class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700">
-                        <i class="ki-filled ki-right text-white text-sm"></i>
+                        class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700"
+                        (click)="openMemberSelectionForAll()" pTooltip="Adicionar membros em massa">
+                        <i class="ki-filled ki-plus text-white text-sm"></i>
                     </button>
                 </div>
+
+                <!-- Quick member preview -->
+                @if (getTotalMembersCount() > 0) {
+                <div class="border-t border-gray-200 pt-4">
+                    <p class="text-xs text-gray-500 mb-2">Últimos adicionados:</p>
+                    <div class="flex flex-wrap gap-2">
+                        @for (member of getAllMembersPreview(); track $index) {
+                        <div class="flex items-center gap-1 bg-gray-100 rounded-full px-2 py-1">
+                            <span
+                                class="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-xs text-white">
+                                {{ member.nome?.charAt(0) || 'U' }}
+                            </span>
+                            <span class="text-xs text-gray-700">{{ member.nome }}</span>
+                        </div>
+                        }
+                        @if (getTotalMembersCount() > 5) {
+                        <span class="text-xs text-gray-500 px-2 py-1">+{{ getTotalMembersCount() - 5 }} mais</span>
+                        }
+                    </div>
+                </div>
+                }
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: Additional Cards (if needed) -->
+        <!-- RIGHT COLUMN: Summary Card -->
         <div class="col-span-12 lg:col-span-4">
-            <!-- Empty for now, can add more cards here -->
+            <div class="bg-white rounded-lg border border-gray-200 p-5">
+                <h3 class="text-base font-semibold text-gray-900 mb-4">Resumo da Estrutura</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Total de Níveis:</span>
+                        <span class="text-sm font-medium text-gray-900">{{ countAllLevels() }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Total de Membros:</span>
+                        <span class="text-sm font-medium text-gray-900">{{ getTotalMembersCount() }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Tipo de Comissão:</span>
+                        <span class="text-sm font-medium text-gray-900">{{ getTipoComissaoLabel() }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Tipo de Rateio:</span>
+                        <span class="text-sm font-medium text-gray-900">{{ getTipoRateioLabel() }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- FULL WIDTH: Form Fields (Below the 3 columns) -->
@@ -169,6 +251,7 @@
                         Estrutura</h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
                         <div class="flex flex-col gap-2">
                             <label class="text-sm font-medium text-gray-700">Descrição</label>
                             <input type="text" pInputText formControlName="descricao" class="w-full"
@@ -291,8 +374,8 @@
 </p-dialog>
 
 <!-- Modal de Edição de Nível -->
-<p-dialog [header]="editingNode ? 'Nível Hierárquico ' + editingNode.label : 'Nível Hierarquico 1'"
-    [(visible)]="displayLevelDialog" [modal]="true" [style]="{ width: '700px' }" [draggable]="false"
+<p-dialog [header]="editingNode ? 'Editar Nível: ' + editingNode.label : 'Novo Nível Hierárquico'"
+    [(visible)]="displayLevelDialog" [modal]="true" [style]="{ width: '750px' }" [draggable]="false"
     [resizable]="false">
     <form [formGroup]="levelForm">
         <div class="grid grid-cols-2 gap-4">
@@ -300,14 +383,15 @@
             <div class="flex flex-col gap-2">
                 <label class="text-sm font-medium text-gray-700">Nome do nível hierárquico <span
                         class="text-red-500">*</span></label>
-                <input type="text" pInputText formControlName="nomeNivel" class="w-full" placeholder="Escreva" />
+                <input type="text" pInputText formControlName="nomeNivel" class="w-full"
+                    placeholder="Ex: Gerente de Vendas" />
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-sm font-medium text-gray-700">Nº de parcelas <span
                         class="text-red-500">*</span></label>
                 <p-inputNumber formControlName="prioridade" [min]="1" styleClass="w-full" inputStyleClass="w-full"
-                    placeholder="Escreva" />
+                    placeholder="1" />
             </div>
 
             <!-- Row 2 -->
@@ -323,28 +407,80 @@
                         class="text-red-500">*</span></label>
                 @if (levelForm.get('tipoValor')?.value === TipoValor.Percentual) {
                 <p-inputNumber formControlName="percentual" [min]="0" [max]="100" suffix="%" styleClass="w-full"
-                    inputStyleClass="w-full" placeholder="Escreva" />
+                    inputStyleClass="w-full" placeholder="10" />
                 } @else if (levelForm.get('tipoValor')?.value === TipoValor.Fixo) {
                 <p-inputNumber formControlName="valorFixo" mode="currency" currency="BRL" locale="pt-BR"
-                    styleClass="w-full" inputStyleClass="w-full" placeholder="Escreva" />
+                    styleClass="w-full" inputStyleClass="w-full" placeholder="R$ 1.000,00" />
                 } @else {
-                <input type="text" pInputText disabled class="w-full" placeholder="Escreva" />
+                <input type="text" pInputText disabled class="w-full"
+                    placeholder="Selecione a forma de cálculo primeiro" />
                 }
             </div>
-            <!-- Row 4 -->
+
+            <!-- Row 3: Tipo de Comissão -->
             <div class="flex flex-col gap-2">
-                <label class="text-sm font-medium text-gray-700">Tipo de liberação <span
-                        class="text-red-500">*</span></label>
-                <p-select [options]="regraLiberacaoOptions" styleClass="w-full" placeholder="Selecione"
+                <label class="text-sm font-medium text-gray-700">Tipo de Comissão</label>
+                <p-select [options]="tipoComissaoOptions" styleClass="w-full" placeholder="Selecione"
                     appendTo="body"></p-select>
             </div>
 
+            <!-- Row 4 -->
             <div class="flex flex-col gap-2">
-                <label class="text-sm font-medium text-gray-700">Prioridade de pagamento <span
-                        class="text-red-500">*</span></label>
-                <p-select [options]="tipoRateioOptions" styleClass="w-full" placeholder="Selecione"
+                <label class="text-sm font-medium text-gray-700">Tipo de liberação</label>
+                <p-select [options]="regraLiberacaoOptions" styleClass="w-full" placeholder="Selecione"
                     appendTo="body"></p-select>
             </div>
+        </div>
+
+        <!-- Members Section -->
+        <div class="mt-6 pt-4 border-t border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-semibold text-gray-900">Membros deste Nível ({{ currentLevelMembers.length }})
+                </h4>
+                <button type="button" class="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
+                    (click)="showMemberSearch = !showMemberSearch">
+                    <i class="ki-filled ki-plus text-xs"></i>
+                    <span>Adicionar membro</span>
+                </button>
+            </div>
+
+            <!-- Search member -->
+            @if (showMemberSearch) {
+            <div class="flex gap-2 mb-4">
+                <p-selectButton [options]="memberTypeOptions" [(ngModel)]="selectedMemberType"
+                    [ngModelOptions]="{standalone: true}" styleClass="flex-shrink-0"></p-selectButton>
+                <p-autoComplete [(ngModel)]="selectedMemberToAdd" [ngModelOptions]="{standalone: true}"
+                    [suggestions]="selectedMemberType === 'usuario' ? filteredUsers : filteredTeams"
+                    (completeMethod)="searchMembers($event)" field="nome" placeholder="Buscar por nome..."
+                    styleClass="w-full" inputStyleClass="w-full"></p-autoComplete>
+                <button pButton type="button" icon="pi pi-plus" class="p-button-sm" (click)="addToMemberList()"
+                    [disabled]="!selectedMemberToAdd"></button>
+            </div>
+            }
+
+            <!-- Member list -->
+            @if (currentLevelMembers.length > 0) {
+            <div class="space-y-2 max-h-40 overflow-y-auto">
+                @for (member of currentLevelMembers; track member.id; let i = $index) {
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <span class="text-xs font-medium text-blue-600">{{ member.nome?.charAt(0) || 'U' }}</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ member.nome }}</p>
+                            <p class="text-xs text-gray-500">{{ member.usuarioId ? 'Usuário' : 'Equipe' }}</p>
+                        </div>
+                    </div>
+                    <button type="button" class="text-red-600 hover:text-red-700" (click)="removeFromMemberList(i)">
+                        <i class="ki-filled ki-trash text-sm"></i>
+                    </button>
+                </div>
+                }
+            </div>
+            } @else {
+            <p class="text-sm text-gray-500 text-center py-4">Nenhum membro adicionado a este nível</p>
+            }
         </div>
     </form>
 

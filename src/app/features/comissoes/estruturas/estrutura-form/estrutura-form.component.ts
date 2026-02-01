@@ -33,6 +33,8 @@ import { UserService } from '../../../users/services/user.service';
 import { TeamService } from '../../../teams/services/team.service';
 import { UserListDTO } from '../../../users/models/user.model';
 import { TeamListDTO } from '../../../teams/models/team.model';
+import { HierarchyTreeComponent } from '../components/hierarchy-tree/hierarchy-tree.component';
+import { OrgNode, countSubordinates } from '../models/org-node.model';
 
 @Component({
     selector: 'app-estrutura-form',
@@ -54,7 +56,8 @@ import { TeamListDTO } from '../../../teams/models/team.model';
         AutoCompleteModule,
         SelectButtonModule,
         TooltipModule,
-        CheckboxModule
+        CheckboxModule,
+        HierarchyTreeComponent
     ],
     providers: [MessageService],
     templateUrl: './estrutura-form.component.html',
@@ -83,6 +86,9 @@ export class EstruturaFormComponent implements OnInit {
     treeData: TreeNode[] = [];
     selectedNode: TreeNode | null = null;
 
+    // OrgNode for visual hierarchy tree
+    orgTreeData: OrgNode | null = null;
+
     // Level Dialog Logic
     displayLevelDialog = false;
     levelForm!: FormGroup;
@@ -98,23 +104,71 @@ export class EstruturaFormComponent implements OnInit {
     selectedMembersForBulk: (UserListDTO | TeamListDTO)[] = [];
     selectedBulkMemberType: 'usuario' | 'equipe' = 'usuario';
 
-    // Get total members count across all levels
+    // Member search in level dialog
+    showMemberSearch = false;
+
+    // Get total UNIQUE members count across all levels
     getTotalMembersCount(): number {
+        const seenIds = new Set<string>();
+
+        const collectUnique = (node: TreeNode) => {
+            if (node.data?.membros) {
+                node.data.membros.forEach((m: CreateEstruturaComissaoMembroRequest) => {
+                    const id = m.usuarioId || m.equipeId || m.nome;
+                    if (id) seenIds.add(id);
+                });
+            }
+            node.children?.forEach(collectUnique);
+        };
+
+        this.treeData.forEach(collectUnique);
+        return seenIds.size;
+    }
+
+    // Get all members preview (first 5, unique by usuarioId/equipeId)
+    getAllMembersPreview(): CreateEstruturaComissaoMembroRequest[] {
+        const allMembers: CreateEstruturaComissaoMembroRequest[] = [];
+        const seenIds = new Set<string>();
+
+        const collectMembers = (node: TreeNode) => {
+            if (node.data?.membros) {
+                node.data.membros.forEach((m: CreateEstruturaComissaoMembroRequest) => {
+                    const id = m.usuarioId || m.equipeId || m.nome;
+                    if (id && !seenIds.has(id)) {
+                        seenIds.add(id);
+                        allMembers.push(m);
+                    }
+                });
+            }
+            node.children?.forEach(collectMembers);
+        };
+        this.treeData.forEach(collectMembers);
+        return allMembers.slice(0, 5);
+    }
+
+    // Count all levels including children
+    countAllLevels(): number {
         let count = 0;
-        this.treeData.forEach(node => {
-            count += this.countMembersRecursive(node);
-        });
+        const countRecursive = (node: TreeNode) => {
+            count++;
+            node.children?.forEach(countRecursive);
+        };
+        this.treeData.forEach(countRecursive);
         return count;
     }
 
-    private countMembersRecursive(node: TreeNode): number {
-        let count = node.data?.membros?.length || 0;
-        if (node.children) {
-            node.children.forEach(child => {
-                count += this.countMembersRecursive(child);
-            });
-        }
-        return count;
+    // Get label for Tipo de Comissão
+    getTipoComissaoLabel(): string {
+        const value = this.form?.get('tipoComissao')?.value;
+        const option = this.tipoComissaoOptions.find(o => o.value === value);
+        return option?.label || '-';
+    }
+
+    // Get label for Tipo de Rateio
+    getTipoRateioLabel(): string {
+        const value = this.form?.get('tipoRateio')?.value;
+        const option = this.tipoRateioOptions.find(o => o.value === value);
+        return option?.label || '-';
     }
 
     // Get all assigned member IDs to filter them out
@@ -223,33 +277,18 @@ export class EstruturaFormComponent implements OnInit {
     }
 
     private loadEmpresas() {
-        if (this.authService.isAdmin()) {
-            this.loading.set(true);
-            this.companyService.list({ size: 1000 }).subscribe({
-                next: (result: any) => {
-                    const lista = Array.isArray(result) ? result : (result.content || []);
-                    this.empresas = lista.map((e: Company) => ({
-                        label: `${e.name} (${e.cnpj})`,
-                        value: e.id
-                    }));
-                    if (this.empresas.length === 1 && !this.estruturaId) {
-                        this.form.patchValue({ idEmpresa: this.empresas[0].value });
-                    }
-                    this.loading.set(false);
-                },
-                error: (err) => {
-                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao carregar lista de empresas' });
-                    this.loading.set(false);
-                }
-            });
-        } else {
-            this.empresaSelectorService.userEmpresas$.subscribe(empresas => {
-                this.empresas = empresas.map(e => ({ label: e.nome, value: e.id }));
-                if (this.empresas.length === 1 && !this.estruturaId) {
-                    this.form.patchValue({ idEmpresa: this.empresas[0].value });
-                }
-            });
+        // Pega a empresa do contexto logado automaticamente
+        const empresaAtual = this.empresaSelectorService.getEmpresaAtual();
+        if (empresaAtual && !this.estruturaId) {
+            this.form.patchValue({ idEmpresa: empresaAtual.id });
         }
+
+        // Subscribe para atualizar se mudar a empresa selecionada
+        this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
+            if (ids.length > 0 && !this.estruturaId) {
+                this.form.patchValue({ idEmpresa: ids[0] });
+            }
+        });
     }
 
     loadEstrutura(id: string) {
@@ -282,6 +321,7 @@ export class EstruturaFormComponent implements OnInit {
 
                 if (estrutura.niveis && estrutura.niveis.length > 0) {
                     this.treeData = this.buildTreeFromLevels(estrutura.niveis);
+                    this.updateOrgTreeData();
                     console.log('=== TREE DATA CONSTRUIDA ===');
                     console.log('TreeData:', this.treeData);
                     console.log('Total membros:', this.getTotalMembersCount());
@@ -370,6 +410,88 @@ export class EstruturaFormComponent implements OnInit {
         return roots;
     }
 
+    // Convert TreeNode[] to OrgNode for the visual hierarchy tree
+    private updateOrgTreeData(): void {
+        if (this.treeData.length === 0) {
+            this.orgTreeData = null;
+            return;
+        }
+
+        // Create a virtual root if there are multiple root levels
+        if (this.treeData.length === 1) {
+            this.orgTreeData = this.convertTreeNodeToOrgNode(this.treeData[0], true);
+        } else {
+            // Multiple roots - create a virtual container
+            this.orgTreeData = {
+                id: 'root',
+                name: this.form.get('nome')?.value || 'Estrutura',
+                role: 'Estrutura de Comissão',
+                people: this.getTotalMembersCount(),
+                first: true,
+                children: this.treeData.map(node => this.convertTreeNodeToOrgNode(node, false))
+            };
+        }
+    }
+
+    private convertTreeNodeToOrgNode(node: TreeNode, isFirst: boolean): OrgNode {
+        const membros = node.data?.membros || [];
+        const isBonus = node.type === 'bonus';
+
+        // Get the first member's info or use level name
+        const firstMember = membros[0];
+        const memberName = firstMember?.nome || node.label || 'Sem nome';
+
+        const children = node.children?.map(child => this.convertTreeNodeToOrgNode(child, false)) || [];
+
+        return {
+            id: node.key || '',
+            name: memberName,
+            role: node.label || '',
+            people: membros.length + this.countChildrenMembers(node),
+            first: isFirst,
+            last: children.length === 0,
+            isBonus: isBonus,
+            children: children.length > 0 ? children : undefined
+        };
+    }
+
+    private countChildrenMembers(node: TreeNode): number {
+        if (!node.children) return 0;
+        return node.children.reduce((acc, child) => {
+            const childMembros = child.data?.membros?.length || 0;
+            return acc + childMembros + this.countChildrenMembers(child);
+        }, 0);
+    }
+
+    // Handler for adding subordinates from the visual tree
+    onAddSubordinatesFromTree(node: OrgNode): void {
+        // Find the corresponding TreeNode
+        const treeNode = this.findTreeNodeById(this.treeData, node.id);
+        if (treeNode) {
+            this.editLevel(treeNode);
+        }
+    }
+
+    // Handler for removing a node from the visual tree
+    onRemoveFromTree(node: OrgNode): void {
+        const treeNode = this.findTreeNodeById(this.treeData, node.id);
+        if (treeNode) {
+            this.deleteLevel(treeNode);
+            this.updateOrgTreeData();
+        }
+    }
+
+    private findTreeNodeById(nodes: TreeNode[], id: string): TreeNode | null {
+        for (const node of nodes) {
+            if (node.key === id) return node;
+            if (node.children) {
+                const found = this.findTreeNodeById(node.children, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
     private generateGuid(): string {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
             const r = (Math.random() * 16) | 0;
@@ -390,12 +512,13 @@ export class EstruturaFormComponent implements OnInit {
         this.editingNode = node;
         this.parentForNewNode = null;
         this.currentLevelMembers = node.data.membros || [];
+        this.showMemberSearch = false;
 
         const data = node.data;
         this.levelForm.patchValue({
             nomeNivel: data.nomeNivel,
             prioridade: data.prioridade,
-            tipoValor: Number(data.tipoValor),
+            tipoValor: Number(data.tipoValor) || TipoValor.Percentual,
             percentual: data.percentual,
             valorFixo: data.valorFixo
         });
@@ -420,6 +543,7 @@ export class EstruturaFormComponent implements OnInit {
         this.editingNode = null;
         this.parentForNewNode = parent;
         this.currentLevelMembers = [];
+        this.showMemberSearch = false;
         this.levelForm.reset({
             prioridade: 1,
             tipoValor: TipoValor.Percentual
@@ -516,7 +640,7 @@ export class EstruturaFormComponent implements OnInit {
             const req: CreateEstruturaComissaoNivelRequest = {
                 nomeNivel: data.nomeNivel,
                 prioridade: data.prioridade,
-                tipoValor: data.tipoValor,
+                tipoValor: data.tipoValor || TipoValor.Percentual,
                 percentual: data.percentual,
                 valorFixo: data.valorFixo,
                 parentId: data.parentId,

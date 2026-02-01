@@ -1,22 +1,125 @@
 <div class="kt-container-fluid">
-    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+    <!-- Page Header -->
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-5">
         <div class="flex flex-col justify-center gap-2">
-            <h1 class="text-xl font-medium leading-none text-mono">
-                Estruturas de Comissão
+            <h1 class="text-2xl font-semibold text-blue-600">
+                Estruturas de Comissões
             </h1>
+            <p class="text-sm text-gray-500">Gerencie as estruturas de comissão da sua empresa</p>
         </div>
         <div class="flex items-center gap-2.5">
+            <button type="button"
+                class="px-6 py-2.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2"
+                (click)="onAdd()">
+                <i class="ki-filled ki-plus text-sm"></i>
+                Criar Estrutura de Comissão
+            </button>
         </div>
     </div>
-</div>
 
-<div class="kt-container-fluid">
-    <div class="grid gap-5 lg:gap-7.5">
+    <!-- Filters Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-5 mb-5">
+        <h3 class="text-base font-semibold text-gray-900 mb-4">Filtros</h3>
+
+        <!-- Search Bar -->
+        <div class="mb-4">
+            <div class="relative">
+                <i class="ki-filled ki-magnifier absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" [(ngModel)]="filtros.busca" (ngModelChange)="onFilterChange()"
+                    class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Buscar por nome, filtro ou número..." />
+            </div>
+        </div>
+
+        <!-- Filter Dropdowns Row -->
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Produto -->
+            <div class="flex items-center gap-2">
+                <i class="ki-filled ki-basket text-gray-400"></i>
+                <span class="text-sm text-gray-600">Produto:</span>
+                <p-select [(ngModel)]="filtros.idProduto" [options]="produtoOptions" placeholder="Mostrar tudo"
+                    [showClear]="true" styleClass="min-w-[140px]" (onChange)="onFilterChange()" appendTo="body">
+                </p-select>
+            </div>
+
+            <!-- Escala -->
+            <div class="flex items-center gap-2">
+                <i class="ki-filled ki-chart-line text-gray-400"></i>
+                <span class="text-sm text-gray-600">Escala:</span>
+                <p-select [(ngModel)]="filtros.idEscala" [options]="escalaOptions" placeholder="Mostrar tudo"
+                    [showClear]="true" styleClass="min-w-[140px]" (onChange)="onFilterChange()" appendTo="body">
+                </p-select>
+            </div>
+
+            <!-- Cidade -->
+            <div class="flex items-center gap-2">
+                <i class="ki-filled ki-geolocation text-gray-400"></i>
+                <span class="text-sm text-gray-600">Cidade:</span>
+                <p-select [(ngModel)]="filtros.idCidade" [options]="cidadeOptions" placeholder="Mostrar tudo"
+                    [showClear]="true" styleClass="min-w-[140px]" (onChange)="onFilterChange()" appendTo="body">
+                </p-select>
+            </div>
+
+            <!-- Cargo -->
+            <div class="flex items-center gap-2">
+                <i class="ki-filled ki-badge text-gray-400"></i>
+                <span class="text-sm text-gray-600">Cargo:</span>
+                <p-select [(ngModel)]="filtros.idCargo" [options]="cargoOptions" placeholder="Mostrar tudo"
+                    [showClear]="true" styleClass="min-w-[140px]" (onChange)="onFilterChange()" appendTo="body">
+                </p-select>
+            </div>
+
+            <!-- Pessoa -->
+            <div class="flex items-center gap-2">
+                <i class="ki-filled ki-user text-gray-400"></i>
+                <span class="text-sm text-gray-600">Pessoa:</span>
+                <p-select [(ngModel)]="filtros.idUsuario" [options]="pessoaOptions" placeholder="Mostrar tudo"
+                    [showClear]="true" styleClass="min-w-[140px]" (onChange)="onFilterChange()" appendTo="body">
+                </p-select>
+            </div>
+
+            <!-- Tipo -->
+            <div class="flex items-center gap-2">
+                <i class="ki-filled ki-category text-gray-400"></i>
+                <span class="text-sm text-gray-600">Tipo:</span>
+                <p-select [(ngModel)]="filtros.tipoLiberacao" [options]="tipoLiberacaoOptions"
+                    placeholder="Mostrar tudo" [showClear]="true" styleClass="min-w-[140px]"
+                    (onChange)="onFilterChange()" appendTo="body">
+                </p-select>
+            </div>
+
+            <!-- Status -->
+            <div class="flex items-center gap-2">
+                <i class="ki-filled ki-check-circle text-gray-400"></i>
+                <span class="text-sm text-gray-600">Status:</span>
+                <p-select [(ngModel)]="filtros.ativo" [options]="statusOptions" placeholder="Mostrar tudo"
+                    [showClear]="true" styleClass="min-w-[140px]" (onChange)="onFilterChange()" appendTo="body">
+                </p-select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="bg-white rounded-lg border border-gray-200">
+        <div class="px-5 py-4 border-b border-gray-200">
+            <h3 class="text-base font-semibold text-gray-900">Lista de Estruturas</h3>
+        </div>
+
         <app-generic-p-table tableName="estruturas-list" [tableData]="estruturas" [totalRecords]="totalRecords"
             [rows]="filtros.tamanhoPagina || 10" [serverSidePagination]="true" [columnDefinition]="columns"
-            [optionsColumns]="columns" [displayCreateAction]="true" titleBtnCreate="Nova Estrutura"
-            [displayEditAction]="true" [displayDeleteAction]="true" (add)="onAdd()" (edit)="onEdit($event)"
-            (delete)="onDelete($event)" (lazyLoad)="onLazyLoad($event)">
+            [optionsColumns]="columns" [displayCreateAction]="false" [displayEditAction]="true"
+            [displayDeleteAction]="true" (edit)="onEdit($event)" (delete)="onDelete($event)"
+            (lazyLoad)="onLazyLoad($event)">
+
+            <!-- Custom Actions Template -->
+            <ng-template #customActions let-item>
+                <button type="button" class="p-1 rounded hover:bg-gray-100"
+                    [pTooltip]="item.ativo ? 'Desativar' : 'Ativar'" tooltipPosition="top"
+                    (click)="onToggleStatus(item)">
+                    <i class="ki-filled text-sm" [class.ki-toggle-on]="item.ativo" [class.ki-toggle-off]="!item.ativo"
+                        [class.text-green-600]="item.ativo" [class.text-gray-400]="!item.ativo"></i>
+                </button>
+            </ng-template>
         </app-generic-p-table>
     </div>
 </div>
