@@ -30,6 +30,23 @@ export class SignupRequestComponent {
         private router: Router
     ) { }
 
+    onFileSelected(event: any) {
+        const file: File = event.target.files[0];
+        if (file) {
+            // Optional: Validate file size/type here
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                this.error = 'O arquivo excede o tamanho máximo de 5MB.';
+                event.target.value = ''; // Reset input
+                this.data.arquivo = undefined;
+                return;
+            }
+            this.data.arquivo = file;
+        } else {
+            this.data.arquivo = undefined;
+        }
+    }
+
     submit() {
         this.error = '';
         this.success = '';

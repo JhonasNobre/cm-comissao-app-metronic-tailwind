@@ -85,7 +85,7 @@ export class EstruturaFormComponent implements OnInit {
     // Tree Data
     treeData: TreeNode[] = [];
     selectedNode: TreeNode | null = null;
-    orgData: OrgNode | null = null; // Data for the visual tree
+    orgData: OrgNode[] = []; // Data for the visual tree (supports multiple roots)
 
     // Dialogs
     levelDialogVisible = false;
@@ -437,7 +437,7 @@ export class EstruturaFormComponent implements OnInit {
                 data: { ...lvl, membros: lvl.membros || [] },
                 expanded: true,
                 children: [],
-                type: lvl.tipoValor === 4 ? 'bonus' : 'person'
+                type: (lvl.tipoComissao === TipoComissao.Bonus || lvl.tipoComissao === 4 || lvl.tipoComissao === 'Bonus') ? 'bonus' : 'person'
             });
         });
 
@@ -458,68 +458,88 @@ export class EstruturaFormComponent implements OnInit {
         return roots;
     }
 
-    // Convert TreeNode[] to OrgNode for the visual hierarchy tree
-    // The diagram starts directly from the hierarchy levels (no virtual root)
+    // Convert TreeNode[] to OrgNode[] for the visual hierarchy tree
+    // Each root level becomes a separate tree in the diagram
     private updateOrgTreeData(): void {
         if (this.treeData.length === 0) {
-            this.orgData = null;
+            this.orgData = [];
             return;
         }
 
-        // Use the first root level as the main root of the org chart
-        const firstRoot = this.treeData[0];
-        this.orgData = this.convertTreeNodeToOrgNode(firstRoot, true, 1);
-
-        // If there are more root levels, add them as siblings (children of the first root at visual level)
-        if (this.treeData.length > 1) {
-            const additionalRoots = this.treeData.slice(1).map(node => this.convertTreeNodeToOrgNode(node, false, 1));
-            // Insert additional roots alongside the first root's children
-            this.orgData.children = [...(this.orgData.children || []), ...additionalRoots];
-        }
+        // Convert each root-level TreeNode to an OrgNode
+        // This allows multiple trees (including Bonus) to be displayed side by side
+        this.orgData = this.treeData.map((node, index) =>
+            this.convertTreeNodeToOrgNode(node, index === 0, 1)
+        );
     }
 
     private convertTreeNodeToOrgNode(node: TreeNode, isFirst: boolean, level: number): OrgNode {
         const membros = node.data?.membros || [];
-        const isBonus = node.type === 'bonus';
+        // Check both node.type AND data.tipoComissao for bonus detection
+        const isBonus = node.type === 'bonus' ||
+            node.data?.tipoComissao === TipoComissao.Bonus ||
+            node.data?.tipoComissao === 4 ||
+            node.data?.tipoComissao === 'Bonus';
+        const levelName = node.label || 'Sem nome';
+        const role = isBonus ? 'Bônus' : levelName;
 
-        // Display Logic matching Figma:
-        // Name = Node Label (e.g., "Imobiliária")
-        // Role = "Nível Hierárquico X" OR Member Name if multiple?
-        // Actually, based on user feedback:
-        // Top Line (Name) -> "Imobiliária" (Level Name)
-        // Bottom Line (Role) -> "Nível Hierárquico 1" (Level Description)
+        // Convert children levels first
+        const childrenLevels = node.children?.map(child => this.convertTreeNodeToOrgNode(child, false, level + 1)) || [];
 
-        // However, if there are specific members, we might want to show the first member?
-        // The user complained about the DEFAULT state when creating a level.
-        // In that state, there are NO members.
+        // If this level has members, each member becomes a node
+        if (membros.length > 0) {
+            // Create a node for each member
+            // IMPORTANT: Only the FIRST member gets the children levels to avoid duplication
+            const memberNodes: OrgNode[] = membros.map((membro: any, idx: number) => ({
+                id: membro.id || `${node.key}-member-${idx}`,
+                name: membro.nome,
+                role: role,
+                people: idx === 0 && childrenLevels.length > 0 ? this.countDescendants(childrenLevels) : 0,
+                first: isFirst && idx === 0,
+                last: childrenLevels.length === 0,
+                isBonus: isBonus,
+                avatar: membro.fotoUrl || null,
+                // Only the first member gets the sublevel children (to avoid duplication)
+                children: idx === 0 && childrenLevels.length > 0 ? childrenLevels : undefined
+            }));
 
-        let name = node.label || 'Sem nome';
-        let role = `Nível Hierárquico ${level}`;
+            // For normal levels with 1 member: return member directly (no container)
+            // For Bonus or multiple members: always use container
+            if (!isBonus && memberNodes.length === 1) {
+                return memberNodes[0];
+            }
 
-        // If there are members, we might want to show the "Lead" member? 
-        // Or keep showing the Level Name?
-        // The current implementation showed: memberName as Name, node.label as Role.
-        // If members exist: Name="Jhonas", Role="Imobiliária"
-        // If NO members: Name="Imobiliária", Role="Imobiliária" (Duplicate!)
-
-        const firstMember = membros[0];
-        if (firstMember) {
-            name = firstMember.nome;
-            role = node.label || `Nível Hierárquico ${level}`;
+            // Level container with members as children
+            return {
+                id: node.key || '',
+                name: levelName,
+                role: isBonus ? 'Bônus por Performance' : `Nível Hierárquico ${level}`,
+                people: membros.length,
+                first: isFirst,
+                last: false,
+                isBonus: isBonus,
+                children: memberNodes
+            };
         }
 
-        const children = node.children?.map(child => this.convertTreeNodeToOrgNode(child, false, level + 1)) || [];
-
+        // No members - show the level name as the node
         return {
             id: node.key || '',
-            name: name,
-            role: role,
-            people: membros.length, // Only count members of THIS level, not children
+            name: levelName,
+            role: isBonus ? 'Bônus por Performance' : `Nível Hierárquico ${level}`,
+            people: 0,
             first: isFirst,
-            last: children.length === 0,
+            last: childrenLevels.length === 0,
             isBonus: isBonus,
-            children: children.length > 0 ? children : undefined
+            children: childrenLevels.length > 0 ? childrenLevels : undefined
         };
+    }
+
+    private countDescendants(nodes: OrgNode[]): number {
+        return nodes.reduce((acc, node) => {
+            const childCount = node.children ? this.countDescendants(node.children) : 0;
+            return acc + 1 + childCount;
+        }, 0);
     }
 
     private countChildrenMembers(node: TreeNode): number {
@@ -794,7 +814,7 @@ export class EstruturaFormComponent implements OnInit {
 
         const value = this.levelForm.value;
         const finalMembers = [...this.currentLevelMembers];
-        const isBonus = value.tipoComissao === TipoComissao.Bonus;
+        const isBonus = value.tipoComissao === TipoComissao.Bonus || value.tipoComissao === 4 || value.tipoComissao === 'Bonus';
 
         if (this.editingNode) {
             this.editingNode.data = { ...this.editingNode.data, ...value, membros: finalMembers };
@@ -812,33 +832,39 @@ export class EstruturaFormComponent implements OnInit {
                 children: [],
                 type: isBonus ? 'bonus' : 'person'
             };
-            // NEW: use form's parentId to be robust
-            const targetParentId = value.parentId;
-
-            // Try to find parent by ID if parentForNewNode is missing but parentId exists
-            let targetParent = this.parentForNewNode;
-            if (!targetParent && targetParentId) {
-                targetParent = this.findTreeNodeById(this.treeData, targetParentId);
-
-                if (!targetParent) {
-                    this.messageService.add({
-                        severity: 'error',
-                        summary: 'Erro de Hierarquia',
-                        detail: 'O nível pai selecionado não foi encontrado.'
-                    });
-                    return;
-                }
-            }
-
-            if (targetParent) {
-                if (!targetParent.children) targetParent.children = [];
-                targetParent.children.push(newNode);
-                // Use data.id for safer persistence link
-                newNode.data.parentId = targetParent.data.id;
-            } else {
-                // Se não tem pai, garante que o parentId seja nulo para persistência
+            // Bônus is always added at root level (independent from hierarchy)
+            if (isBonus) {
                 newNode.data.parentId = null;
                 this.treeData = [...this.treeData, newNode];
+            } else {
+                // NEW: use form's parentId to be robust
+                const targetParentId = value.parentId;
+
+                // Try to find parent by ID if parentForNewNode is missing but parentId exists
+                let targetParent = this.parentForNewNode;
+                if (!targetParent && targetParentId) {
+                    targetParent = this.findTreeNodeById(this.treeData, targetParentId);
+
+                    if (!targetParent) {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro de Hierarquia',
+                            detail: 'O nível pai selecionado não foi encontrado.'
+                        });
+                        return;
+                    }
+                }
+
+                if (targetParent) {
+                    if (!targetParent.children) targetParent.children = [];
+                    targetParent.children.push(newNode);
+                    // Use data.id for safer persistence link
+                    newNode.data.parentId = targetParent.data.id;
+                } else {
+                    // Se não tem pai, garante que o parentId seja nulo para persistência
+                    newNode.data.parentId = null;
+                    this.treeData = [...this.treeData, newNode];
+                }
             }
         }
 

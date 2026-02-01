@@ -13,6 +13,7 @@ export interface SignupRequest {
     telefone: string;
     titulo: string;
     mensagem: string;
+    arquivo?: File;
 }
 
 /**
@@ -407,7 +408,19 @@ export class AuthService {
      * Solicita cadastro de novo usuário
      */
     requestSignup(data: SignupRequest): Observable<any> {
-        return this.http.post(`${environment.apiUrl}/authentication/signup-request`, data);
+        const formData = new FormData();
+        formData.append('nome', data.nome);
+        formData.append('sobrenome', data.sobrenome);
+        formData.append('email', data.email);
+        formData.append('telefone', data.telefone);
+        formData.append('titulo', data.titulo);
+        formData.append('mensagem', data.mensagem);
+
+        if (data.arquivo) {
+            formData.append('arquivo', data.arquivo);
+        }
+
+        return this.http.post(`${environment.apiUrl}/authentication/signup-request`, formData);
     }
 
     validateRecoveryCode(email: string, code: string): Observable<any> {

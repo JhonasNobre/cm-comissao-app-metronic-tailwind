@@ -41,6 +41,7 @@ export class HeaderComponent {
   supportPhone: string = '';
   supportTitle: string = '';
   supportMessage: string = '';
+  supportFile?: File;
   sendingSupport: boolean = false;
 
   ngOnInit(): void {
@@ -63,6 +64,22 @@ export class HeaderComponent {
     this.isSupportVisible = true;
   }
 
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (file) {
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        this.messageService.add({ severity: 'warn', summary: 'Arquivo muito grande', detail: 'O arquivo excede o limite de 5MB.' });
+        event.target.value = '';
+        this.supportFile = undefined;
+        return;
+      }
+      this.supportFile = file;
+    } else {
+      this.supportFile = undefined;
+    }
+  }
+
   sendSupportRequest() {
     if (!this.supportName || !this.supportTitle || !this.supportMessage) {
       this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos obrigatórios.' });
@@ -74,7 +91,8 @@ export class HeaderComponent {
       nome: this.supportName,
       telefone: this.supportPhone,
       titulo: this.supportTitle,
-      mensagem: this.supportMessage
+      mensagem: this.supportMessage,
+      arquivo: this.supportFile
     };
 
     this.suporteService.abrirChamado(request).subscribe({
@@ -85,6 +103,7 @@ export class HeaderComponent {
         // Reset non-user fields
         this.supportTitle = '';
         this.supportMessage = '';
+        this.supportFile = undefined;
       },
       error: (err) => {
         console.error('Erro ao enviar chamado', err);

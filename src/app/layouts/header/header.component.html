@@ -2136,6 +2136,17 @@
 			<textarea pTextarea [(ngModel)]="supportMessage" rows="5" class="w-full"
 				placeholder="Explique em poucas palavras o que você precisa."></textarea>
 		</div>
+
+		<div class="flex flex-col gap-2">
+			<label class="font-medium">Anexo (Opcional)</label>
+			<input type="file" (change)="onFileSelected($event)" class="w-full text-sm text-gray-500
+				file:mr-4 file:py-2 file:px-4
+				file:rounded-full file:border-0
+				file:text-sm file:font-semibold
+				file:bg-blue-50 file:text-blue-700
+				hover:file:bg-blue-100" />
+			<small class="text-gray-500">Máx: 5MB (PDF ou Imagens)</small>
+		</div>
 	</div>
 
 	<ng-template pTemplate="footer">
