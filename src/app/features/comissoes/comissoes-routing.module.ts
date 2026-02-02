@@ -35,6 +35,13 @@ const routes: Routes = [
                 (m) => m.ParcelasListComponent
             ),
     },
+    {
+        path: 'legacy-test',
+        loadComponent: () =>
+            import('./legacy-test/legacy-test.component').then(
+                (m) => m.LegacyTestComponent
+            ),
+    },
 ];
 
 @NgModule({
