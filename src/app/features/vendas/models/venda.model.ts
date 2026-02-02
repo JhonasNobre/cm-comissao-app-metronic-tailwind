@@ -1,11 +1,14 @@
 export interface VendaImportada {
     id: string;
     idVendaLegado: string;
+    codigoProdutoLegado?: string;
+    imovel?: string;
     nomeCliente: string;
     valorTotalVenda: number;
     dataVenda: string;
     sistemaOrigem: number;
     statusImportacao: number;
+    parcelasPagamento?: any[];
 }
 
 export interface VendaFiltros {

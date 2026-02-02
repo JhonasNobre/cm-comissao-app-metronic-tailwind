@@ -66,6 +66,7 @@ export interface CreateEstruturaComissaoRequest {
 }
 
 export interface CreateEstruturaComissaoNivelRequest {
+    id: string;
     nomeNivel: string;
     prioridade: number;
     idGrupo?: string;
@@ -77,6 +78,7 @@ export interface CreateEstruturaComissaoNivelRequest {
 }
 
 export interface CreateEstruturaComissaoMembroRequest {
+    id: string;
     nome: string;
     usuarioId?: string;
     equipeId?: string;

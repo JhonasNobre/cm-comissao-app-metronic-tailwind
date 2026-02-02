@@ -89,4 +89,21 @@ export class ComissaoService extends BaseService {
             }
         });
     }
+
+    uploadDocumento(idComissao: string, file: File, idResponsavel: string, categoria: number): Observable<any> {
+        const formData = new FormData();
+        formData.append('Arquivo', file);  // PascalCase to match C# backend
+        formData.append('IdResponsavel', idResponsavel);
+        formData.append('Categoria', categoria.toString());
+
+        return this.http.post(`${this.baseUrl}/${idComissao}/documentos`, formData);
+    }
+
+    aprovarDocumento(idComissao: string, idDocumento: string): Observable<any> {
+        return this.http.put(`${this.baseUrl}/${idComissao}/documentos/${idDocumento}/aprovar`, {});
+    }
+
+    reprovarDocumento(idComissao: string, idDocumento: string): Observable<any> {
+        return this.http.put(`${this.baseUrl}/${idComissao}/documentos/${idDocumento}/reprovar`, {});
+    }
 }

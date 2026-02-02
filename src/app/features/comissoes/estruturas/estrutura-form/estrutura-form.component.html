@@ -2,7 +2,7 @@
     <!-- Page Header -->
     <div class="flex flex-wrap items-center justify-between gap-5 pb-5">
         <div class="flex flex-col gap-1">
-            <h1 class="text-2xl font-semibold text-blue-600">
+            <h1 class="text-xl font-bold text-gray-900">
                 @if (isEditMode()) {
                 Editar Estrutura de Comissões
                 } @else {
@@ -11,28 +11,36 @@
             </h1>
         </div>
         <div class="flex gap-3">
-            <button type="button" class="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium"
+            <button type="button"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 (click)="cancel()">
                 Cancelar
             </button>
-            <button type="button" class="px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 font-medium"
+            <button type="button"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center"
                 (click)="onSubmit()" [disabled]="saving() || loading()">
                 @if (saving()) {
-                <span
-                    class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2 inline-block"></span>
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
                 }
                 Salvar Estrutura
             </button>
         </div>
     </div>
 
-    <!-- Nome da Estrutura (Top Field) -->
+    <!-- Nome da Estrutura (Clean Input) -->
     <form [formGroup]="form">
-        <div class="mb-5">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Nome da Estrutura de Comissão *</label>
+        <div class="mb-8">
+            <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Nome da Estrutura de
+                Comissão *</label>
             <input type="text" formControlName="nome"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Defina um nome" />
+                class="w-full px-0 py-2 border-0 border-b border-gray-200 text-lg font-medium text-gray-900 placeholder-gray-400 focus:ring-0 focus:border-blue-500 transition-colors bg-transparent"
+                placeholder="Defina um nome para a estrutura" />
         </div>
     </form>
 </div>
@@ -48,12 +56,13 @@
     <div class="grid grid-cols-12 gap-5">
 
         <!-- LEFT COLUMN: Níveis Hierárquicos -->
-        <div class="col-span-12 lg:col-span-4">
-            <div class="bg-white rounded-lg border border-gray-200">
-                <!-- Header -->
-                <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <h3 class="text-base font-semibold text-gray-900">Níveis Hierárquicos</h3>
-                    <button type="button" class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+        <div class="col-span-12 lg:col-span-4 flex flex-col gap-5">
+            <!-- Níveis Hierárquicos Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-5 py-4 flex items-center justify-between border-b border-gray-50">
+                    <h3 class="font-semibold text-gray-900">Níveis Hierárquicos</h3>
+                    <button type="button"
+                        class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
                         (click)="addRootLevel()">
                         <i class="ki-filled ki-plus text-xs"></i>
                         <span>Adicionar nível</span>
@@ -73,229 +82,118 @@
                     </div>
                     } @else {
                     <div class="space-y-2">
-                        @for (node of treeData; track node.key) {
-                        <div class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer"
-                            [class.bg-yellow-50]="node.type === 'bonus'"
-                            [class.border-yellow-300]="node.type === 'bonus'" (click)="editLevel(node)">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center"
-                                        [class.bg-blue-100]="node.type !== 'bonus'"
-                                        [class.bg-yellow-100]="node.type === 'bonus'">
-                                        <i class="text-sm" [class.ki-filled]="true"
-                                            [class.ki-people]="node.type !== 'bonus'"
-                                            [class.ki-star]="node.type === 'bonus'"
-                                            [class.text-blue-600]="node.type !== 'bonus'"
-                                            [class.text-yellow-600]="node.type === 'bonus'"></i>
+                        <!-- Template recursivo para níveis ilimitados -->
+                        <ng-template #levelTemplate let-nodes let-depth="depth">
+                            @for (node of nodes; track node.key) {
+                            <div class="group relative bg-white border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition-all hover:shadow-sm"
+                                [class.bg-yellow-50]="node.type === 'bonus'"
+                                [class.border-yellow-300]="node.type === 'bonus'"
+                                [style.margin-left.px]="depth > 1 ? 16 : 0">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2 cursor-pointer" (click)="editLevel(node)">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                                            [class.bg-blue-100]="node.type !== 'bonus'"
+                                            [class.bg-yellow-100]="node.type === 'bonus'">
+                                            <i class="text-sm" [class.ki-filled]="true"
+                                                [class.ki-people]="node.type !== 'bonus'"
+                                                [class.ki-star]="node.type === 'bonus'"
+                                                [class.text-blue-600]="node.type !== 'bonus'"
+                                                [class.text-yellow-600]="node.type === 'bonus'"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium" [class.text-gray-900]="node.type !== 'bonus'"
+                                                [class.text-yellow-700]="node.type === 'bonus'">{{ node.label }}</p>
+                                            <p class="text-xs text-gray-500">
+                                                @if (node.type === 'bonus') {
+                                                Bônus por Performance · {{ node.data?.membros?.length || 0 }} membro(s)
+                                                } @else {
+                                                Nível Hierárquico {{ depth }} · {{ node.data?.membros?.length || 0 }}
+                                                membro(s) ·
+                                                {{ node.data.tipoValor === TipoValor.Percentual ? (node.data.percentual
+                                                + '%') : 'R$ ' + node.data.valorFixo }}
+                                                }
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">{{ node.label }}</p>
-                                        <p class="text-xs text-gray-500">
-                                            {{ node.data.tipoValor === TipoValor.Percentual ? (node.data.percentual +
-                                            '%') : 'R$ ' + node.data.valorFixo }}
-                                        </p>
+                                    <div class="flex gap-1">
+                                        <button type="button"
+                                            class="w-6 h-6 flex items-center justify-center rounded hover:bg-blue-100"
+                                            (click)="$event.stopPropagation(); editLevel(node)" pTooltip="Editar"
+                                            tooltipPosition="top">
+                                            <i class="ki-filled ki-pencil text-xs text-blue-600"></i>
+                                        </button>
+                                        <button type="button"
+                                            class="w-6 h-6 flex items-center justify-center rounded hover:bg-red-100"
+                                            (click)="$event.stopPropagation(); deleteLevel(node)" pTooltip="Excluir"
+                                            tooltipPosition="top">
+                                            <i class="ki-filled ki-trash text-xs text-red-600"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="flex gap-1">
-                                    <button type="button"
-                                        class="w-6 h-6 flex items-center justify-center rounded hover:bg-blue-100"
-                                        (click)="$event.stopPropagation(); editLevel(node)" pTooltip="Editar"
-                                        tooltipPosition="top">
-                                        <i class="ki-filled ki-pencil text-xs text-blue-600"></i>
-                                    </button>
-                                    <button type="button"
-                                        class="w-6 h-6 flex items-center justify-center rounded hover:bg-red-100"
-                                        (click)="$event.stopPropagation(); deleteLevel(node)" pTooltip="Excluir"
-                                        tooltipPosition="top">
-                                        <i class="ki-filled ki-trash text-xs text-red-600"></i>
-                                    </button>
+                                <!-- Renderiza filhos recursivamente -->
+                                @if (node.children && node.children.length > 0) {
+                                <div class="ml-4 mt-2 space-y-2 border-l-2 border-gray-200 pl-3">
+                                    <ng-container
+                                        *ngTemplateOutlet="levelTemplate; context: { $implicit: node.children, depth: depth + 1 }"></ng-container>
                                 </div>
+                                }
+                                <!-- Botão para adicionar subnível neste nó -->
+                                <button type="button"
+                                    class="text-blue-600 hover:text-blue-700 text-xs flex items-center gap-1 mt-2"
+                                    (click)="$event.stopPropagation(); addChildLevel(node)">
+                                    <i class="ki-filled ki-plus text-xs"></i>
+                                    <span>Adicionar subnível</span>
+                                </button>
                             </div>
-                        </div>
-                        }
+                            }
+                        </ng-template>
 
-                        <!-- Ações rápidas -->
-                        <div class="mt-6 pt-6 border-t border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Ações rápidas</h4>
-                            <button type="button"
-                                class="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
-                                (click)="openMemberSelectionForAll()">
-                                <i class="ki-filled ki-plus text-xs"></i>
-                                <span>Adicionar integrante ou equipe</span>
-                            </button>
-                        </div>
+                        <!-- Inicia a recursão com depth=1 -->
+                        <ng-container
+                            *ngTemplateOutlet="levelTemplate; context: { $implicit: treeData, depth: 1 }"></ng-container>
                     </div>
                     }
                 </div>
             </div>
-        </div>
 
-        <!-- MIDDLE COLUMN: Integrante Card -->
-        <div class="col-span-12 lg:col-span-4">
-            <div class="bg-white rounded-lg border border-gray-200 p-5">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                            <span class="text-lg font-semibold text-gray-600">Aa</span>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-semibold text-gray-900">Integrante</h3>
-                            <p class="text-sm text-gray-500">Descrição</p>
-                            <p class="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                                <i class="ki-filled ki-people text-xs"></i>
-                                <span>{{ getTotalMembersCount() }} pessoas</span>
-                            </p>
-                        </div>
+            <!-- Ações Rápidas Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                <h3 class="font-semibold text-gray-900 mb-4">Ações rápidas</h3>
+
+                <button type="button"
+                    class="w-full h-12 flex items-center gap-3 px-4 rounded-lg border border-dashed border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-blue-700 transition-all group"
+                    (click)="openMemberSelectionForAll()">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                        <i class="ki-filled ki-users text-sm"></i>
                     </div>
-                    <button type="button"
-                        class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700">
-                        <i class="ki-filled ki-right text-white text-sm"></i>
-                    </button>
-                </div>
+                    <span class="text-sm font-medium">Adicionar integrante ou equipe</span>
+                </button>
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: Additional Cards (if needed) -->
-        <div class="col-span-12 lg:col-span-4">
-            <!-- Empty for now, can add more cards here -->
+        <!-- RIGHT COLUMN: Visual Tree -->
+        <div class="col-span-12 lg:col-span-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 h-full p-0 overflow-hidden flex flex-col relative"
+                style="min-height: 600px;">
+                <app-hierarchy-tree [data]="orgData" (addSubordinates)="onAddSubordinatesFromTree($event)"
+                    (removeNode)="onRemoveFromTree($event)" class="w-full h-full block">
+                </app-hierarchy-tree>
+            </div>
         </div>
 
-        <!-- FULL WIDTH: Form Fields (Below the 3 columns) -->
-        <div class="col-span-12 mt-5">
-            <form [formGroup]="form">
-                <div class="bg-white rounded-lg border border-gray-200 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-5 pb-4 border-b border-gray-200">Configurações
-                        da
-                        Estrutura</h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        <div class="flex flex-col gap-2">
-                            <label class="text-sm font-medium text-gray-700">Descrição</label>
-                            <input type="text" pInputText formControlName="descricao" class="w-full"
-                                placeholder="Descrição opcional" />
-                        </div>
-
-                        <div class="flex flex-col gap-2">
-                            <label class="text-sm font-medium text-gray-700">Tipo de Comissão *</label>
-                            <p-select formControlName="tipoComissao" [options]="tipoComissaoOptions"
-                                placeholder="Selecione o tipo" styleClass="w-full" />
-                        </div>
-
-                        <div class="flex flex-col gap-2">
-                            <label class="text-sm font-medium text-gray-700">Tipo de Rateio *</label>
-                            <p-select formControlName="tipoRateio" [options]="tipoRateioOptions"
-                                placeholder="Selecione o rateio" styleClass="w-full" />
-                        </div>
-
-                        @if (form.get('tipoComissao')?.value === TipoComissao.Percentual ||
-                        form.get('tipoComissao')?.value === TipoComissao.Misto) {
-                        <div class="flex flex-col gap-2">
-                            <label class="text-sm font-medium text-gray-700">Percentual Base (%) *</label>
-                            <p-inputNumber formControlName="valorPercentual" [min]="0" [max]="100"
-                                [minFractionDigits]="2" [maxFractionDigits]="2" suffix="%" styleClass="w-full"
-                                inputStyleClass="w-full" />
-                        </div>
-                        }
-
-                        @if (form.get('tipoComissao')?.value === TipoComissao.ValorFixo ||
-                        form.get('tipoComissao')?.value === TipoComissao.Misto) {
-                        <div class="flex flex-col gap-2">
-                            <label class="text-sm font-medium text-gray-700">Valor Fixo Base *</label>
-                            <p-inputNumber formControlName="valorFixoInicial" mode="currency" currency="BRL"
-                                locale="pt-BR" [min]="0" styleClass="w-full" inputStyleClass="w-full" />
-                        </div>
-                        }
-
-                        <div class="flex flex-col gap-2">
-                            <label class="text-sm font-medium text-gray-700">Regra de Liberação *</label>
-                            <p-select formControlName="regraLiberacao" [options]="regraLiberacaoOptions"
-                                placeholder="Selecione a regra" styleClass="w-full" />
-                        </div>
-
-                        @if (form.get('regraLiberacao')?.value === RegraLiberacao.PercentualPago) {
-                        <div class="flex flex-col gap-2">
-                            <label class="text-sm font-medium text-gray-700">Percentual para Liberação (%) *</label>
-                            <p-inputNumber formControlName="percentualLiberacao" [min]="0" [max]="100" suffix="%"
-                                styleClass="w-full" inputStyleClass="w-full" />
-                        </div>
-                        }
-
-                        @if (form.get('regraLiberacao')?.value === RegraLiberacao.ParcelasPagas) {
-                        <div class="flex flex-col gap-2">
-                            <label class="text-sm font-medium text-gray-700">Parcela para Liberação *</label>
-                            <p-inputNumber formControlName="parcelaLiberacao" [min]="1" styleClass="w-full"
-                                inputStyleClass="w-full" />
-                        </div>
-                        }
-                    </div>
-                </div>
-            </form>
-        </div>
     </div>
 </div>
 }
 
-<!-- Modal de Adição em Massa -->
-<p-dialog header="Adicionar integrantes em massa" [(visible)]="displayBulkMemberDialog" [modal]="true"
-    [style]="{ width: '600px' }" [draggable]="false" [resizable]="false">
 
-    <p class="text-sm text-gray-600 mb-1">Selecione os membros para atribuir a todos os níveis hierárquicos</p>
-    <p class="text-xs text-gray-500 mb-4">Busca por NOME ou CNPJ</p>
-
-    <!-- Search Bar -->
-    <div class="mb-3">
-        <input type="text" pInputText [(ngModel)]="bulkMemberSearch" (ngModelChange)="filterMembersForBulk()"
-            class="w-full" placeholder="Busca Global" />
-    </div>
-
-    <!-- Select All Link -->
-    <div class="mb-3">
-        <a href="javascript:void(0)" class="text-blue-600 hover:underline text-sm" (click)="selectAllMembers()">
-            Selecionar todos ({{ filteredMembersForBulk.length }})
-        </a>
-    </div>
-
-    <!-- Member List -->
-    <div class="max-h-[400px] overflow-y-auto border rounded-lg">
-        @if (filteredMembersForBulk.length === 0) {
-        <div class="p-8 text-center text-gray-500">
-            <p class="text-sm">Nenhum membro encontrado</p>
-        </div>
-        } @else {
-        <div class="divide-y">
-            @for (member of filteredMembersForBulk; track member.id) {
-            <div class="p-3 hover:bg-gray-50 cursor-pointer flex items-center gap-3"
-                (click)="toggleMemberSelection(member)">
-                <p-checkbox [binary]="true" [ngModel]="isMemberSelected(member)" [ngModelOptions]="{standalone: true}"
-                    (click)="$event.stopPropagation()">
-                </p-checkbox>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-900">{{ member.nome }}</p>
-                </div>
-            </div>
-            }
-        </div>
-        }
-    </div>
-
-    <ng-template pTemplate="footer">
-        <div class="flex gap-2 justify-end">
-            <button pButton label="Cancelar" class="p-button-text p-button-secondary"
-                (click)="displayBulkMemberDialog = false"></button>
-            <button pButton
-                [label]="'Vincular ' + selectedMembersForBulk.length + (selectedMembersForBulk.length === 1 ? ' Pessoa' : ' Pessoas')"
-                class="p-button" [disabled]="selectedMembersForBulk.length === 0"
-                (click)="confirmBulkAssignment()"></button>
-        </div>
-    </ng-template>
-</p-dialog>
 
 <!-- Modal de Edição de Nível -->
-<p-dialog [header]="editingNode ? 'Nível Hierárquico ' + editingNode.label : 'Nível Hierarquico 1'"
-    [(visible)]="displayLevelDialog" [modal]="true" [style]="{ width: '700px' }" [draggable]="false"
+<p-dialog [header]="editingNode ? 'Editar Nível: ' + editingNode.label : 'Novo Nível Hierárquico'"
+    [(visible)]="displayLevelDialog" [modal]="true" [style]="{ width: '750px' }" [draggable]="false"
     [resizable]="false">
     <form [formGroup]="levelForm">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Row 1 -->
             <div class="flex flex-col gap-2">
                 <label class="text-sm font-medium text-gray-700">Nome do nível hierárquico <span
@@ -326,35 +224,176 @@
                     inputStyleClass="w-full" placeholder="Escreva" />
                 } @else if (levelForm.get('tipoValor')?.value === TipoValor.Fixo) {
                 <p-inputNumber formControlName="valorFixo" mode="currency" currency="BRL" locale="pt-BR"
-                    styleClass="w-full" inputStyleClass="w-full" placeholder="Escreva" />
+                    styleClass="w-full" inputStyleClass="w-full" placeholder="R$ 0,00" />
                 } @else {
-                <input type="text" pInputText disabled class="w-full" placeholder="Escreva" />
+                <input type="text" pInputText disabled class="w-full" placeholder="Selecione a forma de cálculo" />
                 }
             </div>
+
+            <!-- Row 3: Tipo de Comissão (Full Width) -->
+            <div class="col-span-1 md:col-span-2 flex flex-col gap-2">
+                <label class="text-sm font-medium text-gray-700">Tipo de Comissão <span
+                        class="text-red-500">*</span></label>
+                <p-select formControlName="tipoComissao" [options]="tipoComissaoOptions" styleClass="w-full"
+                    placeholder="Selecione" appendTo="body"></p-select>
+            </div>
+
             <!-- Row 4 -->
             <div class="flex flex-col gap-2">
                 <label class="text-sm font-medium text-gray-700">Tipo de liberação <span
                         class="text-red-500">*</span></label>
-                <p-select [options]="regraLiberacaoOptions" styleClass="w-full" placeholder="Selecione"
-                    appendTo="body"></p-select>
+                <p-select formControlName="regraLiberacao" [options]="regraLiberacaoOptions" styleClass="w-full"
+                    placeholder="Selecione" appendTo="body"></p-select>
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-sm font-medium text-gray-700">Prioridade de pagamento <span
                         class="text-red-500">*</span></label>
-                <p-select [options]="tipoRateioOptions" styleClass="w-full" placeholder="Selecione"
-                    appendTo="body"></p-select>
+                <!-- Using placeholder items for Prioridade since it is new/unmapped -->
+                <p-select formControlName="prioridadePagamento"
+                    [options]="[{label: 'Alta', value: 1}, {label: 'Normal', value: 2}, {label: 'Baixa', value: 3}]"
+                    styleClass="w-full" placeholder="Selecione" appendTo="body"></p-select>
             </div>
         </div>
+
+        <!-- Members Section REMOVED to align with Figma 'Clean' design -->
     </form>
 
     <ng-template pTemplate="footer">
-        <div class="flex gap-2 justify-end">
-            <button pButton label="Cancelar" class="p-button-text p-button-secondary"
-                (click)="displayLevelDialog = false"></button>
-            <button pButton [label]="editingNode ? 'Salvar' : 'Criar'" class="p-button" (click)="saveLevel()"></button>
+        <div class="flex gap-2 justify-end pt-4 border-t border-gray-100">
+            <button type="button"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                (click)="displayLevelDialog = false">
+                Cancelar
+            </button>
+            <button type="button"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                (click)="saveLevel()">
+                {{ editingNode ? 'Salvar' : 'Criar' }}
+            </button>
         </div>
     </ng-template>
 </p-dialog>
 
-<p-toast />
+
+<!-- Bulk Member Dialog -->
+<p-dialog [(visible)]="displayBulkMemberDialog" [modal]="true" [style]="{width: '600px'}"
+    [header]="'Adicionar integrantes em massa'" styleClass="p-fluid">
+
+    <div class="mb-4">
+        <p class="text-sm text-gray-500 mb-4">Adicionando subordinados</p>
+
+        <div class="flex gap-2 mb-4">
+            <span class="p-input-icon-left flex-1">
+                <i class="ki-filled ki-magnifier"></i>
+                <input type="text" pInputText [(ngModel)]="bulkMemberSearch" (ngModelChange)="filterMembersForBulk()"
+                    placeholder="Buscar por nome ou CRECI" />
+            </span>
+            <div class="flex border rounded-lg overflow-hidden">
+                <button type="button" class="px-3 py-2 text-sm font-medium transition-colors"
+                    [class.bg-blue-50]="selectedBulkMemberType === 'usuario'"
+                    [class.text-blue-600]="selectedBulkMemberType === 'usuario'"
+                    [class.bg-white]="selectedBulkMemberType !== 'usuario'"
+                    [class.text-gray-600]="selectedBulkMemberType !== 'usuario'"
+                    (click)="selectedBulkMemberType = 'usuario'; filterMembersForBulk()">
+                    Usuários
+                </button>
+                <button type="button" class="px-3 py-2 text-sm font-medium transition-colors border-l"
+                    [class.bg-blue-50]="selectedBulkMemberType === 'equipe'"
+                    [class.text-blue-600]="selectedBulkMemberType === 'equipe'"
+                    [class.bg-white]="selectedBulkMemberType !== 'equipe'"
+                    [class.text-gray-600]="selectedBulkMemberType !== 'equipe'"
+                    (click)="selectedBulkMemberType = 'equipe'; filterMembersForBulk()">
+                    Equipes
+                </button>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-2">
+            <button type="button" class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                (click)="toggleAllBulkMembers()">
+                Selecionar todos ({{ filteredMembersForBulk.length }})
+            </button>
+            <span class="text-sm text-gray-500">{{ selectedMembersForBulk.length }} selecionados</span>
+        </div>
+
+        <div class="h-[300px] overflow-y-auto border rounded-lg divide-y bg-gray-50">
+            @if (selectedBulkMemberType === 'usuario') {
+            <div class="divide-y divide-gray-100">
+                @for (group of groupedMembersForBulk; track group.name) {
+                <!-- Team Header -->
+                <div class="bg-white px-3 py-2 border-b border-gray-50 sticky top-0 z-10">
+                    <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ group.name }}</h5>
+                </div>
+
+                <!-- Members in Team -->
+                @for (member of group.members; track member.id) {
+                <div class="p-3 hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors pl-6"
+                    [class.bg-blue-50]="isBulkMemberSelected(member)" (click)="toggleBulkMemberSelection(member)">
+                    <div class="w-5 h-5 rounded border flex items-center justify-center transition-colors"
+                        [class.bg-blue-600]="isBulkMemberSelected(member)"
+                        [class.border-blue-600]="isBulkMemberSelected(member)"
+                        [class.border-gray-300]="!isBulkMemberSelected(member)"
+                        [class.bg-white]="!isBulkMemberSelected(member)">
+                        @if (isBulkMemberSelected(member)) {
+                        <i class="ki-filled ki-check text-white text-xs"></i>
+                        }
+                    </div>
+                    <!-- <p-checkbox [binary]="true" [ngModel]="isBulkMemberSelected(member)" [ngModelOptions]="{standalone: true}"
+                    (click)="$event.stopPropagation()" (onChange)="toggleBulkMemberSelection(member)">
+                </p-checkbox> -->
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">{{ member.nome }}</p>
+                    </div>
+                </div>
+                }
+                }
+            </div>
+            } @else {
+            <!-- Flat List for Teams (legacy/fallback) -->
+            <div class="divide-y divide-gray-100">
+                @for (member of filteredMembersForBulk; track member.id) {
+                <div class="p-3 hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors"
+                    [class.bg-blue-50]="isBulkMemberSelected(member)" (click)="toggleBulkMemberSelection(member)">
+                    <div class="w-5 h-5 rounded border flex items-center justify-center transition-colors"
+                        [class.bg-blue-600]="isBulkMemberSelected(member)"
+                        [class.border-blue-600]="isBulkMemberSelected(member)"
+                        [class.border-gray-300]="!isBulkMemberSelected(member)"
+                        [class.bg-white]="!isBulkMemberSelected(member)">
+                        @if (isBulkMemberSelected(member)) {
+                        <i class="ki-filled ki-check text-white text-xs"></i>
+                        }
+                    </div>
+                    <!-- <p-checkbox [binary]="true" [ngModel]="isBulkMemberSelected(member)" [ngModelOptions]="{standalone: true}"
+                    (click)="$event.stopPropagation()" (onChange)="toggleBulkMemberSelection(member)">
+                </p-checkbox> -->
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">{{ member.nome }}</p>
+                        @if (isTeam(member)) {
+                        <p class="text-xs text-gray-500">Equipe</p>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+            }
+            @if (filteredMembersForBulk.length === 0) {
+            <div class="flex flex-col items-center justify-center h-full text-gray-500">
+                <i class="ki-filled ki-search text-2xl mb-2"></i>
+                <p class="text-sm">Nenhum resultado encontrado</p>
+            </div>
+            }
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <button pButton label="Cancelar" class="p-button-text text-gray-600"
+                (click)="displayBulkMemberDialog = false"></button>
+            <button pButton
+                [label]="'Vincular ' + (selectedMembersForBulk.length > 0 ? selectedMembersForBulk.length + ' Pessoas' : '')"
+                class="bg-blue-600 border-none" (click)="saveBulkMembers()"
+                [disabled]="selectedMembersForBulk.length === 0"></button>
+        </div>
+    </ng-template>
+</p-dialog>

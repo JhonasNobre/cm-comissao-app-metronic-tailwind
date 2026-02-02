@@ -16,6 +16,7 @@ export enum EStatusParcela {
 export interface ItemComissao {
     id: string;
     idUsuario: string;
+    nomeUsuario?: string;
     papelVenda: number;
     nomeNivel?: string;
     baseCalculoItem: number;
@@ -29,6 +30,7 @@ export interface ItemComissao {
 export interface ParcelaComissao {
     id: string;
     idUsuario: string;
+    nomeUsuario?: string;
     numeroParcela: number;
     valorParcela: number;
     valorRecebido?: number;
@@ -55,6 +57,22 @@ export interface Comissao {
     observacoes?: string;
     itens?: ItemComissao[];
     parcelas?: ParcelaComissao[];
+    documentos?: ComissaoDocumento[];
+}
+
+export interface ComissaoDocumento {
+    id: string;
+    idComissao: string;
+    nome: string;
+    extensao: string;
+    tamanhoBytes: number;
+    categoria: number;
+    dataEnvio: Date;
+    idUsuarioEnvio: string;
+    nomeUsuarioEnvio?: string;
+    aprovado: boolean;
+    dataAprovacao?: Date;
+    idUsuarioAprovacao?: string;
 }
 
 export interface ComissaoFiltros {

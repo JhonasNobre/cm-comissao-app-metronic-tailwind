@@ -6,6 +6,16 @@ import { environment } from '../../../environments/environment';
 import { LoginRequest, LoginResponse } from '../models/auth.model';
 import { EmpresaSelectorService, EmpresaInfo } from './empresa-selector.service';
 
+export interface SignupRequest {
+    nome: string;
+    sobrenome: string;
+    email: string;
+    telefone: string;
+    titulo: string;
+    mensagem: string;
+    arquivo?: File;
+}
+
 /**
  * Serviço de autenticação usando API Backend (JWT)
  */
@@ -32,7 +42,11 @@ export class AuthService {
         private router: Router,
         private empresaSelectorService: EmpresaSelectorService
     ) {
-        this.checkToken();
+        // Deferir a verificação do token para permitir que o construtor termine
+        // e evitar dependência circular (AuthService -> HttpClient -> Interceptor -> AuthService)
+        setTimeout(() => {
+            this.checkToken();
+        }, 0);
     }
 
     /**
@@ -55,6 +69,7 @@ export class AuthService {
             } else {
                 this.isAuthenticatedSubject.next(true);
                 this.updateCurrentUser(token);
+                this.updateEmpresaSelector(); // Fix: Load companies on startup
                 this.scheduleTokenRefresh(token); // Re-agendar timer!
             }
         }
@@ -232,7 +247,36 @@ export class AuthService {
      */
     private updateEmpresaSelector(): void {
         const empresas = this.getEmpresas();
-        this.empresaSelectorService.setUserEmpresas(empresas);
+
+        if (empresas.length > 0) {
+            this.empresaSelectorService.setUserEmpresas(empresas);
+        } else {
+            console.warn('Nenhuma empresa encontrada no token. Tentando buscar via API...');
+            // Usar endpoint /me/empresas que resolve o ExternalAuthId no backend
+            this.http.get<any[]>(`${environment.apiUrl}/v1/usuarios/me/empresas`)
+                .subscribe({
+                    next: (data) => {
+                        if (data && data.length > 0) {
+                            const empresasApi = data.map(e => ({
+                                id: e.id,
+                                nome: e.nome
+                            }));
+                            this.empresaSelectorService.setUserEmpresas(empresasApi);
+                        } else {
+                            console.warn('Usuário não possui empresas vinculadas na API.');
+                        }
+                    },
+                    error: (err) => console.error('Erro ao buscar empresas do usuário via API', err)
+                });
+        }
+    }
+
+    /**
+     * Obtém o ID do usuário a partir do token (sub)
+     */
+    getUserId(): string | null {
+        const claims = this.getUserInfo();
+        return claims ? claims.sub : null;
     }
 
     /**
@@ -346,4 +390,41 @@ export class AuthService {
                 })
             );
     }
+    /**
+     * Solicita a recuperação de senha
+     */
+    recoverPassword(email: string): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/recover-password`, { email });
+    }
+
+    /**
+     * Redefine a senha com o token
+     */
+    resetPassword(data: any): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/reset-password`, data);
+    }
+
+    /**
+     * Solicita cadastro de novo usuário
+     */
+    requestSignup(data: SignupRequest): Observable<any> {
+        const formData = new FormData();
+        formData.append('nome', data.nome);
+        formData.append('sobrenome', data.sobrenome);
+        formData.append('email', data.email);
+        formData.append('telefone', data.telefone);
+        formData.append('titulo', data.titulo);
+        formData.append('mensagem', data.mensagem);
+
+        if (data.arquivo) {
+            formData.append('arquivo', data.arquivo);
+        }
+
+        return this.http.post(`${environment.apiUrl}/authentication/signup-request`, formData);
+    }
+
+    validateRecoveryCode(email: string, code: string): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/validate-recovery-code`, { email, code });
+    }
 }
+

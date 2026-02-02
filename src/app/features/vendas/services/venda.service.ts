@@ -17,4 +17,8 @@ export class VendaService extends BaseService {
         const params = this.buildHttpParams(filtros);
         return this.http.get<PagedResult<VendaImportada>>(this.baseUrl, { params });
     }
+
+    getById(id: string): Observable<VendaImportada> {
+        return this.http.get<VendaImportada>(`${this.baseUrl}/${id}`);
+    }
 }

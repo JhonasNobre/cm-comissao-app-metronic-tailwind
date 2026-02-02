@@ -228,7 +228,15 @@ export class ComissoesListComponent implements OnInit {
     }
 
     loadPendentes() {
-        if (!this.filtrosPendentes.idEmpresa) return;
+        if (!this.filtrosPendentes.idEmpresa) {
+            console.warn('LoadPendentes abortado: idEmpresa indefinido. Aguardando seleção...');
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Atenção',
+                detail: 'Nenhuma empresa selecionada para carregar comissões.'
+            });
+            return;
+        }
 
         this.loading = true;
         this.comissaoService.getPendentes(this.filtrosPendentes).subscribe({
@@ -240,6 +248,7 @@ export class ComissoesListComponent implements OnInit {
             error: (err) => {
                 console.error(err);
                 this.loading = false;
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao buscar comissões' });
             }
         });
     }

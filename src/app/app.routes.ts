@@ -88,6 +88,7 @@ export const routes: Routes = [
         loadComponent: () => import('./features/imobtech-integration/pages/imobtech-diagnostic/imobtech-diagnostic.component').then(m => m.ImobtechDiagnosticComponent),
         data: { title: 'Laboratório Imobtech', description: 'Diagnóstico e teste dos serviços Imobtech', icon: 'pi pi-bolt', status: 200 }
       },
+      { path: 'legacy-test', loadComponent: () => import('./features/comissoes/legacy-test/legacy-test.component').then(m => m.LegacyTestComponent) },
       { path: 'error/404', loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent), data: { status: 404, title: ' Página não encontrada' } },
 
       { path: 'test', loadComponent: () => import('./features/testing/components/test-page/test-page.component').then(m => m.TestPageComponent) },
@@ -100,6 +101,18 @@ export const routes: Routes = [
   {
     path: 'auth/change-password',
     loadComponent: () => import('./features/auth/components/change-password/change-password.component').then(m => m.ChangePasswordComponent)
+  },
+  {
+    path: 'auth/recover-password',
+    loadComponent: () => import('./features/auth/components/recover-password/recover-password.component').then(m => m.RecoverPasswordComponent)
+  },
+  {
+    path: 'auth/reset-password',
+    loadComponent: () => import('./features/auth/components/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
+    path: 'auth/signup-request',
+    loadComponent: () => import('./features/auth/components/signup-request/signup-request.component').then(m => m.SignupRequestComponent)
   },
   { path: '**', redirectTo: 'error/404' }
 ];
