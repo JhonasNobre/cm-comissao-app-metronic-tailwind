@@ -89,6 +89,7 @@ export const routes: Routes = [
         data: { title: 'Laboratório Imobtech', description: 'Diagnóstico e teste dos serviços Imobtech', icon: 'pi pi-bolt', status: 200 }
       },
       { path: 'legacy-test', loadComponent: () => import('./features/comissoes/legacy-test/legacy-test.component').then(m => m.LegacyTestComponent) },
+      { path: 'legacy-sync', loadComponent: () => import('./features/legacy-sync/legacy-sync.component').then(m => m.LegacySyncComponent) },
       { path: 'error/404', loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent), data: { status: 404, title: ' Página não encontrada' } },
 
       { path: 'test', loadComponent: () => import('./features/testing/components/test-page/test-page.component').then(m => m.TestPageComponent) },
