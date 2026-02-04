@@ -9,11 +9,12 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Cancelamento -->
-        <div class="section-card">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
             <h3 class="font-bold mb-4 dark:text-gray-200">Cancelamento</h3>
 
             <div class="mb-4">
-                <label class="label-text">IDs Remessas (CSV)</label>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">IDs Remessas
+                    (CSV)</label>
                 <div class="p-inputgroup">
                     <input pInputText [(ngModel)]="idsRemessa" placeholder="Ex: 123, 456" />
                     <button type="button" pButton icon="pi pi-times" label="Cancelar Remessa" class="p-button-danger"
@@ -22,7 +23,8 @@
             </div>
 
             <div class="mb-4">
-                <label class="label-text">IDs Parcelas (CSV)</label>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">IDs Parcelas
+                    (CSV)</label>
                 <div class="p-inputgroup">
                     <input pInputText [(ngModel)]="idsParcela" placeholder="Ex: 10, 20" />
                     <button type="button" pButton icon="pi pi-times" label="Cancelar Parcela" class="p-button-danger"
@@ -32,11 +34,11 @@
         </div>
 
         <!-- Pix & Rateios -->
-        <div class="section-card">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
             <h3 class="font-bold mb-4 dark:text-gray-200">Consultas Rápidas</h3>
 
             <div class="mb-4">
-                <label class="label-text">CPF/CNPJ (Pix)</label>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">CPF/CNPJ (Pix)</label>
                 <div class="p-inputgroup">
                     <input pInputText [(ngModel)]="cpfPix" placeholder="000.000.000-00" />
                     <button type="button" pButton icon="pi pi-check" label="Validar Pix" class="p-button-success"
@@ -45,7 +47,8 @@
             </div>
 
             <div class="mb-4">
-                <label class="label-text">ID Parcela (Rateios)</label>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">ID Parcela
+                    (Rateios)</label>
                 <div class="p-inputgroup">
                     <p-inputNumber [(ngModel)]="idParcelaRateio" placeholder="ID Parcela" mode="decimal"
                         [useGrouping]="false" class="w-full"></p-inputNumber>
@@ -56,21 +59,24 @@
         </div>
 
         <!-- Renegociação -->
-        <div class="section-card col-span-2">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 col-span-2">
             <h3 class="font-bold mb-4 dark:text-gray-200">Renegociação</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="flex flex-col">
-                    <label class="label-text">ID Parcela Antiga</label>
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">ID Parcela
+                        Antiga</label>
                     <p-inputNumber [(ngModel)]="renegIdAntiga" mode="decimal" [useGrouping]="false"
                         styleClass="w-full"></p-inputNumber>
                 </div>
                 <div class="flex flex-col">
-                    <label class="label-text">ID Parcela Nova</label>
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">ID Parcela
+                        Nova</label>
                     <p-inputNumber [(ngModel)]="renegIdNova" mode="decimal" [useGrouping]="false"
                         styleClass="w-full"></p-inputNumber>
                 </div>
                 <div class="md:col-span-3">
-                    <label class="label-text">JSON Nova Parcela</label>
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">JSON Nova
+                        Parcela</label>
                     <textarea pInputTextarea [(ngModel)]="renegJson" [rows]="5"
                         style="width: 100%; font-family: monospace;"></textarea>
                     <div class="mt-2">

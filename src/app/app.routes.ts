@@ -93,6 +93,12 @@ export const routes: Routes = [
       { path: 'error/404', loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent), data: { status: 404, title: ' Página não encontrada' } },
 
       { path: 'test', loadComponent: () => import('./features/testing/components/test-page/test-page.component').then(m => m.TestPageComponent) },
+
+      // Bonificações
+      {
+        path: 'bonificacao',
+        loadChildren: () => import('./features/bonificacao/bonificacao.routes').then(m => m.BONIFICACAO_ROUTES)
+      },
     ],
   },
   {

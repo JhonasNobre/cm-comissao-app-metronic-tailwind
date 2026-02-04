@@ -1,0 +1,120 @@
+<div class="kt-container-fluid pt-5">
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between gap-5 pb-8">
+        <div class="flex flex-col gap-1">
+            <h1 class="text-xl font-bold text-gray-900">
+                Lançamento Manual de Bônus
+            </h1>
+            <p class="text-sm text-gray-500 font-medium">Configure as parcelas e o beneficiário para este lançamento
+                único.</p>
+        </div>
+        <div class="flex gap-3">
+            <button type="button"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                routerLink="/bonificacao">
+                Cancelar
+            </button>
+            <button type="button"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 flex items-center transition-colors"
+                (click)="onSubmit()" [disabled]="saving()">
+                <ng-container *ngIf="!saving()">Lançar Bônus</ng-container>
+                <ng-container *ngIf="saving()">
+                    <span
+                        class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                    Lançando...
+                </ng-container>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <form [formGroup]="form">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <!-- Section 1: Beneficiary & Source -->
+            <div class="p-8 border-b border-gray-50 bg-gray-50/30">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Beneficiário
+                            *</label>
+                        <p-select [options]="users()" formControlName="idUsuario" optionLabel="nome" optionValue="id"
+                            placeholder="Selecione o usuário..."
+                            styleClass="w-full border-0 border-b border-gray-200 rounded-none shadow-none px-0 bg-transparent"
+                            appendTo="body" filter="true"></p-select>
+                        <div *ngIf="form.get('idUsuario')?.invalid && form.get('idUsuario')?.touched"
+                            class="text-red-500 text-xs mt-1">
+                            Beneficiário é obrigatório.
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Origem do
+                            Pagamento *</label>
+                        <p-select [options]="origens" formControlName="idOrigem" placeholder="Selecione a origem..."
+                            styleClass="w-full border-0 border-b border-gray-200 rounded-none shadow-none px-0 bg-transparent"
+                            appendTo="body"></p-select>
+                        <div *ngIf="form.get('idOrigem')?.invalid && form.get('idOrigem')?.touched"
+                            class="text-red-500 text-xs mt-1">
+                            Origem do pagamento é obrigatória.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Values & Dates -->
+            <div class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Valor Total
+                            (R$) *</label>
+                        <p-inputNumber formControlName="valor" mode="currency" currency="BRL" locale="pt-BR"
+                            inputStyleClass="w-full px-0 py-2 border-0 border-b border-gray-200 text-lg font-bold text-gray-900 bg-transparent focus:ring-0 focus:border-blue-500"
+                            styleClass="w-full"></p-inputNumber>
+                        <div *ngIf="form.get('valor')?.invalid && form.get('valor')?.touched"
+                            class="text-red-500 text-xs mt-1">
+                            Valor mínimo é R$ 0,01.
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Data
+                            Competência *</label>
+                        <p-datepicker formControlName="dataCompetencia" dateFormat="dd/mm/yy" [showIcon]="true"
+                            inputStyleClass="w-full px-0 py-2 border-0 border-b border-gray-200 text-sm font-medium text-gray-900 bg-transparent shadow-none"
+                            styleClass="w-full" appendTo="body"></p-datepicker>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-medium text-blue-600 mb-1 uppercase tracking-wide font-bold">Data
+                            Primeiro Vencimento *</label>
+                        <p-datepicker formControlName="dataPrimeiroVencimento" dateFormat="dd/mm/yy" [showIcon]="true"
+                            inputStyleClass="w-full px-0 py-2 border-0 border-b border-blue-400 text-sm font-bold text-gray-900 bg-transparent shadow-none"
+                            styleClass="w-full" appendTo="body"></p-datepicker>
+                        <p class="text-[10px] text-gray-400 mt-2 italic leading-relaxed">As parcelas subsequentes serão
+                            mensais a partir desta data.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Quantidade
+                            de Parcelas *</label>
+                        <p-inputNumber formControlName="qtdParcelas" [min]="1" [max]="60" [showButtons]="true"
+                            inputStyleClass="w-full px-0 py-2 border-0 border-b border-gray-200 text-sm font-medium text-gray-900 bg-transparent focus:ring-0 focus:border-blue-500"
+                            styleClass="w-full"></p-inputNumber>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Descrição /
+                            Motivo *</label>
+                        <input type="text" formControlName="descricao"
+                            class="w-full px-0 py-2 border-0 border-b border-gray-200 text-sm font-medium text-gray-900 placeholder-gray-400 focus:ring-0 focus:border-blue-500 transition-colors bg-transparent"
+                            placeholder="Descreva o motivo deste bônus..." />
+                        <div *ngIf="form.get('descricao')?.invalid && form.get('descricao')?.touched"
+                            class="text-red-500 text-xs mt-1">
+                            Descrição é obrigatória.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<p-toast></p-toast>

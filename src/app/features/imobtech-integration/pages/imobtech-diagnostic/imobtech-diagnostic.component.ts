@@ -25,11 +25,7 @@ import { MessageService } from 'primeng/api';
         TextareaModule
     ],
     providers: [MessageService],
-    templateUrl: './imobtech-diagnostic.component.html',
-    styles: [`
-    .section-card { @apply bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6; }
-    .label-text { @apply text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1; }
-  `]
+    templateUrl: './imobtech-diagnostic.component.html'
 })
 export class ImobtechDiagnosticComponent implements OnInit {
     empresaId: string = '';
