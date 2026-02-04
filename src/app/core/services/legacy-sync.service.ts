@@ -16,13 +16,15 @@ export class LegacySyncService {
 
     constructor(private http: HttpClient) { }
 
-    sincronizarProdutos(codigoEmpresaLegado: number): Observable<SyncResult> {
-        const params = new HttpParams().set('codigoEmpresaLegado', codigoEmpresaLegado.toString());
-        return this.http.post<SyncResult>(`${this.apiUrl}/produtos`, {}, { params });
+    sincronizarProdutos(): Observable<SyncResult> {
+        return this.http.post<SyncResult>(`${this.apiUrl}/produtos`, {});
     }
 
-    sincronizarVendas(codigoEmpresaLegado: number): Observable<SyncResult> {
-        const params = new HttpParams().set('codigoEmpresaLegado', codigoEmpresaLegado.toString());
+    sincronizarVendas(inicio?: string, fim?: string): Observable<SyncResult> {
+        let params = new HttpParams();
+        if (inicio) params = params.set('inicio', inicio);
+        if (fim) params = params.set('fim', fim);
+
         return this.http.post<SyncResult>(`${this.apiUrl}/vendas`, {}, { params });
     }
 }

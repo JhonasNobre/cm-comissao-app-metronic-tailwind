@@ -1,0 +1,55 @@
+<div class="kt-container-fluid">
+    <div class="card card-custom gutter-b">
+        <div class="card-header border-0 py-5">
+            <h3 class="card-title text-2xl font-bold text-gray-800 dark:text-gray-100">
+                <span class="card-label font-weight-bolder">Vendas Importadas</span>
+                <small class="block text-sm text-gray-500 mt-1">Vendas importadas aguardando cálculo de comissão</small>
+            </h3>
+        </div>
+
+        <div class="card-body py-0">
+            <app-generic-p-table tableName="vendas-importadas" [tableData]="vendas" [columnDefinition]="columns"
+                [totalRecords]="totalRecords" [rows]="filtros.tamanhoPagina" [serverSidePagination]="true"
+                [displayCreateAction]="false" [displayDetailAction]="false" [displayEditAction]="false"
+                [displayDeleteAction]="false" (lazyLoad)="onLazyLoad($event)">
+
+                <ng-template #customActions let-venda>
+                    <button pButton pRipple label="Calcular" icon="pi pi-calculator"
+                        class="p-button-success p-button-sm" (click)="abrirGerar(venda)">
+                    </button>
+                </ng-template>
+
+            </app-generic-p-table>
+        </div>
+    </div>
+</div>
+
+<p-toast></p-toast>
+
+<!-- Dialog Gerar Comissão -->
+<p-dialog header="Gerar Comissão" [(visible)]="gerarVisible" [modal]="true" [style]="{width: '450px'}"
+    [draggable]="false" [resizable]="false">
+    <ng-template pTemplate="content">
+        <div class="flex flex-col gap-4 py-2" *ngIf="vendaSelecionada">
+            <div class="bg-gray-50 p-3 rounded border">
+                <p><strong>Cliente:</strong> {{ vendaSelecionada.nomeCliente }}</p>
+                <p><strong>Valor Base:</strong> {{ vendaSelecionada.valorTotalVenda | currency:'BRL' }}</p>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="required font-medium">Selecione a Estrutura de Comissão</label>
+                <p-select [options]="estruturas" [(ngModel)]="estruturaSelecionada" optionLabel="nome"
+                    placeholder="Selecione..." [filter]="true" filterBy="nome" styleClass="w-full" appendTo="body">
+                </p-select>
+                <small class="text-gray-500">A estrutura define as regras e percentuais de comissão.</small>
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <button pButton label="Cancelar" icon="pi pi-times" class="p-button-text"
+            (click)="gerarVisible = false"></button>
+        <button pButton label="Confirmar e Gerar" icon="pi pi-check" class="p-button-success"
+            (click)="confirmarGeracao()" [loading]="gerando" [disabled]="!estruturaSelecionada"></button>
+    </ng-template>
+</p-dialog>

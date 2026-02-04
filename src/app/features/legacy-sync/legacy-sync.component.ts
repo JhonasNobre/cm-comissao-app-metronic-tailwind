@@ -1,13 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LegacySyncService, SyncResult } from '../../core/services/legacy-sync.service';
+import { EmpresaSelectorService } from '../../core/services/empresa-selector.service';
 
 @Component({
-    selector: 'app-legacy-sync',
-    standalone: true,
-    imports: [CommonModule, FormsModule],
-    template: `
+  selector: 'app-legacy-sync',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
     <div class="p-6">
       <div class="flex items-center justify-between mb-8">
         <div>
@@ -19,21 +20,9 @@ import { LegacySyncService, SyncResult } from '../../core/services/legacy-sync.s
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Configurações -->
-        <div class="card p-5 bg-white shadow-sm border border-gray-100 lg:col-span-1">
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Empresa no Legado (INT)</label>
-          <div class="relative">
-            <i class="pi pi-id-card absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input type="number" 
-                   class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm" 
-                   [(ngModel)]="codigoEmpresaLegado">
-          </div>
-          <p class="mt-2 text-xs text-gray-400">Este ID é usado para identificar a empresa no banco legado.</p>
-        </div>
-
+      <div class="grid grid-cols-1 gap-6 mb-8">
         <!-- Ações de Sincronização -->
-        <div class="card p-5 bg-white shadow-sm border border-gray-100 lg:col-span-3">
+        <div class="card p-5 bg-white shadow-sm border border-gray-100">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             <button class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 transition-all group"
@@ -92,50 +81,49 @@ import { LegacySyncService, SyncResult } from '../../core/services/legacy-sync.s
   `
 })
 export class LegacySyncComponent {
-    codigoEmpresaLegado: number = 62;
-    loadingProducts: boolean = false;
-    loadingSales: boolean = false;
-    lastResult: SyncResult | null = null;
-    error: string | null = null;
+  loadingProducts: boolean = false;
+  loadingSales: boolean = false;
+  lastResult: SyncResult | null = null;
+  error: string | null = null;
 
-    constructor(private syncService: LegacySyncService) { }
+  constructor(private syncService: LegacySyncService) { }
 
-    get loading(): boolean {
-        return this.loadingProducts || this.loadingSales;
-    }
+  get loading(): boolean {
+    return this.loadingProducts || this.loadingSales;
+  }
 
-    sincronizarProdutos() {
-        this.resetState();
-        this.loadingProducts = true;
-        this.syncService.sincronizarProdutos(this.codigoEmpresaLegado).subscribe({
-            next: (res: SyncResult) => {
-                this.lastResult = res;
-                this.loadingProducts = false;
-            },
-            error: (err: any) => {
-                this.error = err.error?.message || err.message;
-                this.loadingProducts = false;
-            }
-        });
-    }
+  sincronizarProdutos() {
+    this.resetState();
+    this.loadingProducts = true;
+    this.syncService.sincronizarProdutos().subscribe({
+      next: (res: SyncResult) => {
+        this.lastResult = res;
+        this.loadingProducts = false;
+      },
+      error: (err: any) => {
+        this.error = err.error?.message || err.message;
+        this.loadingProducts = false;
+      }
+    });
+  }
 
-    sincronizarVendas() {
-        this.resetState();
-        this.loadingSales = true;
-        this.syncService.sincronizarVendas(this.codigoEmpresaLegado).subscribe({
-            next: (res: SyncResult) => {
-                this.lastResult = res;
-                this.loadingSales = false;
-            },
-            error: (err: any) => {
-                this.error = err.error?.message || err.message;
-                this.loadingSales = false;
-            }
-        });
-    }
+  sincronizarVendas() {
+    this.resetState();
+    this.loadingSales = true;
+    this.syncService.sincronizarVendas().subscribe({
+      next: (res: SyncResult) => {
+        this.lastResult = res;
+        this.loadingSales = false;
+      },
+      error: (err: any) => {
+        this.error = err.error?.message || err.message;
+        this.loadingSales = false;
+      }
+    });
+  }
 
-    private resetState() {
-        this.lastResult = null;
-        this.error = null;
-    }
+  private resetState() {
+    this.lastResult = null;
+    this.error = null;
+  }
 }

@@ -259,7 +259,8 @@ export class AuthService {
                         if (data && data.length > 0) {
                             const empresasApi = data.map(e => ({
                                 id: e.id,
-                                nome: e.nome
+                                nome: e.nome,
+                                codigoLegado: e.codigoLegado
                             }));
                             this.empresaSelectorService.setUserEmpresas(empresasApi);
                         } else {

@@ -47,15 +47,27 @@ export const routes: Routes = [
         path: 'comissoes/detalhes/:id',
         loadComponent: () => import('./features/comissoes/detalhes/comissao-detalhes.component').then(m => m.ComissaoDetalhesComponent)
       },
+      {
+        path: 'vendas/importadas',
+        loadComponent: () => import('./features/vendas/importadas-lista/vendas-importadas-lista.component').then(m => m.VendasImportadasListaComponent)
+      },
+      {
+        path: 'vendas/produtos',
+        loadComponent: () => import('./features/vendas/produtos-importados-lista/produtos-importados-lista.component').then(m => m.ProdutosImportadosListaComponent)
+      },
       // Nova rota de Vendas Pendentes
       {
         path: 'vendas/pendentes',
         loadComponent: () => import('./features/vendas/lista/vendas-lista.component').then(m => m.VendasListaComponent)
       },
+      {
+        path: 'vendas/pendentes/:id',
+        loadComponent: () => import('./features/vendas/detalhe/venda-pendencia-detalhe.component').then(m => m.VendaPendenciaDetalheComponent)
+      },
       // Compatibilidade com Menu Antigo (Redirecionamento)
       {
         path: 'comissoes/vendas',
-        redirectTo: 'vendas/pendentes',
+        redirectTo: 'vendas/importadas',
         pathMatch: 'full'
       },
 
