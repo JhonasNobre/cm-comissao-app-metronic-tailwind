@@ -55,6 +55,11 @@ export interface Comissao {
     dataPagamento?: Date;
     motivoRejeicao?: string;
     observacoes?: string;
+
+    // Novos Campos
+    valorComissaoRecebido?: number;
+    taxaComissaoRecebida?: number;
+
     itens?: ItemComissao[];
     parcelas?: ParcelaComissao[];
     documentos?: ComissaoDocumento[];

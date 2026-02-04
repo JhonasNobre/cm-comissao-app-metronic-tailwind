@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, map } from 'rxjs';
 export interface EmpresaInfo {
     id: string;
     nome: string;
+    codigoLegado?: number;
 }
 
 /**

@@ -203,10 +203,14 @@ export class ComissaoDetalhesComponent implements OnInit {
             equipe: 'Não informado',
             cliente: this.venda?.nomeCliente || 'Não informado',
             corretor: nomeCorretor,
-            cidade: 'Não informado',
+            cidade: this.detalhesDisplay.cidade || 'Não informado',
             valorVenda: this.comissao.valorVenda,
-            valorRecebido: 'Indisponível',
-            taxaRecebida: 'Indisponível'
+            valorRecebido: this.comissao.valorComissaoRecebido
+                ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(this.comissao.valorComissaoRecebido)
+                : 'R$ 0,00',
+            taxaRecebida: this.comissao.taxaComissaoRecebida
+                ? `${this.comissao.taxaComissaoRecebida}%`
+                : '0%'
         };
 
         if (this.comissao.parcelas) {

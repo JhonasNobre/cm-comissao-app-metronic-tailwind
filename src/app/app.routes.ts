@@ -47,15 +47,27 @@ export const routes: Routes = [
         path: 'comissoes/detalhes/:id',
         loadComponent: () => import('./features/comissoes/detalhes/comissao-detalhes.component').then(m => m.ComissaoDetalhesComponent)
       },
+      {
+        path: 'vendas/importadas',
+        loadComponent: () => import('./features/vendas/importadas-lista/vendas-importadas-lista.component').then(m => m.VendasImportadasListaComponent)
+      },
+      {
+        path: 'vendas/produtos',
+        loadComponent: () => import('./features/vendas/produtos-importados-lista/produtos-importados-lista.component').then(m => m.ProdutosImportadosListaComponent)
+      },
       // Nova rota de Vendas Pendentes
       {
         path: 'vendas/pendentes',
         loadComponent: () => import('./features/vendas/lista/vendas-lista.component').then(m => m.VendasListaComponent)
       },
+      {
+        path: 'vendas/pendentes/:id',
+        loadComponent: () => import('./features/vendas/detalhe/venda-pendencia-detalhe.component').then(m => m.VendaPendenciaDetalheComponent)
+      },
       // Compatibilidade com Menu Antigo (Redirecionamento)
       {
         path: 'comissoes/vendas',
-        redirectTo: 'vendas/pendentes',
+        redirectTo: 'vendas/importadas',
         pathMatch: 'full'
       },
 
@@ -89,9 +101,16 @@ export const routes: Routes = [
         data: { title: 'Laboratório Imobtech', description: 'Diagnóstico e teste dos serviços Imobtech', icon: 'pi pi-bolt', status: 200 }
       },
       { path: 'legacy-test', loadComponent: () => import('./features/comissoes/legacy-test/legacy-test.component').then(m => m.LegacyTestComponent) },
+      { path: 'legacy-sync', loadComponent: () => import('./features/legacy-sync/legacy-sync.component').then(m => m.LegacySyncComponent) },
       { path: 'error/404', loadComponent: () => import('./pages/general/status-page/status-page.component').then(m => m.StatusPageComponent), data: { status: 404, title: ' Página não encontrada' } },
 
       { path: 'test', loadComponent: () => import('./features/testing/components/test-page/test-page.component').then(m => m.TestPageComponent) },
+
+      // Bonificações
+      {
+        path: 'bonificacao',
+        loadChildren: () => import('./features/bonificacao/bonificacao.routes').then(m => m.BONIFICACAO_ROUTES)
+      },
     ],
   },
   {
