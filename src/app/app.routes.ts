@@ -126,6 +126,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/components/recover-password/recover-password.component').then(m => m.RecoverPasswordComponent)
   },
   {
+    path: 'auth/recover-password-sms',
+    loadComponent: () => import('./features/auth/components/recover-password-sms/recover-password-sms.component').then(m => m.RecoverPasswordSmsComponent)
+  },
+  {
     path: 'auth/reset-password',
     loadComponent: () => import('./features/auth/components/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
   },

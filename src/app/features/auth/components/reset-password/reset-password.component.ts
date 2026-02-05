@@ -61,7 +61,18 @@ export class ResetPasswordComponent implements OnInit {
         this.error = '';
         this.success = '';
 
-        this.authService.resetPassword(this.data).subscribe({
+        const isSms = this.route.snapshot.queryParams['type'] === 'sms';
+
+        const request = isSms
+            ? this.authService.resetPasswordSms({
+                identificador: this.data.email,
+                code: this.data.token,
+                newPassword: this.data.newPassword,
+                confirmPassword: this.data.confirmPassword
+            })
+            : this.authService.resetPassword(this.data);
+
+        request.subscribe({
             next: () => {
                 this.loading = false;
                 this.success = 'Senha redefinida com sucesso! Redirecionando para o login...';
@@ -73,7 +84,6 @@ export class ResetPasswordComponent implements OnInit {
                 console.error('Reset password error:', err);
                 this.loading = false;
                 if (err.error?.errors) {
-                    // Tentar extrair erro de validação
                     const firstError = Object.values(err.error.errors)[0] as string[];
                     this.error = firstError ? firstError[0] : 'Erro na validação dos dados.';
                 } else {

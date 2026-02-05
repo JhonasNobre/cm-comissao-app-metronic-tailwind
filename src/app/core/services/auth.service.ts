@@ -427,5 +427,26 @@ export class AuthService {
     validateRecoveryCode(email: string, code: string): Observable<any> {
         return this.http.post(`${environment.apiUrl}/authentication/validate-recovery-code`, { email, code });
     }
+
+    /**
+     * Solicita recuperação de senha via SMS
+     */
+    requestPasswordRecoverySms(identificador: string): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/recover-password-sms`, { identificador });
+    }
+
+    /**
+     * Valida o código recebido via SMS
+     */
+    validateSmsCode(identificador: string, code: string): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/validate-recovery-code-sms`, { identificador, code });
+    }
+
+    /**
+     * Redefine a senha usando o código SMS
+     */
+    resetPasswordSms(data: any): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/authentication/reset-password-sms`, data);
+    }
 }
 
