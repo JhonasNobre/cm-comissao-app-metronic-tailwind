@@ -100,6 +100,7 @@ export class AuthService {
      * Salva o token e atualiza o estado
      */
     private setSession(token: string, refreshToken?: string): void {
+        console.log('[AuthService] setSession: Gravando token e atualizando estado.');
         localStorage.setItem(this.TOKEN_KEY, token);
         if (refreshToken) {
             localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
@@ -247,28 +248,12 @@ export class AuthService {
      */
     private updateEmpresaSelector(): void {
         const empresas = this.getEmpresas();
+        console.log('[AuthService] updateEmpresaSelector: Empresas encontradas no token:', empresas.length, empresas);
 
         if (empresas.length > 0) {
             this.empresaSelectorService.setUserEmpresas(empresas);
         } else {
-            console.warn('Nenhuma empresa encontrada no token. Tentando buscar via API...');
-            // Usar endpoint /me/empresas que resolve o ExternalAuthId no backend
-            this.http.get<any[]>(`${environment.apiUrl}/v1/usuarios/me/empresas`)
-                .subscribe({
-                    next: (data) => {
-                        if (data && data.length > 0) {
-                            const empresasApi = data.map(e => ({
-                                id: e.id,
-                                nome: e.nome,
-                                codigoLegado: e.codigoLegado
-                            }));
-                            this.empresaSelectorService.setUserEmpresas(empresasApi);
-                        } else {
-                            console.warn('Usuário não possui empresas vinculadas na API.');
-                        }
-                    },
-                    error: (err) => console.error('Erro ao buscar empresas do usuário via API', err)
-                });
+            console.warn('[AuthService] Nenhuma empresa encontrada no token. O fallback da API no LoginComponent deve resolver...');
         }
     }
 

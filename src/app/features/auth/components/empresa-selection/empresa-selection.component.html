@@ -1,0 +1,157 @@
+<div class="min-h-screen w-full bg-cover bg-center bg-no-repeat flex flex-col"
+    style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);">
+
+    <!-- Header -->
+    <header class="w-full px-8 py-6 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <img src="assets/media/app/cmcomissao-icon.svg" alt="Logo" class="h-10 w-10"
+                onerror="this.style.display='none'">
+            <span class="text-2xl font-bold text-white">ClickMenos</span>
+        </div>
+        <button (click)="logout()"
+            class="text-white/80 hover:text-white text-sm font-medium flex items-center gap-2 transition-colors">
+            <i class="ki-filled ki-exit-right text-lg"></i>
+            Sair
+        </button>
+    </header>
+
+    <!-- Content -->
+    <main class="flex-1 flex flex-col items-center justify-center px-4 py-8">
+        <!-- Greetings (Common) -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-white mb-2">
+                Bem-vindo(a), {{ userName }}
+            </h1>
+            <p class="text-xl text-white/80">
+                {{ step === 'select-company' ? 'Selecione sua empresa' : 'Selecione a plataforma' }}
+            </p>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="loading" class="flex items-center justify-center py-20">
+            <div class="animate-spin h-12 w-12 border-4 border-white border-t-transparent rounded-full"></div>
+        </div>
+
+        <!-- STEP 1: Select Company -->
+        <ng-container *ngIf="!loading && step === 'select-company'">
+            <!-- Empty State -->
+            <div *ngIf="empresas.length === 0" class="bg-white/10 backdrop-blur-sm rounded-xl p-8 text-center max-w-md">
+                <i class="ki-filled ki-information-4 text-5xl text-white/60 mb-4"></i>
+                <h3 class="text-lg font-semibold text-white mb-2">Nenhuma empresa vinculada</h3>
+                <p class="text-white/70">Entre em contato com o administrador para vincular seu usuário a uma empresa.
+                </p>
+            </div>
+
+            <!-- Grid -->
+            <div *ngIf="empresas.length > 0"
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-6xl w-full">
+
+                <div *ngFor="let empresa of empresas" (click)="selectEmpresa(empresa)"
+                    [class.ring-4]="selectedEmpresaId === empresa.id"
+                    [class.ring-yellow-400]="selectedEmpresaId === empresa.id"
+                    [class.scale-105]="selectedEmpresaId === empresa.id" class="bg-white rounded-xl shadow-xl overflow-hidden cursor-pointer 
+                            transform transition-all duration-200 hover:scale-102 hover:shadow-2xl
+                            flex flex-col">
+
+                    <!-- Card Header -->
+                    <div class="bg-gray-50 px-4 py-3 border-b">
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            {{ empresa.codigoLegado ? 'Cód. ' + empresa.codigoLegado : 'Empresa' }}
+                        </span>
+                    </div>
+
+                    <!-- Logo -->
+                    <div class="flex-1 flex items-center justify-center p-6 min-h-[140px]">
+                        <img [src]="getLogoUrl(empresa.id)" [alt]="empresa.nome"
+                            class="max-h-24 max-w-full object-contain"
+                            onerror="this.src='assets/media/app/default-logo.svg'; this.onerror=null;">
+                    </div>
+
+                    <!-- Name -->
+                    <div class="px-4 py-4 bg-gray-50 border-t text-center">
+                        <h3 class="font-semibold text-gray-800 text-sm line-clamp-2">
+                            {{ empresa.nome }}
+                        </h3>
+                        <p *ngIf="empresa.dominioLegado" class="text-xs text-gray-400 mt-1 truncate">
+                            {{ empresa.dominioLegado }}
+                        </p>
+                    </div>
+
+                    <!-- Selection Indicator -->
+                    <div *ngIf="selectedEmpresaId === empresa.id" class="bg-yellow-400 py-2 text-center">
+                        <span class="text-sm font-bold text-yellow-900">
+                            <i class="ki-filled ki-check-circle me-1"></i>
+                            Selecionada
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Step 1 -->
+            <div *ngIf="empresas.length > 0" class="mt-10 flex gap-4">
+                <button (click)="logout()" class="px-8 py-3 rounded-lg border-2 border-white/30 text-white font-semibold
+                            hover:bg-white/10 transition-colors">
+                    Sair
+                </button>
+                <button (click)="proceedToPlatformSelection()" [disabled]="!selectedEmpresaId" class="px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold
+                            hover:bg-blue-700 transition-colors shadow-lg
+                            disabled:opacity-50 disabled:cursor-not-allowed">
+                    Próximo
+                </button>
+            </div>
+        </ng-container>
+
+        <!-- STEP 2: Select Platform -->
+        <ng-container *ngIf="!loading && step === 'select-platform'">
+            <div class="flex flex-col md:flex-row gap-8 max-w-4xl w-full justify-center">
+
+                <!-- Platform 1: Sales (Legacy) -->
+                <div (click)="selectPlatform('sales')" [class.ring-4]="selectedPlatform === 'sales'"
+                    [class.ring-blue-400]="selectedPlatform === 'sales'" class="bg-white rounded-xl shadow-xl p-8 cursor-pointer transform transition-all duration-200 
+                           hover:scale-105 flex-1 flex flex-col items-center justify-center text-center min-h-[250px]">
+
+                    <div class="bg-blue-100 p-6 rounded-full mb-6 text-blue-600">
+                        <i class="ki-filled ki-shop text-5xl"></i>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Plataforma de Vendas</h3>
+                    <p class="text-gray-500 text-sm">Acesse o sistema de gestão de vendas (Legado)</p>
+                </div>
+
+                <!-- Platform 2: Commission (New) -->
+                <div (click)="selectPlatform('commission')" [class.ring-4]="selectedPlatform === 'commission'"
+                    [class.ring-green-400]="selectedPlatform === 'commission'" class="bg-white rounded-xl shadow-xl p-8 cursor-pointer transform transition-all duration-200 
+                           hover:scale-105 flex-1 flex flex-col items-center justify-center text-center min-h-[250px]">
+
+                    <div class="bg-green-100 p-6 rounded-full mb-6 text-green-600">
+                        <i class="ki-filled ki-dollar text-5xl"></i>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Plataforma de Comissionamento</h3>
+                    <p class="text-gray-500 text-sm">Acesse o novo sistema de comissões e pagamentos</p>
+                </div>
+
+            </div>
+
+            <!-- Actions Step 2 -->
+            <div class="mt-10 flex gap-4">
+                <button (click)="backToCompanySelection()" class="px-8 py-3 rounded-lg border-2 border-white/30 text-white font-semibold
+                            hover:bg-white/10 transition-colors">
+                    Voltar
+                </button>
+                <button (click)="confirmPlatformSelection()" [disabled]="!selectedPlatform" class="px-8 py-3 rounded-lg bg-blue-600 text-white font-semibold
+                            hover:bg-blue-700 transition-colors shadow-lg
+                            disabled:opacity-50 disabled:cursor-not-allowed">
+                    Próximo
+                </button>
+            </div>
+        </ng-container>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-4 text-center">
+        <p class="text-white/50 text-sm">
+            &copy; 2025 ClickMenos. Todos os direitos reservados.
+        </p>
+    </footer>
+</div>

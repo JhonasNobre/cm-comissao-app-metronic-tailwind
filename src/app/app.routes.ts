@@ -137,5 +137,9 @@ export const routes: Routes = [
     path: 'auth/signup-request',
     loadComponent: () => import('./features/auth/components/signup-request/signup-request.component').then(m => m.SignupRequestComponent)
   },
+  {
+    path: 'auth/select-empresa',
+    loadComponent: () => import('./features/auth/components/empresa-selection/empresa-selection.component').then(m => m.EmpresaSelectionComponent)
+  },
   { path: '**', redirectTo: 'error/404' }
 ];

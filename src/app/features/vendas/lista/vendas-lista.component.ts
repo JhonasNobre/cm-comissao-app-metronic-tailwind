@@ -11,9 +11,8 @@ import { Router } from '@angular/router';
 import { PendenciaService } from '../services/pendencia.service';
 import { VendaPendencia } from '../models/pendencia.model';
 import { AuthService } from '../../../core/services/auth.service';
-import { GenericPTableComponent } from '../../../shared/components/ui/generic-p-table/generic-p-table.component';
 import { ColumnHeader } from '../../../shared/models/column-header.model';
-import { EmpresaSelectorService, EmpresaInfo } from '../../../core/services/empresa-selector.service';
+import { EmpresaSelectorService } from '../../../core/services/empresa-selector.service';
 
 @Component({
     selector: 'app-vendas-lista',
@@ -25,8 +24,7 @@ import { EmpresaSelectorService, EmpresaInfo } from '../../../core/services/empr
         ButtonModule,
         InputTextModule,
         TagModule,
-        ToastModule,
-        GenericPTableComponent
+        ToastModule
     ],
     providers: [MessageService],
     templateUrl: './vendas-lista.component.html'

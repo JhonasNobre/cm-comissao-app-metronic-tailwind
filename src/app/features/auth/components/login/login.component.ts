@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
-// Trigger rebuild
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../../core/services/auth.service';
+import { EmpresaSelectorService } from '../../../../core/services/empresa-selector.service';
 import { LoginRequest } from '../../../../core/models/auth.model';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
     selector: 'app-login',
@@ -14,6 +16,11 @@ import { LoginRequest } from '../../../../core/models/auth.model';
     host: { class: 'contents' }
 })
 export class LoginComponent {
+    private authService = inject(AuthService);
+    private empresaSelectorService = inject(EmpresaSelectorService);
+    private router = inject(Router);
+    private http = inject(HttpClient);
+
     credentials: LoginRequest = {
         username: '',
         password: ''
@@ -21,11 +28,6 @@ export class LoginComponent {
 
     loading = false;
     error = '';
-
-    constructor(
-        private authService: AuthService,
-        private router: Router
-    ) { }
 
     login() {
         if (!this.credentials.username || !this.credentials.password) {
@@ -38,7 +40,9 @@ export class LoginComponent {
 
         this.authService.login(this.credentials).subscribe({
             next: () => {
-                this.router.navigate(['/']);
+                console.log('[Login] Sucesso na autenticação. Iniciando verificação de empresas...');
+                // Após login, verificar quantidade de empresas
+                this.checkEmpresasAndRedirect();
             },
             error: (err) => {
                 console.error('Login error:', err);
@@ -56,6 +60,48 @@ export class LoginComponent {
                 } else {
                     this.error = 'Erro ao realizar login. Tente novamente.';
                 }
+            }
+        });
+    }
+
+    private checkEmpresasAndRedirect(): void {
+        console.log('[Login] Buscando empresas via API: ', `${environment.apiUrl}/v1/usuarios/me/empresas`);
+        // Buscar empresas do usuário via API
+        this.http.get<any[]>(`${environment.apiUrl}/v1/usuarios/me/empresas`).subscribe({
+            next: (empresas) => {
+                console.log('[Login] Empresas retornadas pela API:', empresas?.length || 0, empresas);
+
+                if (empresas && empresas.length > 1) {
+                    console.log('[Login] Múltiplas empresas detectadas. Redirecionando para seleção...');
+                    const empresasInfo = empresas.map(e => ({
+                        id: e.id,
+                        nome: e.nome,
+                        codigoLegado: e.codigoLegado,
+                        dominioLegado: e.dominioLegado,
+                        ambienteLegado: e.ambienteLegado
+                    }));
+                    this.empresaSelectorService.setUserEmpresas(empresasInfo);
+                    this.router.navigate(['/auth/select-empresa']);
+                } else if (empresas && empresas.length === 1) {
+                    console.log('[Login] Apenas uma empresa detectada. Selecionando automaticamente...');
+                    const empresa = empresas[0];
+                    this.empresaSelectorService.setUserEmpresas([{
+                        id: empresa.id,
+                        nome: empresa.nome,
+                        codigoLegado: empresa.codigoLegado,
+                        dominioLegado: empresa.dominioLegado,
+                        ambienteLegado: empresa.ambienteLegado
+                    }]);
+                    this.empresaSelectorService.setSelectedEmpresas([empresa.id]);
+                    this.router.navigate(['/']);
+                } else {
+                    console.warn('[Login] Nenhuma empresa vinculada. Seguindo para dashboard...');
+                    this.router.navigate(['/']);
+                }
+            },
+            error: (err) => {
+                console.error('[Login] Erro ao buscar empresas via API:', err);
+                this.router.navigate(['/']);
             }
         });
     }

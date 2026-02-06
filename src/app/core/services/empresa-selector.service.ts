@@ -5,6 +5,8 @@ export interface EmpresaInfo {
     id: string;
     nome: string;
     codigoLegado?: number;
+    dominioLegado?: string;
+    ambienteLegado?: string;
 }
 
 /**
@@ -30,25 +32,22 @@ export class EmpresaSelectorService {
 
     /**
      * Define as empresas do usuário logado (chamado pelo AuthService após login)
+     * Quando há apenas 1 empresa, auto-seleciona.
+     * Quando há múltiplas, NÃO auto-seleciona - o usuário deve escolher na tela de seleção.
      */
     setUserEmpresas(empresas: EmpresaInfo[]): void {
+        console.log('[EmpresaSelectorService] setUserEmpresas: Definindo lista de empresas:', empresas.length, empresas);
         this.userEmpresasSubject.next(empresas);
 
-        // Auto-seleciona se o usuário tem apenas 1 empresa
+        // Auto-seleciona SOMENTE se o usuário tem apenas 1 empresa
         if (empresas.length === 1) {
+            console.log('[EmpresaSelectorService] Auto-selecionando empresa única:', empresas[0].id);
             this.setSelectedEmpresas([empresas[0].id]);
-        } else if (empresas.length > 0) {
-            // Se tem mais de 1, verifica se já tinha seleção salva
-            const savedIds = this.getFromStorage();
-            const validIds = savedIds.filter(id => empresas.some(e => e.id === id));
-
-            if (validIds.length > 0) {
-                this.setSelectedEmpresas(validIds);
-            } else {
-                // Se não tinha seleção válida, seleciona a primeira
-                this.setSelectedEmpresas([empresas[0].id]);
-            }
+        } else {
+            console.log('[EmpresaSelectorService] Múltiplas empresas ou lista vazia. Não auto-selecionando.');
         }
+        // Para múltiplas empresas, NÃO auto-seleciona.
+        // A seleção será feita explicitamente na tela de seleção via setSelectedEmpresas().
     }
 
     /**
