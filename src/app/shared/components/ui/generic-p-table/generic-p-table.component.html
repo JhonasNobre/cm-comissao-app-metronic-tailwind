@@ -150,7 +150,8 @@
             </ng-template>
         </p-table>
 
-        <app-no-records-found [length]="tableData.length || 0" [hasBtnCreate]="displayCreateAction && hasBtnCreate"
+        <app-no-records-found [length]="tableData.length || 0" [label]="'Nenhum registro encontrado'"
+            [btnLabel]="titleBtnCreate" [hasBtnCreate]="displayCreateAction && hasBtnCreate"
             (onClick)="onAdd()"></app-no-records-found>
     </div>
 </div>

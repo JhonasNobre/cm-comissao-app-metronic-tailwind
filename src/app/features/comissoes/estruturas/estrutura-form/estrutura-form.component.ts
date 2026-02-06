@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -17,32 +17,33 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { CheckboxModule } from 'primeng/checkbox';
-import { EstruturaComissaoService } from '../../services/estrutura-comissao.service';
-import { CreateEstruturaComissaoRequest, UpdateEstruturaComissaoRequest, CreateEstruturaComissaoNivelRequest, EstruturaComissaoMembro, CreateEstruturaComissaoMembroRequest } from '../../models/estrutura-comissao.model';
+import { OrigemPagamentoService } from '../../../bonificacao/origem-pagamento/services/origem-pagamento.service';
 import {
     TipoComissao, TipoComissaoLabels,
     TipoRateio, TipoRateioLabels,
     RegraLiberacao, RegraLiberacaoLabels,
-    TipoValor, TipoValorLabels
+    TipoValor, TipoValorLabels,
+    TipoBonificacao, TipoBonificacaoLabels, // SCRUM-180
+    StatusComissao
 } from '../../models/enums';
+import { EstruturaComissaoMembro, CreateEstruturaComissaoNivelRequest, CreateEstruturaComissaoRequest, UpdateEstruturaComissaoRequest } from '../../models/estrutura-comissao.model';
+import { TeamService } from '../../../../features/teams/services/team.service';
+import { EstruturaComissaoService } from '../../services/estrutura-comissao.service';
+import { UserService } from '../../../../features/users/services/user.service';
+import { UserListDTO } from '../../../../features/users/models/user.model';
+import { TeamListDTO } from '../../../../features/teams/models/team.model';
 import { EmpresaSelectorService } from '../../../../core/services/empresa-selector.service';
-import { AuthService } from '../../../../core/services/auth.service';
-import { CompanyService } from '../../../companies/services/company.service';
-import { Company } from '../../../companies/models/company.model';
-import { UserService } from '../../../users/services/user.service';
-import { TeamService } from '../../../teams/services/team.service';
-import { UserListDTO } from '../../../users/models/user.model';
-import { TeamListDTO } from '../../../teams/models/team.model';
-import { OrgNode, countSubordinates } from '../models/org-node.model';
 import { HierarchyTreeComponent } from '../components/hierarchy-tree/hierarchy-tree.component';
+
+import { OrgNode } from '../models/org-node.model';
 
 @Component({
     selector: 'app-estrutura-form',
     standalone: true,
     imports: [
         CommonModule,
-        ReactiveFormsModule,
         FormsModule,
+        ReactiveFormsModule,
         ToastModule,
         ButtonModule,
         InputTextModule,
@@ -59,80 +60,77 @@ import { HierarchyTreeComponent } from '../components/hierarchy-tree/hierarchy-t
         CheckboxModule,
         HierarchyTreeComponent
     ],
-    providers: [MessageService],
     templateUrl: './estrutura-form.component.html',
-    styleUrl: './estrutura-form.component.scss'
+    providers: [MessageService]
 })
 export class EstruturaFormComponent implements OnInit {
     private fb = inject(FormBuilder);
-    private estruturaService = inject(EstruturaComissaoService);
+    private messageService = inject(MessageService);
     private route = inject(ActivatedRoute);
-    private router = inject(Router);
-    public messageService = inject(MessageService);
-    private empresaSelectorService = inject(EmpresaSelectorService);
-    private companyService = inject(CompanyService);
-    private authService = inject(AuthService);
-    private userService = inject(UserService);
+    public router = inject(Router);
     private teamService = inject(TeamService);
+    private origemPagamentoService = inject(OrigemPagamentoService); // SCRUM-180
+    private estruturaService = inject(EstruturaComissaoService);
+    private userService = inject(UserService);
+    private empresaSelectorService = inject(EmpresaSelectorService);
 
-    saving = signal(false);
-    loading = signal(false);
-    form!: FormGroup;
-    isEditMode = signal(false);
+    // State
     estruturaId: string | null = null;
-    versaoAtual: number = 0;
+    isEditMode: WritableSignal<boolean> = signal(false);
+    loading = signal(false);
+    saving = signal(false);
+    versaoAtual: number = 1;
+
+    // Forms
+    form!: FormGroup;
+    levelForm!: FormGroup;
 
     // Tree Data
     treeData: TreeNode[] = [];
-    selectedNode: TreeNode | null = null;
-    orgData: OrgNode[] = []; // Data for the visual tree (supports multiple roots)
+    orgData: OrgNode[] = [];
 
-    // Dialogs
-    levelDialogVisible = false;
-    bulkMemberDialogVisible = false;
+    // Auxiliary UI State
+    showMemberSearch: boolean = false;
+    displayLevelDialog: boolean = false;
+    displayBulkMemberDialog: boolean = false;
+    bulkMemberSearch: string = '';
 
-    // Level Dialog Logic
-    displayLevelDialog = false;
-    levelForm!: FormGroup;
-    editingNode: TreeNode | null = null;
-    parentForNewNode: TreeNode | null = null;
-
-    // Bulk Member Assignment Dialog (simplified - no level selection)
-    displayBulkMemberDialog = false;
-    bulkMemberSearch = '';
-    allUsersForBulk: UserListDTO[] = [];
-    allTeamsForBulk: TeamListDTO[] = [];
-    filteredMembersForBulk: (UserListDTO | TeamListDTO)[] = [];
-    selectedMembersForBulk: (UserListDTO | TeamListDTO)[] = [];
-    selectedBulkMemberType: 'usuario' | 'equipe' = 'usuario';
-
-    // Member search in level dialog
-    showMemberSearch = false;
-
-    // Member Selection Logic
-    memberTypeOptions = [
-        { label: 'Usuário', value: 'usuario' },
-        { label: 'Equipe', value: 'equipe' }
-    ];
-    selectedMemberType = 'usuario';
+    // Member Selection State
+    selectedMemberType: string = 'usuario'; // 'usuario' | 'equipe'
+    selectedBulkMemberType: string = 'usuario';
     filteredUsers: UserListDTO[] = [];
     filteredTeams: TeamListDTO[] = [];
-    selectedMemberToAdd: any = null;
-    currentLevelMembers: EstruturaComissaoMembro[] = [];
+    allUsersForBulk: UserListDTO[] = [];
+    allTeamsForBulk: TeamListDTO[] = [];
+    filteredMembersForBulk: any[] = [];
+    selectedMembersForBulk: any[] = [];
 
-    // Enums para uso no template
+    // Node Editing State
+    editingNode: TreeNode | null = null;
+    parentForNewNode: TreeNode | null = null;
+    currentLevelMembers: any[] = [];
+    selectedMemberToAdd: any;
+
+
+    // Enums for template access
     TipoComissao = TipoComissao;
     TipoRateio = TipoRateio;
     RegraLiberacao = RegraLiberacao;
     TipoValor = TipoValor;
+    TipoBonificacao = TipoBonificacao;
 
-    // Options para dropdowns
+    // Options
     tipoComissaoOptions = Object.entries(TipoComissaoLabels).map(([value, label]) => ({
         label,
         value: Number(value)
     }));
 
-    tipoRateioOptions = Object.entries(TipoRateioLabels).map(([value, label]) => ({
+    tipoBonificacaoOptions = Object.entries(TipoBonificacaoLabels).map(([value, label]) => ({
+        label,
+        value: Number(value)
+    })); // SCRUM-180
+
+    tipoValorOptions = Object.entries(TipoValorLabels).map(([value, label]) => ({
         label,
         value: Number(value)
     }));
@@ -142,103 +140,30 @@ export class EstruturaFormComponent implements OnInit {
         value: Number(value)
     }));
 
-    tipoValorOptions = Object.entries(TipoValorLabels).map(([value, label]) => ({
-        label,
-        value: Number(value)
-    }));
+    // Origens de Pagamento
+    origensPagamento: { label: string; value: string }[] = [];
 
-    // Empresas
-    empresas: { label: string; value: string }[] = [];
-
-    // Get total UNIQUE members count across all levels
     getTotalMembersCount(): number {
-        const seenIds = new Set<string>();
-
-        const collectUnique = (node: TreeNode) => {
-            if (node.data?.membros) {
-                node.data.membros.forEach((m: CreateEstruturaComissaoMembroRequest) => {
-                    const id = m.usuarioId || m.equipeId || m.nome;
-                    if (id) seenIds.add(id);
-                });
-            }
-            node.children?.forEach(collectUnique);
-        };
-
-        this.treeData.forEach(collectUnique);
-        return seenIds.size;
-    }
-
-    // Get all members preview (first 5, unique by usuarioId/equipeId)
-    getAllMembersPreview(): CreateEstruturaComissaoMembroRequest[] {
-        const allMembers: CreateEstruturaComissaoMembroRequest[] = [];
-        const seenIds = new Set<string>();
-
-        const collectMembers = (node: TreeNode) => {
-            if (node.data?.membros) {
-                node.data.membros.forEach((m: CreateEstruturaComissaoMembroRequest) => {
-                    const id = m.usuarioId || m.equipeId || m.nome;
-                    if (id && !seenIds.has(id)) {
-                        seenIds.add(id);
-                        allMembers.push(m);
-                    }
-                });
-            }
-            node.children?.forEach(collectMembers);
-        };
-        this.treeData.forEach(collectMembers);
-        return allMembers.slice(0, 5);
-    }
-
-    // Count all levels including children
-    countAllLevels(): number {
-        let count = 0;
-        const countRecursive = (node: TreeNode) => {
-            count++;
-            node.children?.forEach(countRecursive);
-        };
-        this.treeData.forEach(countRecursive);
-        return count;
-    }
-
-    // Get label for Tipo de Comissão
-    getTipoComissaoLabel(): string {
-        const value = this.form?.get('tipoComissao')?.value;
-        const option = this.tipoComissaoOptions.find(o => o.value === value);
-        return option?.label || '-';
-    }
-
-    // Get label for Tipo de Rateio
-    getTipoRateioLabel(): string {
-        const value = this.form?.get('tipoRateio')?.value;
-        const option = this.tipoRateioOptions.find(o => o.value === value);
-        return option?.label || '-';
-    }
-
-    // Get all assigned member IDs to filter them out
-    private getAssignedMemberIds(): { userIds: string[], teamIds: string[] } {
-        const userIds: string[] = [];
-        const teamIds: string[] = [];
-
-        const collectFromNode = (node: TreeNode) => {
-            if (node.data?.membros) {
-                node.data.membros.forEach((m: CreateEstruturaComissaoMembroRequest) => {
-                    if (m.usuarioId) userIds.push(m.usuarioId);
-                    if (m.equipeId) teamIds.push(m.equipeId);
-                });
-            }
-            if (node.children) {
-                node.children.forEach(collectFromNode);
-            }
-        };
-
-        this.treeData.forEach(collectFromNode);
-        return { userIds, teamIds };
+        // Implementação básica se necessário
+        return 0;
     }
 
     ngOnInit() {
         this.initForm();
         this.initLevelForm();
         this.loadEmpresas();
+
+        // Subscribe to empresa changes to load Payment Origins
+        this.form.get('idEmpresa')?.valueChanges.subscribe(id => {
+            if (id) this.loadOrigensPagamento(id);
+        });
+
+        // Carregar origens imediatamente se empresa já definida
+        const empresaId = this.form.get('idEmpresa')?.value;
+        console.log('[DEBUG] OnInit EmpresaId:', empresaId);
+        if (empresaId) {
+            this.loadOrigensPagamento(empresaId);
+        }
 
         this.route.paramMap.subscribe(params => {
             const id = params.get('id');
@@ -252,6 +177,17 @@ export class EstruturaFormComponent implements OnInit {
         });
 
         this.loadForm();
+    }
+
+    loadOrigensPagamento(idEmpresa: string) {
+        console.log('[DEBUG] loading origens for:', idEmpresa);
+        this.origemPagamentoService.getAll(idEmpresa, true).subscribe(origens => {
+            console.log('[DEBUG] origens result:', origens);
+            this.origensPagamento = origens.map(o => ({
+                label: o.nome,
+                value: o.id
+            }));
+        });
     }
 
     initializeTree() {
@@ -278,11 +214,75 @@ export class EstruturaFormComponent implements OnInit {
 
     loadForm() {
         if (this.isEditMode()) {
-            this.form.patchValue({
-                // ... patch values if needed, usually handled in loadEstrutura
-            });
+            // Logic handled in loadEstrutura
         }
     }
+
+    private initLevelForm() {
+        this.levelForm = this.fb.group({
+            nomeNivel: ['', [Validators.required, Validators.maxLength(50)]],
+            prioridade: [1, [Validators.required, Validators.min(1)]],
+            tipoValor: [TipoValor.Percentual, [Validators.required]],
+            percentual: [null, [Validators.min(0), Validators.max(100)]],
+            valorFixo: [null, [Validators.min(0)]],
+            tipoComissao: [null, [Validators.required]],
+            regraLiberacao: [null, [Validators.required]],
+            prioridadePagamento: [null],
+            parentId: [null],
+            // Campos de Bônus (SCRUM-180)
+            tipoBonificacao: [null],
+            origemPagamentoId: [null],
+            metaVendasMinima: [null],
+            parcelaInicialLiberacao: [null]
+        });
+
+        // Watch TipoComissao changes to handle validation
+        this.levelForm.get('tipoComissao')?.valueChanges.subscribe(val => {
+            const tipoBonificacaoControl = this.levelForm.get('tipoBonificacao');
+            const origemControl = this.levelForm.get('origemPagamentoId');
+
+            if (val >= TipoComissao.BonusPorPercentual) {
+                // tipoBonificacao não é mais necessário
+                origemControl?.setValidators([Validators.required]);
+            } else {
+                tipoBonificacaoControl?.clearValidators();
+                origemControl?.clearValidators();
+            }
+            tipoBonificacaoControl?.updateValueAndValidity();
+            origemControl?.updateValueAndValidity();
+        });
+    }
+
+    onAddSubordinatesFromTree(node: OrgNode) {
+        const treeNode = this.findTreeNodeById(this.treeData, node.id);
+        if (treeNode) {
+            this.parentForNewNode = treeNode;
+            this.currentLevelMembers = [];
+            this.showMemberSearch = false;
+            this.initLevelForm();
+            this.displayLevelDialog = true;
+        }
+    }
+
+    onRemoveFromTree(node: OrgNode) {
+        const treeNode = this.findTreeNodeById(this.treeData, node.id);
+        if (treeNode) {
+            this.deleteLevel(treeNode);
+            this.updateOrgTreeData();
+        }
+    }
+
+    private findTreeNodeById(nodes: TreeNode[], id: string): TreeNode | null {
+        for (const node of nodes) {
+            if (node.key === id || node.data?.id === id) return node;
+            if (node.children) {
+                const found = this.findTreeNodeById(node.children, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
 
     private initForm() {
         this.form = this.fb.group({
@@ -300,19 +300,7 @@ export class EstruturaFormComponent implements OnInit {
         });
     }
 
-    private initLevelForm() {
-        this.levelForm = this.fb.group({
-            nomeNivel: ['', [Validators.required, Validators.maxLength(50)]],
-            prioridade: [1, [Validators.required, Validators.min(1)]], // Nº de Parcelas
-            tipoValor: [TipoValor.Percentual, [Validators.required]],
-            percentual: [null, [Validators.min(0), Validators.max(100)]],
-            valorFixo: [null, [Validators.min(0)]],
-            tipoComissao: [null], // Visual alignment
-            regraLiberacao: [null], // Visual alignment
-            prioridadePagamento: [null], // Visual alignment
-            parentId: [null] // Hidden field to track parent
-        });
-    }
+
 
     private loadEmpresas() {
         // Pega a empresa do contexto logado automaticamente
@@ -437,7 +425,7 @@ export class EstruturaFormComponent implements OnInit {
                 data: { ...lvl, membros: lvl.membros || [] },
                 expanded: true,
                 children: [],
-                type: (lvl.tipoComissao === TipoComissao.Bonus || lvl.tipoComissao === 4 || lvl.tipoComissao === 'Bonus') ? 'bonus' : 'person'
+                type: (lvl.tipoComissao >= TipoComissao.BonusPorPercentual || lvl.tipoComissao >= 4) ? 'bonus' : 'person'
             });
         });
 
@@ -477,9 +465,8 @@ export class EstruturaFormComponent implements OnInit {
         const membros = node.data?.membros || [];
         // Check both node.type AND data.tipoComissao for bonus detection
         const isBonus = node.type === 'bonus' ||
-            node.data?.tipoComissao === TipoComissao.Bonus ||
-            node.data?.tipoComissao === 4 ||
-            node.data?.tipoComissao === 'Bonus';
+            node.data?.tipoComissao >= TipoComissao.BonusPorPercentual ||
+            node.data?.tipoComissao >= 4;
         const levelName = node.label || 'Sem nome';
         const role = isBonus ? 'Bônus' : levelName;
 
@@ -548,35 +535,6 @@ export class EstruturaFormComponent implements OnInit {
             const childMembros = child.data?.membros?.length || 0;
             return acc + childMembros + this.countChildrenMembers(child);
         }, 0);
-    }
-
-    // Handler for adding subordinates from the visual tree
-    onAddSubordinatesFromTree(node: OrgNode): void {
-        // Find the corresponding TreeNode
-        const treeNode = this.findTreeNodeById(this.treeData, node.id);
-        if (treeNode) {
-            this.openBulkMemberDialog(treeNode);
-        }
-    }
-
-    // Handler for removing a node from the visual tree
-    onRemoveFromTree(node: OrgNode): void {
-        const treeNode = this.findTreeNodeById(this.treeData, node.id);
-        if (treeNode) {
-            this.deleteLevel(treeNode);
-            this.updateOrgTreeData();
-        }
-    }
-
-    private findTreeNodeById(nodes: TreeNode[], id: string): TreeNode | null {
-        for (const node of nodes) {
-            if (node.key === id) return node;
-            if (node.children) {
-                const found = this.findTreeNodeById(node.children, id);
-                if (found) return found;
-            }
-        }
-        return null;
     }
 
     private generateGuid(): string {
@@ -814,7 +772,7 @@ export class EstruturaFormComponent implements OnInit {
 
         const value = this.levelForm.value;
         const finalMembers = [...this.currentLevelMembers];
-        const isBonus = value.tipoComissao === TipoComissao.Bonus || value.tipoComissao === 4 || value.tipoComissao === 'Bonus';
+        const isBonus = value.tipoComissao >= TipoComissao.BonusPorPercentual || value.tipoComissao >= 4;
 
         if (this.editingNode) {
             this.editingNode.data = { ...this.editingNode.data, ...value, membros: finalMembers };
@@ -936,6 +894,14 @@ export class EstruturaFormComponent implements OnInit {
                 tipoValor: data.tipoValor || TipoValor.Percentual,
                 percentual: data.percentual,
                 valorFixo: data.valorFixo,
+                // SCRUM-180
+                tipoComissao: Number(data.tipoComissao),
+                regraLiberacao: Number(data.regraLiberacao),
+                prioridadePagamento: data.prioridadePagamento || 2,
+                tipoBonificacao: Number(data.tipoBonificacao),
+                origemPagamentoId: data.origemPagamentoId,
+                metaVendasMinima: data.metaVendasMinima,
+                parcelaInicialLiberacao: data.parcelaInicialLiberacao,
                 parentId: data.parentId,
                 membros: data.membros ? data.membros.map((m: any) => ({
                     id: m.id,

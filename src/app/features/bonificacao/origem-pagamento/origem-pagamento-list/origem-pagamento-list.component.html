@@ -1,0 +1,18 @@
+<div class="card">
+    <app-generic-p-table tableName="origens-pagamento" [tableData]="origens" [columnDefinition]="columns"
+        [totalRecords]="totalRecords" [rows]="filtros.tamanhoPagina" [serverSidePagination]="false"
+        [hasBtnCreate]="true" [displayCreateAction]="true" [displayEditAction]="true" [displayDeleteAction]="true"
+        titleBtnCreate="Nova Origem" (add)="onAdd()" (edit)="onEdit($event)" (delete)="onDelete($event)">
+    </app-generic-p-table>
+
+    <!-- Dialog Formulário -->
+    <p-dialog [header]="isEditing ? 'Editar Origem' : 'Nova Origem'" [(visible)]="displayForm" [modal]="true"
+        [style]="{width: '600px'}" [draggable]="false" [resizable]="false" (onHide)="onFormHide()">
+
+        <app-origem-pagamento-form *ngIf="displayForm" [origem]="selectedOrigem" [idEmpresa]="filtros.idEmpresa"
+            (save)="onSave($event)" (cancel)="onCancel()">
+        </app-origem-pagamento-form>
+    </p-dialog>
+
+    <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+</div>

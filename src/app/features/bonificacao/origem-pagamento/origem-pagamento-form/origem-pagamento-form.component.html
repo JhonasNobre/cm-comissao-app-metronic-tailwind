@@ -1,0 +1,40 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-6 pt-2">
+    <!-- Nome -->
+    <div class="flex flex-col gap-2">
+        <label for="nome" class="text-sm font-semibold text-gray-700">Nome <span class="text-red-500">*</span></label>
+        <input type="text" pInputText id="nome" formControlName="nome" class="w-full"
+            placeholder="Ex: Fundo Próprio, Empresa Filial..."
+            [ngClass]="{'border-red-500': form.get('nome')?.invalid && form.get('nome')?.touched}" />
+        <small *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched" class="text-red-500 text-xs">
+            O nome é obrigatório e deve ter no máximo 255 caracteres.
+        </small>
+    </div>
+
+    <!-- Descrição -->
+    <div class="flex flex-col gap-2">
+        <label for="descricao" class="text-sm font-semibold text-gray-700">Descrição</label>
+        <textarea pInputTextarea id="descricao" formControlName="descricao" rows="3" class="w-full"
+            placeholder="Detalhes opcionais sobre esta origem..."></textarea>
+    </div>
+
+    <!-- Padrão -->
+    <div class="flex items-center gap-2">
+        <p-checkbox formControlName="isDefault" [binary]="true" inputId="isDefault"></p-checkbox>
+        <label for="isDefault" class="text-sm font-medium text-gray-700 cursor-pointer select-none">
+            Definir como origem padrão para esta empresa
+        </label>
+    </div>
+
+    <!-- Ações -->
+    <div class="flex justify-end gap-3 pt-5 mt-4 border-t border-gray-200">
+        <button type="button" class="kt-btn kt-btn-light" (click)="onCancel()">
+            Cancelar
+        </button>
+        <button type="submit" class="kt-btn kt-btn-primary" [disabled]="form.invalid || saving">
+            <i *ngIf="!saving" class="ki-filled ki-check"></i>
+            <span *ngIf="saving"
+                class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+            Salvar Origem
+        </button>
+    </div>
+</form>

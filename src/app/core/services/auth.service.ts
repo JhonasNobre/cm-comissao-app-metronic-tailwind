@@ -83,7 +83,9 @@ export class AuthService {
             .pipe(
                 tap(response => {
                     if (response && response.access_token) {
-                        this.setSession(response.access_token, response.refresh_token);
+                        // Durante o login, suprimimos a auto-seleção do EmpresaSelectorService
+                        // para que o LoginComponent possa decidir após consultar a API completa.
+                        this.setSession(response.access_token, response.refresh_token, true);
                     }
                 })
             );
@@ -98,16 +100,19 @@ export class AuthService {
 
     /**
      * Salva o token e atualiza o estado
+     * @param token JWT
+     * @param refreshToken Refresh Token opcional
+     * @param suppressAutoSelect Se true, não auto-seleciona empresa no EmpresaSelectorService (usado no login)
      */
-    private setSession(token: string, refreshToken?: string): void {
-        console.log('[AuthService] setSession: Gravando token e atualizando estado.');
+    private setSession(token: string, refreshToken?: string, suppressAutoSelect = false): void {
+        console.log('[AuthService] setSession: Gravando token e atualizando estado. Auto-seleção suprimida:', suppressAutoSelect);
         localStorage.setItem(this.TOKEN_KEY, token);
         if (refreshToken) {
             localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
         }
         this.isAuthenticatedSubject.next(true);
         this.updateCurrentUser(token);
-        this.updateEmpresaSelector();
+        this.updateEmpresaSelector(suppressAutoSelect);
         this.scheduleTokenRefresh(token);
     }
 
@@ -244,14 +249,22 @@ export class AuthService {
     }
 
     /**
-     * Atualiza o EmpresaSelectorService com as empresas do usuário
+     * Atualiza o EmpresaSelectorService com as empresas do usuário encontradas no token
+     * @param suppressAutoSelect Se true, define as empresas mas NÃO dispara a lógica de auto-seleção
      */
-    private updateEmpresaSelector(): void {
+    private updateEmpresaSelector(suppressAutoSelect = false): void {
         const empresas = this.getEmpresas();
         console.log('[AuthService] updateEmpresaSelector: Empresas encontradas no token:', empresas.length, empresas);
 
         if (empresas.length > 0) {
-            this.empresaSelectorService.setUserEmpresas(empresas);
+            if (suppressAutoSelect) {
+                console.log('[AuthService] Suprimindo auto-seleção (Login Flow). Apenas populando lista.');
+                // Se o seletor tiver um método para apenas popular, usaríamos ele. 
+                // Por enquanto, passamos a lista para o seletor.
+                this.empresaSelectorService.setUserEmpresas(empresas);
+            } else {
+                this.empresaSelectorService.setUserEmpresas(empresas);
+            }
         } else {
             console.warn('[AuthService] Nenhuma empresa encontrada no token. O fallback da API no LoginComponent deve resolver...');
         }

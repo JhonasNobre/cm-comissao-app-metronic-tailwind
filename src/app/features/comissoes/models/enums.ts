@@ -5,7 +5,9 @@ export enum TipoComissao {
     Percentual = 1,
     ValorFixo = 2,
     Misto = 3,
-    Bonus = 4
+    BonusPorPercentual = 4,
+    BonusLivre = 5,
+    BonusMeta = 6
 }
 
 export enum TipoRateio {
@@ -44,7 +46,9 @@ export const TipoComissaoLabels: Record<TipoComissao, string> = {
     [TipoComissao.Percentual]: 'Percentual',
     [TipoComissao.ValorFixo]: 'Valor Fixo',
     [TipoComissao.Misto]: 'Misto',
-    [TipoComissao.Bonus]: 'Bônus por Performance'
+    [TipoComissao.BonusPorPercentual]: 'Bônus por Percentual',
+    [TipoComissao.BonusLivre]: 'Bônus Livre',
+    [TipoComissao.BonusMeta]: 'Bônus Meta'
 };
 
 export const TipoRateioLabels: Record<TipoRateio, string> = {
@@ -70,4 +74,16 @@ export const TipoValorLabels: Record<TipoValor, string> = {
     [TipoValor.Percentual]: 'Percentual',
     [TipoValor.Fixo]: 'Valor Fixo',
     [TipoValor.Misto]: 'Misto'
+};
+
+export enum TipoBonificacao {
+    PorParcelamento = 1,
+    Livre = 2,
+    PorMeta = 3
+}
+
+export const TipoBonificacaoLabels: Record<TipoBonificacao, string> = {
+    [TipoBonificacao.PorParcelamento]: 'Por Parcelamento',
+    [TipoBonificacao.Livre]: 'Livre (Manual)',
+    [TipoBonificacao.PorMeta]: 'Por Meta de Vendas'
 };

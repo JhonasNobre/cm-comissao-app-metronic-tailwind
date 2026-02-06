@@ -39,6 +39,11 @@ export const routes: Routes = [
         path: 'comissoes/parcelas',
         loadComponent: () => import('./features/comissoes/parcelas-list/parcelas-list.component').then(m => m.ParcelasListComponent)
       },
+      // SCRUM-180: Origem Pagamento (Bônus)
+      {
+        path: 'bonificacao/origem-pagamento',
+        loadComponent: () => import('./features/bonificacao/origem-pagamento/origem-pagamento-list/origem-pagamento-list.component').then(m => m.OrigemPagamentoListComponent)
+      },
       {
         path: 'admin/comissoes',
         loadComponent: () => import('./features/comissoes/comissoes-admin-list/comissoes-admin-list.component').then(m => m.ComissoesAdminListComponent)
@@ -106,11 +111,6 @@ export const routes: Routes = [
 
       { path: 'test', loadComponent: () => import('./features/testing/components/test-page/test-page.component').then(m => m.TestPageComponent) },
 
-      // Bonificações
-      {
-        path: 'bonificacao',
-        loadChildren: () => import('./features/bonificacao/bonificacao.routes').then(m => m.BONIFICACAO_ROUTES)
-      },
     ],
   },
   {

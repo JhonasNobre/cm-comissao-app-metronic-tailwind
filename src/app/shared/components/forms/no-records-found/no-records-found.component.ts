@@ -10,8 +10,8 @@ import { ButtonModule } from 'primeng/button';
 })
 export class NoRecordsFoundComponent {
 
-  @Input() label = 'general.phrase.no_matching_records_found';
-  @Input() btnLabel = 'general.singular.new';
+  @Input() label = 'Nenhum registro encontrado';
+  @Input() btnLabel = 'Novo';
   @Input() length: number = 0;
   @Input() hasBtnCreate = true;
 

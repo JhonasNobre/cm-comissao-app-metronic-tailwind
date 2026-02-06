@@ -65,13 +65,21 @@ export class LoginComponent {
     }
 
     private checkEmpresasAndRedirect(): void {
+        console.log('[Login] checkEmpresasAndRedirect: Iniciando verificação de empresas.');
+
+        // Garantir que não há empresa selecionada antes de verificar a lista completa via API.
+        // Isso evita que o AuthInterceptor filtre o resultado da própria API de listagem.
+        this.empresaSelectorService.setSelectedEmpresas([]);
+
         console.log('[Login] Buscando empresas via API: ', `${environment.apiUrl}/v1/usuarios/me/empresas`);
+
         // Buscar empresas do usuário via API
         this.http.get<any[]>(`${environment.apiUrl}/v1/usuarios/me/empresas`).subscribe({
             next: (empresas) => {
-                console.log('[Login] Empresas retornadas pela API:', empresas?.length || 0, empresas);
+                const count = empresas?.length || 0;
+                console.log('[Login] Empresas retornadas pela API:', count, empresas);
 
-                if (empresas && empresas.length > 1) {
+                if (count > 1) {
                     console.log('[Login] Múltiplas empresas detectadas. Redirecionando para seleção...');
                     const empresasInfo = empresas.map(e => ({
                         id: e.id,
@@ -82,25 +90,27 @@ export class LoginComponent {
                     }));
                     this.empresaSelectorService.setUserEmpresas(empresasInfo);
                     this.router.navigate(['/auth/select-empresa']);
-                } else if (empresas && empresas.length === 1) {
+                } else if (count === 1) {
                     console.log('[Login] Apenas uma empresa detectada. Selecionando automaticamente...');
                     const empresa = empresas[0];
-                    this.empresaSelectorService.setUserEmpresas([{
+                    const info = {
                         id: empresa.id,
                         nome: empresa.nome,
                         codigoLegado: empresa.codigoLegado,
                         dominioLegado: empresa.dominioLegado,
                         ambienteLegado: empresa.ambienteLegado
-                    }]);
+                    };
+                    this.empresaSelectorService.setUserEmpresas([info]);
                     this.empresaSelectorService.setSelectedEmpresas([empresa.id]);
                     this.router.navigate(['/']);
                 } else {
-                    console.warn('[Login] Nenhuma empresa vinculada. Seguindo para dashboard...');
+                    console.warn('[Login] Nenhuma empresa vinculada. Seguindo para dashboard (fallback)...');
                     this.router.navigate(['/']);
                 }
             },
             error: (err) => {
                 console.error('[Login] Erro ao buscar empresas via API:', err);
+                // Fallback: Tentar usar o que veio no token se disponível, ou ir para a raiz
                 this.router.navigate(['/']);
             }
         });
