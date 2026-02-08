@@ -321,10 +321,6 @@ export class EstruturaFormComponent implements OnInit {
         this.loading.set(true);
         this.estruturaService.getById(id).subscribe({
             next: (estrutura) => {
-                console.log('=== [DEBUG] STRUCTURE LOADED FROM API ===');
-                console.log('API Response:', estrutura);
-                console.log('Levels (Raw):', estrutura.niveis);
-
                 if (estrutura.niveis) {
                     estrutura.niveis.forEach((n: any, i: number) => {
                         console.log(`[DEBUG] Level ${i}:`, {
@@ -355,12 +351,6 @@ export class EstruturaFormComponent implements OnInit {
                 if (estrutura.niveis && estrutura.niveis.length > 0) {
                     this.treeData = this.buildTreeFromLevels(estrutura.niveis);
                     this.updateOrgTreeData();
-                    console.log('=== [DEBUG] TREE DATA BUILT ===');
-                    console.log('TreeNode Structure:', this.treeData);
-                    console.log('Visual OrgData:', this.orgData);
-                    console.log('Total Unique Members:', this.getTotalMembersCount());
-                } else {
-                    console.warn('=== [DEBUG] NO LEVELS FOUND IN STRUCTURE ===');
                 }
                 this.loading.set(false);
             },
@@ -947,7 +937,6 @@ export class EstruturaFormComponent implements OnInit {
         // Load all users and teams
         this.userService.list({ ativo: true }).subscribe({
             next: (result: UserListDTO[]) => {
-                console.log('Users loaded:', result);
                 this.allUsersForBulk = result;
                 if (this.selectedBulkMemberType === 'usuario') {
                     this.filterMembersForBulk();
@@ -965,7 +954,6 @@ export class EstruturaFormComponent implements OnInit {
 
         this.teamService.list({ ativo: true }).subscribe({
             next: (result: TeamListDTO[]) => {
-                console.log('Teams loaded:', result);
                 this.allTeamsForBulk = result;
                 if (this.selectedBulkMemberType === 'equipe') {
                     this.filterMembersForBulk();

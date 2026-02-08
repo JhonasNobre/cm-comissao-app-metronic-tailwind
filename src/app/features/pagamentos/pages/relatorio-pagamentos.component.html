@@ -1,0 +1,304 @@
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+    <!-- Header -->
+    <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Relatório de Pagamentos</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Acompanhe a distribuição de pagamentos de comissão</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="px-6 pt-4">
+        <div class="flex border-b border-gray-200 dark:border-gray-700">
+            <button class="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+                [class]="tabAtiva() === 'dashboard' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                (click)="selecionarTab('dashboard')">
+                <i class="ki-filled ki-chart-line-up mr-2"></i>Dashboard
+            </button>
+            <button class="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+                [class]="tabAtiva() === 'mensal' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                (click)="selecionarTab('mensal')">
+                <i class="ki-filled ki-calendar mr-2"></i>Relatório Mensal
+            </button>
+            <button class="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+                [class]="tabAtiva() === 'beneficiario' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                (click)="selecionarTab('beneficiario')">
+                <i class="ki-filled ki-user-tick mr-2"></i>Buscar Beneficiário
+            </button>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <!-- Dashboard Tab -->
+        @if (tabAtiva() === 'dashboard') {
+        <div>
+            @if (loading()) {
+            <div class="flex justify-center py-12">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500"></div>
+            </div>
+            } @else if (estatisticas()) {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Card Pendentes -->
+                <div
+                    class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-5 border border-amber-200 dark:border-amber-800">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-amber-500 flex items-center justify-center">
+                            <i class="ki-filled ki-time text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-amber-600 dark:text-amber-400">{{
+                                estatisticas()?.pendentes }}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Pendentes</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Concluídas -->
+                <div
+                    class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-5 border border-emerald-200 dark:border-emerald-800">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-emerald-500 flex items-center justify-center">
+                            <i class="ki-filled ki-check-circle text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{
+                                estatisticas()?.concluidas }}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Concluídas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Com Erro -->
+                <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-red-500 flex items-center justify-center">
+                            <i class="ki-filled ki-warning-2 text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-red-600 dark:text-red-400">{{ estatisticas()?.comErro }}
+                            </div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Com Erro</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Total -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center">
+                            <i class="ki-filled ki-dollar text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ estatisticas()?.total }}
+                            </div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Total</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+        }
+
+        <!-- Relatório Mensal Tab -->
+        @if (tabAtiva() === 'mensal') {
+        <div>
+            <!-- Filtros -->
+            <div class="flex flex-wrap gap-4 mb-6">
+                <div class="w-40">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mês</label>
+                    <select
+                        class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        [(ngModel)]="mesSelecionado">
+                        @for (mes of meses; track mes.valor) {
+                        <option [value]="mes.valor">{{ mes.nome }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="w-32">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ano</label>
+                    <select
+                        class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        [(ngModel)]="anoSelecionado">
+                        @for (ano of anos; track ano) {
+                        <option [value]="ano">{{ ano }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button
+                        class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        (click)="carregarRelatorioMensal()" [disabled]="loading()">
+                        <i class="ki-filled ki-magnifier mr-2"></i>Gerar Relatório
+                    </button>
+                </div>
+            </div>
+
+            @if (loading()) {
+            <div class="flex justify-center py-12">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500"></div>
+            </div>
+            } @else if (relatorioMensal()) {
+            <!-- Resumo -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div
+                    class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 text-center border border-gray-200 dark:border-gray-600">
+                    <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{
+                        relatorioMensal()?.valorPago | currency:'BRL' }}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Valor Pago</div>
+                </div>
+                <div
+                    class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 text-center border border-gray-200 dark:border-gray-600">
+                    <div class="text-3xl font-bold text-amber-600 dark:text-amber-400">{{
+                        relatorioMensal()?.valorPendente | currency:'BRL' }}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Valor Pendente</div>
+                </div>
+                <div
+                    class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 text-center border border-gray-200 dark:border-gray-600">
+                    <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{
+                        relatorioMensal()?.totalTransacoes }}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Transações</div>
+                </div>
+            </div>
+
+            <!-- Top Beneficiários -->
+            <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Beneficiários</h5>
+            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Documento</th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Nome</th>
+                            <th
+                                class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Qtd</th>
+                            <th
+                                class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Valor Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @for (benef of relatorioMensal()?.topBeneficiarios; track benef.documento) {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="font-medium text-gray-900 dark:text-white">{{
+                                    formatarDocumento(benef.documento) }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ benef.nome || '-' }}</td>
+                            <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{{ benef.quantidade }}
+                            </td>
+                            <td class="px-4 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">{{
+                                benef.valorTotal | currency:'BRL' }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            }
+        </div>
+        }
+
+        <!-- Buscar Beneficiário Tab -->
+        @if (tabAtiva() === 'beneficiario') {
+        <div>
+            <!-- Filtro Busca -->
+            <div class="flex flex-wrap gap-4 mb-6">
+                <div class="w-64">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CPF ou CNPJ</label>
+                    <input type="text"
+                        class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        [(ngModel)]="documentoBusca" placeholder="Digite o documento"
+                        (keyup.enter)="buscarBeneficiario()">
+                </div>
+                <div class="flex items-end">
+                    <button
+                        class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        (click)="buscarBeneficiario()" [disabled]="loadingBeneficiario()">
+                        <i class="ki-filled ki-magnifier mr-2"></i>Buscar
+                    </button>
+                </div>
+            </div>
+
+            @if (loadingBeneficiario()) {
+            <div class="flex justify-center py-12">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500"></div>
+            </div>
+            } @else if (resumoBeneficiario()) {
+            <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-6 border border-gray-200 dark:border-gray-600">
+                <!-- Header Beneficiário -->
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
+                    <div>
+                        <h4 class="text-xl font-bold text-gray-900 dark:text-white">{{
+                            formatarDocumento(resumoBeneficiario()?.documento || '') }}</h4>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">{{ resumoBeneficiario()?.totalTransacoes
+                            }} transações</span>
+                    </div>
+                </div>
+
+                <!-- Cards Resumo -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div
+                        class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-5 text-center border border-emerald-200 dark:border-emerald-800">
+                        <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{
+                            resumoBeneficiario()?.totalRecebido | currency:'BRL' }}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Recebido</div>
+                    </div>
+                    <div
+                        class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-5 text-center border border-amber-200 dark:border-amber-800">
+                        <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{
+                            resumoBeneficiario()?.saldoPendente | currency:'BRL' }}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Saldo Pendente</div>
+                    </div>
+                </div>
+
+                <!-- Últimas Transações -->
+                <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Últimas Transações</h5>
+                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <table class="w-full">
+                        <thead class="bg-gray-100 dark:bg-gray-700">
+                            <tr>
+                                <th
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Data</th>
+                                <th
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Tipo</th>
+                                <th
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Status</th>
+                                <th
+                                    class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            @for (trans of resumoBeneficiario()?.ultimasTransacoes; track $index) {
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ trans.dataTransacao |
+                                    date:'dd/MM/yyyy HH:mm' }}</td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ trans.tipo }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full" [ngClass]="{
+                                            'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': trans.status === 'Pendente',
+                                            'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400': trans.status === 'Concluida',
+                                            'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': trans.status === 'Erro',
+                                            'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300': trans.status === 'Cancelada'
+                                        }">
+                                        {{ trans.status }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">{{ trans.valor
+                                    | currency:'BRL' }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            }
+        </div>
+        }
+    </div>
+</div>

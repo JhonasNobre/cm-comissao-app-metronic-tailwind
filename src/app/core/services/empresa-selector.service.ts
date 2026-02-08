@@ -39,15 +39,35 @@ export class EmpresaSelectorService {
         console.log('[EmpresaSelectorService] setUserEmpresas: Definindo lista de empresas:', empresas.length, empresas);
         this.userEmpresasSubject.next(empresas);
 
+        // Validação de Segurança: Verificar se a seleção atual (do storage) é válida para este usuário
         const currentSelection = this.selectedEmpresaIdsSubject.value;
-        console.log('[EmpresaSelectorService] setUserEmpresas: Seleção atual no serviço:', currentSelection);
+        const validSelection = currentSelection.filter(id => empresas.some(e => e.id === id));
+
+        if (currentSelection.length > 0 && validSelection.length !== currentSelection.length) {
+            console.warn('[EmpresaSelectorService] Seleção anterior inválida para este usuário. Limpando seleção.');
+
+            if (validSelection.length > 0) {
+                // Se sobrou alguma válida, mantém apenas ela
+                this.setSelectedEmpresas(validSelection);
+            } else {
+                // Se nenhuma é válida, limpa tudo
+                this.selectedEmpresaIdsSubject.next([]);
+                localStorage.removeItem(this.STORAGE_KEY);
+            }
+        } else {
+            console.log('[EmpresaSelectorService] Seleção atual validada com sucesso:', currentSelection);
+        }
 
         // Auto-seleciona SOMENTE se o usuário tem apenas 1 empresa
         if (empresas.length === 1) {
-            console.log('[EmpresaSelectorService] Auto-selecionando empresa única:', empresas[0].id);
-            this.setSelectedEmpresas([empresas[0].id]);
+            const empresaId = empresas[0].id;
+            // Só auto-seleciona se já não estiver selecionada (evita loop/spam)
+            if (!validSelection.includes(empresaId)) {
+                console.log('[EmpresaSelectorService] Auto-selecionando empresa única:', empresaId);
+                this.setSelectedEmpresas([empresaId]);
+            }
         } else if (empresas.length > 1) {
-            console.log('[EmpresaSelectorService] Múltiplas empresas detectadas. Mantendo seleção atual ou aguardando escolha manual.');
+            console.log('[EmpresaSelectorService] Múltiplas empresas detectadas. Aguardando seleção manual.');
         } else {
             console.log('[EmpresaSelectorService] Lista de empresas vazia.');
         }
