@@ -35,7 +35,7 @@ export interface EstruturaComissaoNivel {
     valorFixo?: number;
     ordemExibicao?: number;
 
-    // Campos de Bônus (SCRUM-180)
+    // Campos de Bônus
     tipoBonificacao?: number;
     origemPagamentoId?: string;
     parcelaInicialLiberacao?: number;
@@ -85,7 +85,7 @@ export interface CreateEstruturaComissaoNivelRequest {
     tipoComissao?: number;
     regraLiberacao?: number;
     prioridadePagamento?: number;
-    // Campos de Bônus (SCRUM-180)
+    // Campos de Bônus 
     tipoBonificacao?: number;
     origemPagamentoId?: string;
     parcelaInicialLiberacao?: number;

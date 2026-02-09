@@ -23,7 +23,7 @@ import {
     TipoRateio, TipoRateioLabels,
     RegraLiberacao, RegraLiberacaoLabels,
     TipoValor, TipoValorLabels,
-    TipoBonificacao, TipoBonificacaoLabels, // SCRUM-180
+    TipoBonificacao, TipoBonificacaoLabels,
     StatusComissao
 } from '../../models/enums';
 import { EstruturaComissaoMembro, CreateEstruturaComissaoNivelRequest, CreateEstruturaComissaoRequest, UpdateEstruturaComissaoRequest } from '../../models/estrutura-comissao.model';
@@ -69,7 +69,7 @@ export class EstruturaFormComponent implements OnInit {
     private route = inject(ActivatedRoute);
     public router = inject(Router);
     private teamService = inject(TeamService);
-    private origemPagamentoService = inject(OrigemPagamentoService); // SCRUM-180
+    private origemPagamentoService = inject(OrigemPagamentoService);
     private estruturaService = inject(EstruturaComissaoService);
     private userService = inject(UserService);
     private empresaSelectorService = inject(EmpresaSelectorService);
@@ -128,7 +128,7 @@ export class EstruturaFormComponent implements OnInit {
     tipoBonificacaoOptions = Object.entries(TipoBonificacaoLabels).map(([value, label]) => ({
         label,
         value: Number(value)
-    })); // SCRUM-180
+    }));
 
     tipoValorOptions = Object.entries(TipoValorLabels).map(([value, label]) => ({
         label,
@@ -229,7 +229,7 @@ export class EstruturaFormComponent implements OnInit {
             regraLiberacao: [null, [Validators.required]],
             prioridadePagamento: [null],
             parentId: [null],
-            // Campos de Bônus (SCRUM-180)
+            // Campos de Bônus
             tipoBonificacao: [null],
             origemPagamentoId: [null],
             metaVendasMinima: [null],
@@ -265,11 +265,41 @@ export class EstruturaFormComponent implements OnInit {
     }
 
     onRemoveFromTree(node: OrgNode) {
+        // Primeiro tenta encontrar como um nível (TreeNode)
         const treeNode = this.findTreeNodeById(this.treeData, node.id);
         if (treeNode) {
             this.deleteLevel(treeNode);
             this.updateOrgTreeData();
+            return;
         }
+
+        // Se não encontrou como nível, pode ser um membro individual
+        // Procura o membro em todos os níveis e remove
+        const removed = this.removeMemberFromTree(this.treeData, node.id);
+        if (removed) {
+            this.updateOrgTreeData();
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Sucesso',
+                detail: `"${node.name}" foi removido da estrutura.`
+            });
+        }
+    }
+
+    private removeMemberFromTree(nodes: TreeNode[], memberId: string): boolean {
+        for (const node of nodes) {
+            if (node.data?.membros) {
+                const index = node.data.membros.findIndex((m: any) => m.id === memberId);
+                if (index >= 0) {
+                    node.data.membros.splice(index, 1);
+                    return true;
+                }
+            }
+            if (node.children && this.removeMemberFromTree(node.children, memberId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private findTreeNodeById(nodes: TreeNode[], id: string): TreeNode | null {
@@ -682,9 +712,13 @@ export class EstruturaFormComponent implements OnInit {
     toggleBulkMemberSelection(member: any) {
         const index = this.selectedMembersForBulk.findIndex(m => m.id === member.id);
         if (index >= 0) {
+            // Remove o membro (usando filter para criar novo array)
             this.selectedMembersForBulk = this.selectedMembersForBulk.filter(m => m.id !== member.id);
         } else {
-            this.selectedMembersForBulk = [...this.selectedMembersForBulk, member];
+            // Adiciona apenas se não existir (evita duplicatas)
+            if (!this.selectedMembersForBulk.some(m => m.id === member.id)) {
+                this.selectedMembersForBulk = [...this.selectedMembersForBulk, member];
+            }
         }
     }
 
@@ -693,9 +727,16 @@ export class EstruturaFormComponent implements OnInit {
     }
 
     toggleAllBulkMembers() {
-        if (this.selectedMembersForBulk.length === this.filteredMembersForBulk.length) {
+        // Verifica se TODOS os membros únicos estão selecionados
+        const allSelected = this.filteredMembersForBulk.every(m =>
+            this.selectedMembersForBulk.some(s => s.id === m.id)
+        );
+
+        if (allSelected) {
+            // Desmarca todos
             this.selectedMembersForBulk = [];
         } else {
+            // Seleciona todos (usa filteredMembersForBulk que é a lista única sem duplicatas)
             this.selectedMembersForBulk = [...this.filteredMembersForBulk];
         }
     }
@@ -884,20 +925,26 @@ export class EstruturaFormComponent implements OnInit {
                 tipoValor: data.tipoValor || TipoValor.Percentual,
                 percentual: data.percentual,
                 valorFixo: data.valorFixo,
-                // SCRUM-180
+
+                // Tratamento para evitar envio de string vazia "" para campos Guid?
+                idGrupo: data.idGrupo || undefined,
+
                 tipoComissao: Number(data.tipoComissao),
                 regraLiberacao: Number(data.regraLiberacao),
                 prioridadePagamento: data.prioridadePagamento || 2,
                 tipoBonificacao: Number(data.tipoBonificacao),
-                origemPagamentoId: data.origemPagamentoId,
+
+                origemPagamentoId: data.origemPagamentoId || undefined,
+                parentId: data.parentId || undefined,
+
                 metaVendasMinima: data.metaVendasMinima,
                 parcelaInicialLiberacao: data.parcelaInicialLiberacao,
-                parentId: data.parentId,
+
                 membros: data.membros ? data.membros.map((m: any) => ({
                     id: m.id,
                     nome: m.nome,
-                    usuarioId: m.usuarioId,
-                    equipeId: m.equipeId
+                    usuarioId: m.usuarioId || undefined,
+                    equipeId: m.equipeId || undefined
                 })) : []
             };
 
@@ -918,6 +965,20 @@ export class EstruturaFormComponent implements OnInit {
     openMemberSelectionForAll() {
         this.selectedMembersForBulk = [];
         this.bulkMemberSearch = '';
+
+        // Seleciona automaticamente o primeiro nível da árvore como destino
+        // Se não houver níveis, força o usuário a criar um primeiro
+        if (this.treeData.length > 0) {
+            this.parentForNewNode = this.treeData[0]; // Primeiro nível raiz
+        } else {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Atenção',
+                detail: 'Crie um nível hierárquico antes de adicionar integrantes.'
+            });
+            return;
+        }
+
         this.displayBulkMemberDialog = true;
         this.loadAllMembersForBulk();
     }

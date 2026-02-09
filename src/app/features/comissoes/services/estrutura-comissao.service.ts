@@ -86,7 +86,7 @@ export class EstruturaComissaoService {
     }
 
     /**
-     * SCRUM-164: Envia estrutura para o sistema UAU
+     * Envia estrutura para o sistema UAU
      */
     enviarParaUau(id: string): Observable<{ codigoUau: number }> {
         return this.http.post<{ codigoUau: number }>(`${this.apiUrl}/${id}/enviar-uau`, {});

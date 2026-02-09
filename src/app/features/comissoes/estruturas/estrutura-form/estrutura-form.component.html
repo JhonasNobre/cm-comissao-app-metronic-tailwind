@@ -238,7 +238,7 @@
                     placeholder="Selecione" appendTo="body" optionLabel="label" optionValue="value"></p-select>
             </div>
 
-            <!-- SCRUM-180: Campos de Bônus (Visíveis para qualquer tipo de bônus: 4, 5, 6) -->
+            <!-- Campos de Bônus (Visíveis para qualquer tipo de bônus: 4, 5, 6) -->
             @if (levelForm.get('tipoComissao')?.value >= TipoComissao.BonusPorPercentual) {
             <div class="col-span-1 md:col-span-2 p-4 bg-yellow-50 rounded-lg border border-yellow-200 mt-2">
                 <h4 class="text-sm font-bold text-yellow-800 mb-4 flex items-center gap-2">
@@ -342,7 +342,8 @@
     [header]="'Adicionar integrantes em massa'" styleClass="p-fluid">
 
     <div class="mb-4">
-        <p class="text-sm text-gray-500 mb-4">Adicionando subordinados</p>
+        <p class="text-sm text-gray-500 mb-4">Adicionando {{ parentForNewNode ? 'pessoa(s) do nível "' +
+            parentForNewNode.label + '"' : 'integrantes' }}</p>
 
         <div class="flex gap-2 mb-4">
             <span class="p-input-icon-left flex-1">
@@ -370,10 +371,21 @@
             </div>
         </div>
 
-        <div class="flex items-center justify-between mb-2">
-            <button type="button" class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+        <div class="flex items-center justify-between mb-2 gap-2">
+            <button type="button"
+                class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                [class.bg-blue-600]="selectedMembersForBulk.length < filteredMembersForBulk.length"
+                [class.text-white]="selectedMembersForBulk.length < filteredMembersForBulk.length"
+                [class.hover:bg-blue-700]="selectedMembersForBulk.length < filteredMembersForBulk.length"
+                [class.bg-gray-100]="selectedMembersForBulk.length === filteredMembersForBulk.length"
+                [class.text-gray-700]="selectedMembersForBulk.length === filteredMembersForBulk.length"
+                [class.hover:bg-gray-200]="selectedMembersForBulk.length === filteredMembersForBulk.length"
                 (click)="toggleAllBulkMembers()">
-                Selecionar todos ({{ filteredMembersForBulk.length }})
+                <i class="ki-filled"
+                    [class.ki-check-square]="selectedMembersForBulk.length === filteredMembersForBulk.length"
+                    [class.ki-add-item]="selectedMembersForBulk.length < filteredMembersForBulk.length"></i>
+                {{ selectedMembersForBulk.length === filteredMembersForBulk.length ? 'Desmarcar todos' : 'Selecionar
+                todos (' + filteredMembersForBulk.length + ')' }}
             </button>
             <span class="text-sm text-gray-500">{{ selectedMembersForBulk.length }} selecionados</span>
         </div>

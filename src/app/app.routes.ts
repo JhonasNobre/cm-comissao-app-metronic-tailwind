@@ -39,7 +39,7 @@ export const routes: Routes = [
         path: 'comissoes/parcelas',
         loadComponent: () => import('./features/comissoes/parcelas-list/parcelas-list.component').then(m => m.ParcelasListComponent)
       },
-      // SCRUM-180: Origem Pagamento (Bônus)
+      // Origem Pagamento (Bônus)
       {
         path: 'bonificacao/origem-pagamento',
         loadComponent: () => import('./features/bonificacao/origem-pagamento/origem-pagamento-list/origem-pagamento-list.component').then(m => m.OrigemPagamentoListComponent)
