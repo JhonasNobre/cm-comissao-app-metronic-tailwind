@@ -82,9 +82,9 @@ export interface CreateEstruturaComissaoNivelRequest {
     percentual?: number;
     valorFixo?: number;
 
-    tipoComissao?: number;
-    regraLiberacao?: number;
-    prioridadePagamento?: number;
+    tipoComissao?: number | null;
+    regraLiberacao?: number | null;
+    prioridadePagamento?: number | null;
     // Campos de Bônus 
     tipoBonificacao?: number;
     origemPagamentoId?: string;
@@ -94,6 +94,18 @@ export interface CreateEstruturaComissaoNivelRequest {
     metaVendasMinima?: number;
     parentId?: string;
     membros: CreateEstruturaComissaoMembroRequest[];
+    regrasParcelamento?: RegraParcelamentoBonificacaoRequest[];
+}
+
+export interface RegraParcelamentoBonificacaoRequest {
+    id?: string;
+    parcelasMin: number;
+    parcelasMax: number;
+    formaCalculo: number; // EFormaCalculoBonificacao
+    numeroParcelasBonus: number;
+    prioridadePagamento: number;
+    percentual?: number;
+    valorFixo?: number;
 }
 
 export interface CreateEstruturaComissaoMembroRequest {

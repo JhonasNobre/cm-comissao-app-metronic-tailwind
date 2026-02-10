@@ -138,8 +138,8 @@ export class EstruturasListComponent implements OnInit {
                 formatter: (v) => {
                     const labels: Record<number, string> = {
                         [RegraLiberacao.Diretamente]: 'Direta',
-                        [RegraLiberacao.PercentualPago]: 'Automática',
-                        [RegraLiberacao.ParcelasPagas]: 'Manual'
+                        [RegraLiberacao.Percentual]: 'Automática',
+                        [RegraLiberacao.Parcela]: 'Manual'
                     };
                     return labels[v] || 'Automática';
                 }

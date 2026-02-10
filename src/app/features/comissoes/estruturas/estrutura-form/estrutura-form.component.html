@@ -293,6 +293,13 @@
                         <small class="text-gray-500 text-xs">A partir de qual parcela paga o bônus começa a ser
                             liberado.</small>
                     </div>
+
+                    <div class="flex items-center gap-2">
+                        <p-checkbox formControlName="liberacaoAutomaticaQuitacao" [binary]="true"
+                            inputId="libAuto"></p-checkbox>
+                        <label for="libAuto" class="text-sm text-gray-700 cursor-pointer">Liberar automaticamente na
+                            quitação antecipada</label>
+                    </div>
                     }
                 </div>
             </div>
