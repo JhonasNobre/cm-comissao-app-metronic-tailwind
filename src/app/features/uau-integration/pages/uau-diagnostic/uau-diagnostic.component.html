@@ -1,0 +1,40 @@
+<div class="container mx-auto p-4">
+    <p-toast></p-toast>
+
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold dark:text-gray-100">Laboratório UAU (Diagnóstico)</h1>
+        <p-button label="Limpar Logs" icon="pi pi-trash" (onClick)="limparLogs()"
+            styleClass="p-button-outlined p-button-secondary"></p-button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Conexão -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="font-bold mb-4 dark:text-gray-200">Conectividade</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Valida se as credenciais cadastradas estão corretas e se o sistema consegue se autenticar na API do UAU.
+            </p>
+            <p-button label="Testar Conexão UAU" icon="pi pi-bolt" (onClick)="testarConexao()"
+                [loading]="isTesting" styleClass="p-button-primary w-full"></p-button>
+        </div>
+
+        <!-- Importação -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="font-bold mb-4 dark:text-gray-200">Importação de Dados</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Busca as categorias de comissão (Estruturas) configuradas no UAU e as sincroniza com o banco de dados local.
+            </p>
+            <p-button label="Importar Estruturas do UAU" icon="pi pi-download" (onClick)="importarEstruturas()"
+                [loading]="isImporting" styleClass="p-button-success w-full"></p-button>
+        </div>
+    </div>
+
+    <!-- Logs Window -->
+    <div
+        class="bg-black text-green-400 p-4 rounded-lg font-mono text-xs h-96 overflow-y-auto shadow-inner border border-gray-700">
+        <div *ngFor="let log of logs" class="mb-1 border-b border-gray-800 pb-1 break-all">
+            {{ log }}
+        </div>
+        <div *ngIf="logs.length === 0" class="text-gray-500 italic">Nenhum log disponível. Aguardando ações...</div>
+    </div>
+</div>

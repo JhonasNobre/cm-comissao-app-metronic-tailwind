@@ -87,12 +87,15 @@ export class ConfigurationFormComponent implements OnInit {
         this.uauForm = this.fb.group({
             sistemaIntegracao: ['UAU', Validators.required],
             stringConexao: ['', Validators.required],
+
+            // Legacy / Clickmenos
             usuarioClickmenos: ['', Validators.required],
-            senhaClickmenos: [''], // Opcional se já existe
+            senhaClickmenos: [''],
             urlApiClickmenos: ['', Validators.required],
             urlApiGraphql: ['', Validators.required],
 
-            urlApi: ['', Validators.required], // API UAU
+            // API UAU
+            urlApi: ['', Validators.required],
             usuarioUau: ['', Validators.required],
             usuarioActiveDirectory: ['', Validators.required],
             senhaUau: ['']
@@ -128,6 +131,7 @@ export class ConfigurationFormComponent implements OnInit {
                 this.uauForm.patchValue({
                     sistemaIntegracao: data.sistemaIntegracao || 'UAU',
                     stringConexao: data.stringConexao || '',
+
                     usuarioClickmenos: data.usuarioClickmenos || '',
                     urlApiClickmenos: data.urlApiClickmenos || '',
                     urlApiGraphql: data.urlApiGraphql || '',
@@ -136,8 +140,8 @@ export class ConfigurationFormComponent implements OnInit {
                     usuarioUau: data.usuarioUau || '',
                     usuarioActiveDirectory: data.usuarioActiveDirectory || '',
 
-                    senhaClickmenos: '',
-                    senhaUau: ''
+                    senhaUau: '',
+                    senhaClickmenos: ''
                 });
                 this.loadingUau = false;
             },
@@ -195,14 +199,15 @@ export class ConfigurationFormComponent implements OnInit {
         const request: UauConfiguration = {
             sistemaIntegracao: formValue.sistemaIntegracao,
             stringConexao: formValue.stringConexao,
+
             usuarioClickmenos: formValue.usuarioClickmenos,
             senhaClickmenos: formValue.senhaClickmenos || undefined,
             urlApiClickmenos: formValue.urlApiClickmenos,
             urlApiGraphql: formValue.urlApiGraphql,
-            usuarioActiveDirectory: formValue.usuarioActiveDirectory,
 
             urlApi: formValue.urlApi,
             usuarioUau: formValue.usuarioUau,
+            usuarioActiveDirectory: formValue.usuarioActiveDirectory,
             senhaUau: formValue.senhaUau || undefined
         };
 

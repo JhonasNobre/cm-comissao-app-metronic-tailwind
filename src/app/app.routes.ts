@@ -106,6 +106,11 @@ export const routes: Routes = [
         data: { title: 'Laboratório Imobtech', description: 'Diagnóstico e teste dos serviços Imobtech', icon: 'pi pi-bolt', status: 200 }
       },
       {
+        path: 'uau/diagnostico',
+        loadComponent: () => import('./features/uau-integration/pages/uau-diagnostic/uau-diagnostic.component').then(m => m.UauDiagnosticComponent),
+        data: { title: 'Laboratório UAU', description: 'Diagnóstico e teste dos serviços UAU', icon: 'pi pi-bolt', status: 200 }
+      },
+      {
         path: 'pagamentos/relatorio',
         loadComponent: () => import('./features/pagamentos/pages/relatorio-pagamentos.component').then(m => m.RelatorioPagamentosComponent),
         data: { title: 'Relatório de Pagamentos', description: 'Acompanhe a distribuição de pagamentos de comissão', icon: 'ki-filled ki-wallet', status: 200 }
