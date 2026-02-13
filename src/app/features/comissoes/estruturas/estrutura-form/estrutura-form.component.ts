@@ -23,7 +23,8 @@ import {
     TipoRateio, TipoRateioLabels,
     RegraLiberacao, RegraLiberacaoLabels,
     TipoValor, TipoValorLabels,
-    TipoBonificacao, TipoBonificacaoLabels, // SCRUM-180
+    TipoBonificacao, TipoBonificacaoLabels,
+    EFormaCalculoBonificacao,
     StatusComissao
 } from '../../models/enums';
 import { EstruturaComissaoMembro, CreateEstruturaComissaoNivelRequest, CreateEstruturaComissaoRequest, UpdateEstruturaComissaoRequest } from '../../models/estrutura-comissao.model';
@@ -69,7 +70,7 @@ export class EstruturaFormComponent implements OnInit {
     private route = inject(ActivatedRoute);
     public router = inject(Router);
     private teamService = inject(TeamService);
-    private origemPagamentoService = inject(OrigemPagamentoService); // SCRUM-180
+    private origemPagamentoService = inject(OrigemPagamentoService);
     private estruturaService = inject(EstruturaComissaoService);
     private userService = inject(UserService);
     private empresaSelectorService = inject(EmpresaSelectorService);
@@ -128,7 +129,7 @@ export class EstruturaFormComponent implements OnInit {
     tipoBonificacaoOptions = Object.entries(TipoBonificacaoLabels).map(([value, label]) => ({
         label,
         value: Number(value)
-    })); // SCRUM-180
+    }));
 
     tipoValorOptions = Object.entries(TipoValorLabels).map(([value, label]) => ({
         label,
@@ -160,7 +161,7 @@ export class EstruturaFormComponent implements OnInit {
 
         // Carregar origens imediatamente se empresa já definida
         const empresaId = this.form.get('idEmpresa')?.value;
-        console.log('[DEBUG] OnInit EmpresaId:', empresaId);
+
         if (empresaId) {
             this.loadOrigensPagamento(empresaId);
         }
@@ -180,9 +181,9 @@ export class EstruturaFormComponent implements OnInit {
     }
 
     loadOrigensPagamento(idEmpresa: string) {
-        console.log('[DEBUG] loading origens for:', idEmpresa);
+
         this.origemPagamentoService.getAll(idEmpresa, true).subscribe(origens => {
-            console.log('[DEBUG] origens result:', origens);
+
             this.origensPagamento = origens.map(o => ({
                 label: o.nome,
                 value: o.id
@@ -229,11 +230,12 @@ export class EstruturaFormComponent implements OnInit {
             regraLiberacao: [null, [Validators.required]],
             prioridadePagamento: [null],
             parentId: [null],
-            // Campos de Bônus (SCRUM-180)
+            // Campos de Bônus
             tipoBonificacao: [null],
             origemPagamentoId: [null],
             metaVendasMinima: [null],
-            parcelaInicialLiberacao: [null]
+            parcelaInicialLiberacao: [null],
+            liberacaoAutomaticaQuitacao: [false]
         });
 
         // Watch TipoComissao changes to handle validation
@@ -265,11 +267,41 @@ export class EstruturaFormComponent implements OnInit {
     }
 
     onRemoveFromTree(node: OrgNode) {
+        // Primeiro tenta encontrar como um nível (TreeNode)
         const treeNode = this.findTreeNodeById(this.treeData, node.id);
         if (treeNode) {
             this.deleteLevel(treeNode);
             this.updateOrgTreeData();
+            return;
         }
+
+        // Se não encontrou como nível, pode ser um membro individual
+        // Procura o membro em todos os níveis e remove
+        const removed = this.removeMemberFromTree(this.treeData, node.id);
+        if (removed) {
+            this.updateOrgTreeData();
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Sucesso',
+                detail: `"${node.name}" foi removido da estrutura.`
+            });
+        }
+    }
+
+    private removeMemberFromTree(nodes: TreeNode[], memberId: string): boolean {
+        for (const node of nodes) {
+            if (node.data?.membros) {
+                const index = node.data.membros.findIndex((m: any) => m.id === memberId);
+                if (index >= 0) {
+                    node.data.membros.splice(index, 1);
+                    return true;
+                }
+            }
+            if (node.children && this.removeMemberFromTree(node.children, memberId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private findTreeNodeById(nodes: TreeNode[], id: string): TreeNode | null {
@@ -290,11 +322,11 @@ export class EstruturaFormComponent implements OnInit {
             nome: ['', [Validators.required, Validators.maxLength(100)]],
             descricao: ['', [Validators.maxLength(500)]],
             status: ['Ativo', [Validators.required]],
-            tipoComissao: [TipoComissao.Percentual, [Validators.required]],
+            tipoComissao: [null],
             valorPercentual: [null, [Validators.min(0), Validators.max(100)]],
             valorFixoInicial: [null, [Validators.min(0)]],
-            tipoRateio: [TipoRateio.Linear, [Validators.required]],
-            regraLiberacao: [RegraLiberacao.Diretamente, [Validators.required]],
+            tipoRateio: [null],
+            regraLiberacao: [RegraLiberacao.Diretamente],
             percentualLiberacao: [null, [Validators.min(0), Validators.max(100)]],
             parcelaLiberacao: [null, [Validators.min(1)]]
         });
@@ -321,19 +353,9 @@ export class EstruturaFormComponent implements OnInit {
         this.loading.set(true);
         this.estruturaService.getById(id).subscribe({
             next: (estrutura) => {
-                console.log('=== [DEBUG] STRUCTURE LOADED FROM API ===');
-                console.log('API Response:', estrutura);
-                console.log('Levels (Raw):', estrutura.niveis);
-
                 if (estrutura.niveis) {
                     estrutura.niveis.forEach((n: any, i: number) => {
-                        console.log(`[DEBUG] Level ${i}:`, {
-                            nome: n.nomeNivel,
-                            id: n.id,
-                            parentId: n.parentId,
-                            memberCount: n.membros?.length || 0,
-                            membros: n.membros
-                        });
+
                     });
                 }
 
@@ -347,7 +369,7 @@ export class EstruturaFormComponent implements OnInit {
                     valorPercentual: estrutura.valorPercentual,
                     valorFixoInicial: estrutura.valorFixoInicial,
                     tipoRateio: typeof estrutura.tipoRateio === 'string' ? TipoRateio[estrutura.tipoRateio as keyof typeof TipoRateio] : estrutura.tipoRateio,
-                    regraLiberacao: typeof estrutura.regraLiberacao === 'string' ? RegraLiberacao[estrutura.regraLiberacao as keyof typeof RegraLiberacao] : estrutura.regraLiberacao,
+                    regraLiberacao: (typeof estrutura.regraLiberacao === 'string' ? RegraLiberacao[estrutura.regraLiberacao as keyof typeof RegraLiberacao] : estrutura.regraLiberacao) ?? RegraLiberacao.Diretamente,
                     percentualLiberacao: estrutura.percentualLiberacao,
                     parcelaLiberacao: estrutura.parcelaLiberacao
                 });
@@ -355,12 +377,6 @@ export class EstruturaFormComponent implements OnInit {
                 if (estrutura.niveis && estrutura.niveis.length > 0) {
                     this.treeData = this.buildTreeFromLevels(estrutura.niveis);
                     this.updateOrgTreeData();
-                    console.log('=== [DEBUG] TREE DATA BUILT ===');
-                    console.log('TreeNode Structure:', this.treeData);
-                    console.log('Visual OrgData:', this.orgData);
-                    console.log('Total Unique Members:', this.getTotalMembersCount());
-                } else {
-                    console.warn('=== [DEBUG] NO LEVELS FOUND IN STRUCTURE ===');
                 }
                 this.loading.set(false);
             },
@@ -425,7 +441,7 @@ export class EstruturaFormComponent implements OnInit {
                 data: { ...lvl, membros: lvl.membros || [] },
                 expanded: true,
                 children: [],
-                type: (lvl.tipoComissao >= TipoComissao.BonusPorPercentual || lvl.tipoComissao >= 4) ? 'bonus' : 'person'
+                type: (lvl.tipoComissao >= TipoComissao.BonusPorPercentual || lvl.tipoComissao >= 4 || lvl.tipoBonificacao || lvl.TipoBonificacao) ? 'bonus' : 'person'
             });
         });
 
@@ -560,13 +576,57 @@ export class EstruturaFormComponent implements OnInit {
         this.showMemberSearch = false;
 
         const data = node.data;
+
+
+        // Helper to parse potential string enums
+        const parseTipoValor = (val: any): number => {
+            if (typeof val === 'number') return val;
+            if (val === 'Percentual') return TipoValor.Percentual;
+            if (val === 'Fixo' || val === 'ValorFixo') return TipoValor.Fixo;
+            if (val === 'Misto') return TipoValor.Misto;
+            return Number(val) || TipoValor.Percentual;
+        };
+
+        const resolvedTipoValorVal = data.tipoValor ?? data.TipoValor;
+        const resolvedTipoValor = parseTipoValor(resolvedTipoValorVal);
+        const inferredTipoComissao = this.inferTipoComissao(data, resolvedTipoValor);
+
+        const parseRegraLiberacao = (val: any): number => {
+            const root = this.form.get('regraLiberacao')?.value || RegraLiberacao.Diretamente;
+            if (!val) return root;
+            if (typeof val === 'number') return val;
+            if (val === 'Diretamente') return RegraLiberacao.Diretamente;
+            if (val === 'Percentual' || val === 'PercentualPago') return RegraLiberacao.Percentual;
+            if (val === 'Parcela' || val === 'ParcelasPagas') return RegraLiberacao.Parcela;
+            return Number(val) || root;
+        };
+
+        const regraLiberacaoVal = data.regraLiberacao ?? data.RegraLiberacao;
+        const regraLiberacao = parseRegraLiberacao(regraLiberacaoVal);
+
+        const tipoBonificacao = data.tipoBonificacao ?? data.TipoBonificacao;
+        const prioridadePagamento = data.prioridadePagamento ?? data.PrioridadePagamento;
+        const parcelaInicialLiberacao = data.parcelaInicialLiberacao ?? data.ParcelaInicialLiberacao;
+        const metaVendasMinima = data.metaVendasMinima ?? data.MetaVendasMinima;
+        const origemPagamentoId = data.origemPagamentoId ?? data.OrigemPagamentoId;
+        const liberacaoAutomatica = data.liberacaoAutomaticaQuitacao ?? data.LiberacaoAutomaticaQuitacao;
+
         this.levelForm.patchValue({
-            nomeNivel: data.nomeNivel,
-            prioridade: data.prioridade,
-            tipoValor: Number(data.tipoValor) || TipoValor.Percentual,
-            percentual: data.percentual,
-            valorFixo: data.valorFixo
+            nomeNivel: data.nomeNivel || data.NomeNivel,
+            prioridade: data.prioridade || data.Prioridade,
+            tipoValor: resolvedTipoValor,
+            percentual: data.percentual || data.Percentual,
+            valorFixo: data.valorFixo || data.ValorFixo,
+            tipoComissao: inferredTipoComissao,
+            regraLiberacao: regraLiberacao,
+            prioridadePagamento: prioridadePagamento || 2,
+            tipoBonificacao: tipoBonificacao ? Number(tipoBonificacao) : null,
+            origemPagamentoId: origemPagamentoId,
+            metaVendasMinima: metaVendasMinima,
+            parcelaInicialLiberacao: parcelaInicialLiberacao,
+            liberacaoAutomaticaQuitacao: !!liberacaoAutomatica
         });
+
 
         this.displayLevelDialog = true;
     }
@@ -692,9 +752,13 @@ export class EstruturaFormComponent implements OnInit {
     toggleBulkMemberSelection(member: any) {
         const index = this.selectedMembersForBulk.findIndex(m => m.id === member.id);
         if (index >= 0) {
+            // Remove o membro (usando filter para criar novo array)
             this.selectedMembersForBulk = this.selectedMembersForBulk.filter(m => m.id !== member.id);
         } else {
-            this.selectedMembersForBulk = [...this.selectedMembersForBulk, member];
+            // Adiciona apenas se não existir (evita duplicatas)
+            if (!this.selectedMembersForBulk.some(m => m.id === member.id)) {
+                this.selectedMembersForBulk = [...this.selectedMembersForBulk, member];
+            }
         }
     }
 
@@ -703,9 +767,16 @@ export class EstruturaFormComponent implements OnInit {
     }
 
     toggleAllBulkMembers() {
-        if (this.selectedMembersForBulk.length === this.filteredMembersForBulk.length) {
+        // Verifica se TODOS os membros únicos estão selecionados
+        const allSelected = this.filteredMembersForBulk.every(m =>
+            this.selectedMembersForBulk.some(s => s.id === m.id)
+        );
+
+        if (allSelected) {
+            // Desmarca todos
             this.selectedMembersForBulk = [];
         } else {
+            // Seleciona todos (usa filteredMembersForBulk que é a lista única sem duplicatas)
             this.selectedMembersForBulk = [...this.filteredMembersForBulk];
         }
     }
@@ -841,44 +912,69 @@ export class EstruturaFormComponent implements OnInit {
 
     onSubmit() {
         if (this.form.invalid) {
-            this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha o formulário corretamente.' });
+
+            const invalidFields = [];
+            const controls = this.form.controls;
+            for (const name in controls) {
+                if (controls[name].invalid) {
+                    invalidFields.push(name);
+                }
+            }
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Atenção',
+                detail: `Preencha os campos obrigatórios: ${invalidFields.join(', ')}`
+            });
             return;
         }
 
+        try {
+            this.saving.set(true);
+            const formValue = this.form.value;
+            const levelsRequest = this.flattenTreeRecursive(this.treeData);
 
+            // Sanitização: Se não tem valor global, não manda o tipo para evitar erro de validação
+            const sanitizedTipoComissao = (formValue.valorPercentual == null && formValue.valorFixoInicial == null)
+                ? null
+                : formValue.tipoComissao;
 
-        this.saving.set(true);
-        const formValue = this.form.value;
+            const request: UpdateEstruturaComissaoRequest = {
+                ...formValue,
+                id: this.estruturaId || '',
+                versao: this.versaoAtual,
+                tipoComissao: sanitizedTipoComissao,
+                niveis: levelsRequest
+            };
 
-        const levelsRequest = this.flattenTreeRecursive(this.treeData);
+            if (this.isEditMode()) {
+                this.estruturaService.update(this.estruturaId!, request).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Atualizado com sucesso' });
+                        setTimeout(() => this.router.navigate(['/comissoes/estruturas']), 1500);
+                    },
+                    error: (err) => {
 
-        const request: CreateEstruturaComissaoRequest = {
-            ...formValue,
-            niveis: levelsRequest
-        };
+                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao salvar' });
+                        this.saving.set(false);
+                    }
+                });
+            } else {
+                this.estruturaService.create(request as any).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Criado com sucesso' });
+                        setTimeout(() => this.router.navigate(['/comissoes/estruturas']), 1500);
+                    },
+                    error: (err) => {
 
-        if (this.isEditMode()) {
-            this.estruturaService.update(this.estruturaId!, { ...request, id: this.estruturaId!, versao: this.versaoAtual } as UpdateEstruturaComissaoRequest).subscribe({
-                next: () => {
-                    this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Atualizado com sucesso' });
-                    setTimeout(() => this.router.navigate(['/comissoes/estruturas']), 1500);
-                },
-                error: () => {
-                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao salvar' });
-                    this.saving.set(false);
-                }
-            });
-        } else {
-            this.estruturaService.create(request).subscribe({
-                next: () => {
-                    this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Criado com sucesso' });
-                    setTimeout(() => this.router.navigate(['/comissoes/estruturas']), 1500);
-                },
-                error: () => {
-                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao salvar' });
-                    this.saving.set(false);
-                }
-            });
+                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao criar' });
+                        this.saving.set(false);
+                    }
+                });
+            }
+        } catch (error) {
+
+            this.messageService.add({ severity: 'error', summary: 'Erro Interno', detail: 'Ocorreu um erro ao processar os dados.' });
+            this.saving.set(false);
         }
     }
 
@@ -894,20 +990,31 @@ export class EstruturaFormComponent implements OnInit {
                 tipoValor: data.tipoValor || TipoValor.Percentual,
                 percentual: data.percentual,
                 valorFixo: data.valorFixo,
-                // SCRUM-180
-                tipoComissao: Number(data.tipoComissao),
-                regraLiberacao: Number(data.regraLiberacao),
+
+                // Tratamento para evitar envio de string vazia "" para campos Guid?
+                idGrupo: data.idGrupo || undefined,
+
+                tipoComissao: data.tipoComissao !== null && data.tipoComissao !== undefined ? Number(data.tipoComissao) : null,
+                regraLiberacao: data.regraLiberacao ? Number(data.regraLiberacao) : RegraLiberacao.Diretamente,
                 prioridadePagamento: data.prioridadePagamento || 2,
-                tipoBonificacao: Number(data.tipoBonificacao),
-                origemPagamentoId: data.origemPagamentoId,
+
+                // Inferir TipoBonificacao se não estiver setado mas for um nível de bônus
+                tipoBonificacao: this.inferTipoBonificacao(data),
+
+                origemPagamentoId: data.origemPagamentoId || undefined,
+                parentId: data.parentId || undefined,
+
                 metaVendasMinima: data.metaVendasMinima,
                 parcelaInicialLiberacao: data.parcelaInicialLiberacao,
-                parentId: data.parentId,
+                liberacaoAutomaticaQuitacao: !!data.liberacaoAutomaticaQuitacao,
+
+                regrasParcelamento: this.generateRegrasParcelamento(data),
+
                 membros: data.membros ? data.membros.map((m: any) => ({
                     id: m.id,
                     nome: m.nome,
-                    usuarioId: m.usuarioId,
-                    equipeId: m.equipeId
+                    usuarioId: m.usuarioId || undefined,
+                    equipeId: m.equipeId || undefined
                 })) : []
             };
 
@@ -921,6 +1028,74 @@ export class EstruturaFormComponent implements OnInit {
         return result;
     }
 
+    private inferTipoBonificacao(data: any): number | undefined {
+        if (data.tipoBonificacao) return Number(data.tipoBonificacao);
+
+        const tipoComissao = Number(data.tipoComissao);
+        if (tipoComissao === TipoComissao.BonusPorPercentual) return TipoBonificacao.PorParcelamento;
+        if (tipoComissao === TipoComissao.BonusLivre) return TipoBonificacao.Livre;
+        if (tipoComissao === TipoComissao.BonusMeta) return TipoBonificacao.PorMeta;
+
+        return undefined;
+    }
+
+    private inferTipoComissao(data: any, resolvedTipoValor?: number): number {
+        const rawBonificacao = data.tipoBonificacao ?? data.TipoBonificacao;
+        if (!rawBonificacao) return this.fallbackTipoComissao(data, resolvedTipoValor);
+
+        let tipoBonificacao: number | null = null;
+        if (typeof rawBonificacao === 'number') {
+            tipoBonificacao = rawBonificacao;
+        } else {
+            // Handle string enums from API
+            if (rawBonificacao === 'PorParcelamento') tipoBonificacao = TipoBonificacao.PorParcelamento;
+            else if (rawBonificacao === 'Livre') tipoBonificacao = TipoBonificacao.Livre;
+            else if (rawBonificacao === 'PorMeta') tipoBonificacao = TipoBonificacao.PorMeta;
+            else tipoBonificacao = Number(rawBonificacao) || null;
+        }
+
+        if (tipoBonificacao === TipoBonificacao.PorParcelamento) return TipoComissao.BonusPorPercentual;
+        if (tipoBonificacao === TipoBonificacao.Livre) return TipoComissao.BonusLivre;
+        if (tipoBonificacao === TipoBonificacao.PorMeta) return TipoComissao.BonusMeta;
+
+        return this.fallbackTipoComissao(data, resolvedTipoValor);
+    }
+
+    private fallbackTipoComissao(data: any, resolvedTipoValue?: number): number {
+        if (data.tipoComissao) return Number(data.tipoComissao);
+
+        let finalTipoValor = resolvedTipoValue;
+        if (!finalTipoValor) {
+            const val = data.tipoValor ?? data.TipoValor;
+            if (val === 'Percentual') finalTipoValor = TipoValor.Percentual;
+            else if (val === 'Fixo' || val === 'ValorFixo') finalTipoValor = TipoValor.Fixo;
+            else finalTipoValor = Number(val) || TipoValor.Percentual;
+        }
+
+        return finalTipoValor === TipoValor.Percentual ? TipoComissao.Percentual : TipoComissao.ValorFixo;
+    }
+
+    private generateRegrasParcelamento(data: any): any[] {
+        const tipoComissao = Number(data.tipoComissao);
+        if (tipoComissao < TipoComissao.BonusPorPercentual) return [];
+
+        // Se já tem regras no data (ex: vindo da API), mantém elas? 
+        // Na UI simplificada, vamos reconstruir a partir dos campos do modal.
+        const numParcelas = data.prioridade || 1;
+        const percentual = data.percentual;
+        const valorFixo = data.valorFixo;
+
+        return [{
+            parcelasMin: 1,
+            parcelasMax: 99,
+            formaCalculo: percentual !== null && percentual !== undefined ? EFormaCalculoBonificacao.Percentual : EFormaCalculoBonificacao.ValorFixo,
+            numeroParcelasBonus: numParcelas,
+            prioridadePagamento: data.prioridadePagamento || 2,
+            percentual: percentual,
+            valorFixo: valorFixo
+        }];
+    }
+
     cancel() {
         this.router.navigate(['/comissoes/estruturas']);
     }
@@ -928,6 +1103,20 @@ export class EstruturaFormComponent implements OnInit {
     openMemberSelectionForAll() {
         this.selectedMembersForBulk = [];
         this.bulkMemberSearch = '';
+
+        // Seleciona automaticamente o primeiro nível da árvore como destino
+        // Se não houver níveis, força o usuário a criar um primeiro
+        if (this.treeData.length > 0) {
+            this.parentForNewNode = this.treeData[0]; // Primeiro nível raiz
+        } else {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Atenção',
+                detail: 'Crie um nível hierárquico antes de adicionar integrantes.'
+            });
+            return;
+        }
+
         this.displayBulkMemberDialog = true;
         this.loadAllMembersForBulk();
     }
@@ -947,7 +1136,6 @@ export class EstruturaFormComponent implements OnInit {
         // Load all users and teams
         this.userService.list({ ativo: true }).subscribe({
             next: (result: UserListDTO[]) => {
-                console.log('Users loaded:', result);
                 this.allUsersForBulk = result;
                 if (this.selectedBulkMemberType === 'usuario') {
                     this.filterMembersForBulk();
@@ -965,7 +1153,6 @@ export class EstruturaFormComponent implements OnInit {
 
         this.teamService.list({ ativo: true }).subscribe({
             next: (result: TeamListDTO[]) => {
-                console.log('Teams loaded:', result);
                 this.allTeamsForBulk = result;
                 if (this.selectedBulkMemberType === 'equipe') {
                     this.filterMembersForBulk();

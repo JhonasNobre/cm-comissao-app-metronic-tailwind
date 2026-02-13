@@ -84,4 +84,11 @@ export class EstruturaComissaoService {
     duplicar(id: string, novoNome: string): Observable<EstruturaComissao> {
         return this.http.post<EstruturaComissao>(`${this.apiUrl}/${id}/duplicar`, { nome: novoNome });
     }
+
+    /**
+     * Envia estrutura para o sistema UAU
+     */
+    enviarParaUau(id: string): Observable<{ codigoUau: number }> {
+        return this.http.post<{ codigoUau: number }>(`${this.apiUrl}/${id}/enviar-uau`, {});
+    }
 }

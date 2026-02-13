@@ -39,7 +39,7 @@ export const routes: Routes = [
         path: 'comissoes/parcelas',
         loadComponent: () => import('./features/comissoes/parcelas-list/parcelas-list.component').then(m => m.ParcelasListComponent)
       },
-      // SCRUM-180: Origem Pagamento (Bônus)
+      // Origem Pagamento (Bônus)
       {
         path: 'bonificacao/origem-pagamento',
         loadComponent: () => import('./features/bonificacao/origem-pagamento/origem-pagamento-list/origem-pagamento-list.component').then(m => m.OrigemPagamentoListComponent)
@@ -104,6 +104,21 @@ export const routes: Routes = [
         path: 'imobtech/diagnostico',
         loadComponent: () => import('./features/imobtech-integration/pages/imobtech-diagnostic/imobtech-diagnostic.component').then(m => m.ImobtechDiagnosticComponent),
         data: { title: 'Laboratório Imobtech', description: 'Diagnóstico e teste dos serviços Imobtech', icon: 'pi pi-bolt', status: 200 }
+      },
+      {
+        path: 'uau/diagnostico',
+        loadComponent: () => import('./features/uau-integration/pages/uau-diagnostic/uau-diagnostic.component').then(m => m.UauDiagnosticComponent),
+        data: { title: 'Laboratório UAU', description: 'Diagnóstico e teste dos serviços UAU', icon: 'pi pi-bolt', status: 200 }
+      },
+      {
+        path: 'pagamentos/relatorio',
+        loadComponent: () => import('./features/pagamentos/pages/relatorio-pagamentos.component').then(m => m.RelatorioPagamentosComponent),
+        data: { title: 'Relatório de Pagamentos', description: 'Acompanhe a distribuição de pagamentos de comissão', icon: 'ki-filled ki-wallet', status: 200 }
+      },
+      {
+        path: 'pagamentos/transacoes',
+        loadComponent: () => import('./features/pagamentos/pages/transacoes-financeiras.component').then(m => m.TransacoesFinanceirasComponent),
+        data: { title: 'Transações Financeiras', description: 'Visualize todas as transações financeiras', icon: 'ki-filled ki-wallet', status: 200 }
       },
       { path: 'legacy-test', loadComponent: () => import('./features/comissoes/legacy-test/legacy-test.component').then(m => m.LegacyTestComponent) },
       { path: 'legacy-sync', loadComponent: () => import('./features/legacy-sync/legacy-sync.component').then(m => m.LegacySyncComponent) },

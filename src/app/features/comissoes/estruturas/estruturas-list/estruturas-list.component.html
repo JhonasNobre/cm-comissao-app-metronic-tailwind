@@ -113,7 +113,11 @@
 
             <!-- Custom Actions Template -->
             <ng-template #customActions let-item>
-                <button type="button" class="p-1 rounded hover:bg-gray-100"
+                <button type="button" class="btn btn-icon btn-sm btn-light-primary mr-2" pTooltip="Enviar para UAU"
+                    tooltipPosition="top" (click)="onEnviarParaUau(item)">
+                    <i class="ki-filled ki-exit-up text-sm"></i>
+                </button>
+                <button type="button" class="btn btn-icon btn-sm btn-light-success"
                     [pTooltip]="item.ativo ? 'Desativar' : 'Ativar'" tooltipPosition="top"
                     (click)="onToggleStatus(item)">
                     <i class="ki-filled text-sm" [class.ki-toggle-on]="item.ativo" [class.ki-toggle-off]="!item.ativo"

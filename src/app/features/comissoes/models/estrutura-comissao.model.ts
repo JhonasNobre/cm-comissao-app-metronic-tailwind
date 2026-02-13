@@ -7,13 +7,13 @@ export interface EstruturaComissao {
     descricao?: string;
     idEmpresa: string;
     idEmpreendimento?: string;
-    tipoComissao: number; // TipoComissao enum
+    tipoComissao?: number; // TipoComissao enum
     valorPercentual?: number;
     valorFixoInicial?: number;
-    regraLiberacao: number; // RegraLiberacao enum
+    regraLiberacao?: number; // RegraLiberacao enum
     percentualLiberacao?: number;
     parcelaLiberacao?: number;
-    tipoRateio: number; // TipoRateio enum
+    tipoRateio?: number; // TipoRateio enum
     origem: number;
     dataVigenciaInicio?: Date;
     dataVigenciaFim?: Date;
@@ -35,7 +35,7 @@ export interface EstruturaComissaoNivel {
     valorFixo?: number;
     ordemExibicao?: number;
 
-    // Campos de Bônus (SCRUM-180)
+    // Campos de Bônus
     tipoBonificacao?: number;
     origemPagamentoId?: string;
     parcelaInicialLiberacao?: number;
@@ -61,13 +61,13 @@ export interface CreateEstruturaComissaoRequest {
     descricao?: string;
     idEmpresa: string;
     idEmpreendimento?: string;
-    tipoComissao: number;
+    tipoComissao?: number;
     valorPercentual?: number;
     valorFixoInicial?: number;
-    regraLiberacao: number;
+    regraLiberacao?: number;
     percentualLiberacao?: number;
     parcelaLiberacao?: number;
-    tipoRateio: number;
+    tipoRateio?: number;
     dataVigenciaInicio?: Date;
     dataVigenciaFim?: Date;
     niveis: CreateEstruturaComissaoNivelRequest[];
@@ -82,10 +82,10 @@ export interface CreateEstruturaComissaoNivelRequest {
     percentual?: number;
     valorFixo?: number;
 
-    tipoComissao?: number;
-    regraLiberacao?: number;
-    prioridadePagamento?: number;
-    // Campos de Bônus (SCRUM-180)
+    tipoComissao?: number | null;
+    regraLiberacao?: number | null;
+    prioridadePagamento?: number | null;
+    // Campos de Bônus 
     tipoBonificacao?: number;
     origemPagamentoId?: string;
     parcelaInicialLiberacao?: number;
@@ -94,6 +94,18 @@ export interface CreateEstruturaComissaoNivelRequest {
     metaVendasMinima?: number;
     parentId?: string;
     membros: CreateEstruturaComissaoMembroRequest[];
+    regrasParcelamento?: RegraParcelamentoBonificacaoRequest[];
+}
+
+export interface RegraParcelamentoBonificacaoRequest {
+    id?: string;
+    parcelasMin: number;
+    parcelasMax: number;
+    formaCalculo: number; // EFormaCalculoBonificacao
+    numeroParcelasBonus: number;
+    prioridadePagamento: number;
+    percentual?: number;
+    valorFixo?: number;
 }
 
 export interface CreateEstruturaComissaoMembroRequest {

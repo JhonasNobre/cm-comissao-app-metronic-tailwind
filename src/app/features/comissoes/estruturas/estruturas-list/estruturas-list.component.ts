@@ -138,8 +138,8 @@ export class EstruturasListComponent implements OnInit {
                 formatter: (v) => {
                     const labels: Record<number, string> = {
                         [RegraLiberacao.Diretamente]: 'Direta',
-                        [RegraLiberacao.PercentualPago]: 'Automática',
-                        [RegraLiberacao.ParcelasPagas]: 'Manual'
+                        [RegraLiberacao.Percentual]: 'Automática',
+                        [RegraLiberacao.Parcela]: 'Manual'
                     };
                     return labels[v] || 'Automática';
                 }
@@ -286,6 +286,39 @@ export class EstruturasListComponent implements OnInit {
                             summary: 'Erro',
                             detail: `Erro ao ${action} estrutura`
                         });
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Envia estrutura de comissão para o sistema UAU
+     */
+    onEnviarParaUau(estrutura: EstruturaComissao) {
+        this.confirmationService.confirm({
+            message: `Deseja enviar a estrutura "${estrutura.nome}" para o sistema UAU?`,
+            header: 'Enviar para UAU',
+            icon: 'pi pi-cloud-upload',
+            acceptButtonStyleClass: 'p-button-info',
+            accept: () => {
+                this.loading = true;
+                this.estruturaService.enviarParaUau(estrutura.id).subscribe({
+                    next: (result) => {
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Enviado!',
+                            detail: `Estrutura sincronizada com UAU. Código: ${result?.codigoUau || 'N/A'}`
+                        });
+                        this.loading = false;
+                    },
+                    error: (_error: unknown) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: 'Erro ao enviar estrutura para o UAU'
+                        });
+                        this.loading = false;
                     }
                 });
             }

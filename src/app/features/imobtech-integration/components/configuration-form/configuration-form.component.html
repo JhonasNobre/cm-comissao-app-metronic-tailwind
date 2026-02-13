@@ -111,53 +111,60 @@
                         <!-- UAU TAB -->
                         <p-tabpanel value="uau">
                             <form [formGroup]="uauForm" (ngSubmit)="onUauSubmit()" class="flex flex-col gap-6 mt-4">
-                                
-                                <!-- Seção Integração Clickmenos -->
-                                <div class="flex flex-col gap-5 animate-fade-in border p-5 rounded-lg border-dashed border-gray-300">
+
+                                <!-- Seção Integração Clickmenos (Legacy) -->
+                                <div
+                                    class="flex flex-col gap-5 animate-fade-in border p-5 rounded-lg border-dashed border-gray-300">
                                     <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                                        <i class="ki-filled ki-technology-2 text-primary"></i>
+                                        <i class="ki-filled ki-setting-2 text-primary"></i>
                                         Integração Clickmenos
                                     </h3>
 
-                                    <div class="grid grid-cols-1 gap-5">
-                                        <div class="flex flex-col gap-2">
-                                            <label class="font-semibold text-gray-700 required">Sistema integração</label>
-                                            <input type="text" pInputText formControlName="sistemaIntegracao" class="w-full" placeholder="Ex: UAU" />
-                                        </div>
+                                    <div class="flex flex-col gap-2">
+                                        <label class="font-semibold text-gray-700 required">Sistema integração</label>
+                                        <input type="text" pInputText formControlName="sistemaIntegracao" class="w-full"
+                                            placeholder="Ex: UAU" />
+                                    </div>
 
-                                        <div class="flex flex-col gap-2">
-                                            <label class="font-semibold text-gray-700 required">String de Conexão</label>
-                                            <input type="text" pInputText formControlName="stringConexao" class="w-full" placeholder="String de conexão com o banco" />
-                                        </div>
+                                    <div class="flex flex-col gap-2">
+                                        <label class="font-semibold text-gray-700 required">String de Conexão</label>
+                                        <input type="text" pInputText formControlName="stringConexao" class="w-full"
+                                            placeholder="String de conexão com o banco" />
                                     </div>
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div class="flex flex-col gap-2">
-                                            <label class="font-semibold text-gray-700 required">Usuário Clickmenos</label>
-                                            <input type="text" pInputText formControlName="usuarioClickmenos" class="w-full" placeholder="Email ou usuário" />
+                                            <label class="font-semibold text-gray-700 required">Usuário
+                                                Clickmenos</label>
+                                            <input type="text" pInputText formControlName="usuarioClickmenos"
+                                                class="w-full" placeholder="Email ou usuário" />
                                         </div>
 
                                         <div class="flex flex-col gap-2">
                                             <label class="font-semibold text-gray-700">Senha</label>
-                                            <p-password formControlName="senhaClickmenos" [toggleMask]="true" [feedback]="false" 
-                                                styleClass="w-full" inputStyleClass="w-full" placeholder="************"></p-password>
+                                            <p-password formControlName="senhaClickmenos" [toggleMask]="true"
+                                                [feedback]="false" styleClass="w-full" inputStyleClass="w-full"
+                                                placeholder="************"></p-password>
                                             <small class="text-gray-500">Preencha apenas se desejar alterar.</small>
                                         </div>
                                     </div>
 
                                     <div class="flex flex-col gap-2">
                                         <label class="font-semibold text-gray-700 required">API Clickmenos</label>
-                                        <input type="text" pInputText formControlName="urlApiClickmenos" class="w-full" placeholder="http://..." />
+                                        <input type="text" pInputText formControlName="urlApiClickmenos" class="w-full"
+                                            placeholder="http://..." />
                                     </div>
 
                                     <div class="flex flex-col gap-2">
                                         <label class="font-semibold text-gray-700 required">API GraphQL</label>
-                                        <input type="text" pInputText formControlName="urlApiGraphql" class="w-full" placeholder="http://..." />
+                                        <input type="text" pInputText formControlName="urlApiGraphql" class="w-full"
+                                            placeholder="http://..." />
                                     </div>
                                 </div>
 
                                 <!-- Seção API UAU -->
-                                <div class="flex flex-col gap-5 animate-fade-in border p-5 rounded-lg border-dashed border-gray-300">
+                                <div
+                                    class="flex flex-col gap-5 animate-fade-in border p-5 rounded-lg border-dashed border-gray-300">
                                     <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                                         <i class="ki-filled ki-cloud-change text-primary"></i>
                                         API UAU
@@ -165,26 +172,32 @@
 
                                     <div class="flex flex-col gap-2">
                                         <label class="font-semibold text-gray-700 required">Endereço da API UAU</label>
-                                        <input type="text" pInputText formControlName="urlApi" class="w-full" placeholder="http://..." />
+                                        <input type="text" pInputText formControlName="urlApi" class="w-full"
+                                            placeholder="http://..." />
                                     </div>
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div class="flex flex-col gap-2">
-                                            <label class="font-semibold text-gray-700 required">Usuário do sistema de integração</label>
-                                            <input type="text" pInputText formControlName="usuarioUau" class="w-full" placeholder="Usuário UAU" />
+                                            <label class="font-semibold text-gray-700 required">Usuário do sistema de
+                                                integração</label>
+                                            <input type="text" pInputText formControlName="usuarioUau" class="w-full"
+                                                placeholder="Usuário UAU" />
                                         </div>
 
                                         <div class="flex flex-col gap-2">
                                             <label class="font-semibold text-gray-700">Senha</label>
-                                            <p-password formControlName="senhaUau" [toggleMask]="true" [feedback]="false" 
-                                                styleClass="w-full" inputStyleClass="w-full" placeholder="************"></p-password>
+                                            <p-password formControlName="senhaUau" [toggleMask]="true"
+                                                [feedback]="false" styleClass="w-full" inputStyleClass="w-full"
+                                                placeholder="************"></p-password>
                                             <small class="text-gray-500">Preencha apenas se desejar alterar.</small>
                                         </div>
                                     </div>
 
                                     <div class="flex flex-col gap-2">
-                                        <label class="font-semibold text-gray-700 required">Usuário Active Directory</label>
-                                        <input type="text" pInputText formControlName="usuarioActiveDirectory" class="w-full" placeholder="Domínio\Usuário" />
+                                        <label class="font-semibold text-gray-700 required">Usuário Active
+                                            Directory</label>
+                                        <input type="text" pInputText formControlName="usuarioActiveDirectory"
+                                            class="w-full" placeholder="Domínio\Usuário" />
                                     </div>
                                 </div>
 
@@ -192,9 +205,11 @@
                                     <button type="button" class="kt-btn kt-btn-light" (click)="onCancel()">
                                         Cancelar
                                     </button>
-                                    <button type="submit" class="kt-btn kt-btn-primary" [disabled]="uauForm.invalid || loadingUau">
+                                    <button type="submit" class="kt-btn kt-btn-primary"
+                                        [disabled]="uauForm.invalid || loadingUau">
                                         <i *ngIf="!loadingUau" class="ki-filled ki-check"></i>
-                                        <span *ngIf="loadingUau" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                                        <span *ngIf="loadingUau"
+                                            class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
                                         Salvar Configuração UAU
                                     </button>
                                 </div>

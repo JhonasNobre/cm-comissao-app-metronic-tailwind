@@ -106,19 +106,16 @@ export class ComissoesAdminListComponent implements OnInit {
     ];
 
     ngOnInit() {
-        console.log('[Admin Comissões] ngOnInit chamado');
-
         this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
-            console.log('[Admin Comissões] Empresas selecionadas:', ids);
+
             const idEmpresa = ids.length > 0 ? ids[0] : undefined;
             this.filtros.idEmpresa = idEmpresa;
 
             if (idEmpresa) {
-                console.log('[Admin Comissões] Carregando com idEmpresa:', idEmpresa);
+
                 this.loadComissoes();
             } else {
-                console.warn('[Admin Comissões] ⚠️ Nenhuma empresa selecionada! Lista ficará vazia.');
-                console.log('[Admin Comissões] Verifique se há uma empresa no EmpresaSelectorService');
+
                 this.comissoes = [];
                 this.comissoesFiltered = [];
             }
@@ -126,11 +123,11 @@ export class ComissoesAdminListComponent implements OnInit {
     }
 
     loadComissoes() {
-        console.log('[Admin Comissões] loadComissoes iniciado com filtros:', this.filtros);
+
         this.loading = true;
         this.comissaoService.getPendentes(this.filtros).subscribe({
             next: (res) => {
-                console.log('[Admin Comissões] Dados recebidos:', res);
+
                 this.comissoes = res.items;
                 this.totalRecords = res.totalItems;
                 this.buildDropdownOptions();
@@ -138,7 +135,7 @@ export class ComissoesAdminListComponent implements OnInit {
                 this.loading = false;
             },
             error: (err) => {
-                console.error('[Admin Comissões] Erro ao carregar:', err);
+
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',

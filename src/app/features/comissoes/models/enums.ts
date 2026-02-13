@@ -17,8 +17,8 @@ export enum TipoRateio {
 
 export enum RegraLiberacao {
     Diretamente = 1,
-    PercentualPago = 2,
-    ParcelasPagas = 3
+    Parcela = 2,
+    Percentual = 3
 }
 
 export enum TipoValor {
@@ -30,15 +30,16 @@ export enum TipoValor {
 export enum StatusComissao {
     Pendente = 1,
     Aprovada = 2,
-    Reprovada = 3,
-    Liberada = 4,
-    Cancelada = 5
+    Rejeitada = 3,
+    Paga = 4
 }
 
 export enum StatusParcela {
     Pendente = 1,
     Liberada = 2,
-    Cancelada = 3
+    Paga = 3,
+    Cancelada = 4,
+    Bloqueada = 5
 }
 
 // Labels para exibição na UI
@@ -58,16 +59,15 @@ export const TipoRateioLabels: Record<TipoRateio, string> = {
 
 export const RegraLiberacaoLabels: Record<RegraLiberacao, string> = {
     [RegraLiberacao.Diretamente]: 'Liberação Direta',
-    [RegraLiberacao.PercentualPago]: 'Por Percentual Pago',
-    [RegraLiberacao.ParcelasPagas]: 'Por Parcelas Pagas'
+    [RegraLiberacao.Parcela]: 'Por Parcelas Pagas',
+    [RegraLiberacao.Percentual]: 'Por Percentual Pago'
 };
 
 export const StatusComissaoLabels: Record<StatusComissao, string> = {
     [StatusComissao.Pendente]: 'Pendente',
     [StatusComissao.Aprovada]: 'Aprovada',
-    [StatusComissao.Reprovada]: 'Reprovada',
-    [StatusComissao.Liberada]: 'Liberada',
-    [StatusComissao.Cancelada]: 'Cancelada'
+    [StatusComissao.Rejeitada]: 'Rejeitada',
+    [StatusComissao.Paga]: 'Paga'
 };
 
 export const TipoValorLabels: Record<TipoValor, string> = {
@@ -87,3 +87,8 @@ export const TipoBonificacaoLabels: Record<TipoBonificacao, string> = {
     [TipoBonificacao.Livre]: 'Livre (Manual)',
     [TipoBonificacao.PorMeta]: 'Por Meta de Vendas'
 };
+
+export enum EFormaCalculoBonificacao {
+    Percentual = 1,
+    ValorFixo = 2
+}
