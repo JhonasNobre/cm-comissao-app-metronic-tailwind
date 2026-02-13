@@ -1,87 +1,135 @@
-<div class="container mx-auto p-4">
+<div class="container mx-auto p-4 max-w-7xl">
     <p-toast></p-toast>
 
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold dark:text-gray-100">Diagnóstico Imobtech (Lab)</h1>
+    <div class="flex justify-between items-center mb-8 border-b dark:border-gray-700 pb-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
+                <i class="pi pi-desktop text-blue-600 text-3xl"></i> Laboratório Imobtech
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1 font-medium">Ambiente de teste e diagnóstico para validade
+                de integração</p>
+        </div>
+
         <p-button label="Limpar Logs" icon="pi pi-trash" (onClick)="limparLogs()"
-            styleClass="p-button-outlined p-button-secondary"></p-button>
+            styleClass="p-button-outlined p-button-secondary shadow-sm" pTooltip="Limpa a janela de logs abaixo"
+            tooltipPosition="left"></p-button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <!-- Cancelamento -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-            <h3 class="font-bold mb-4 dark:text-gray-200">Cancelamento</h3>
-
-            <div class="mb-4">
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">IDs Remessas
-                    (CSV)</label>
-                <div class="p-inputgroup">
-                    <input pInputText [(ngModel)]="idsRemessa" placeholder="Ex: 123, 456" />
-                    <button type="button" pButton icon="pi pi-times" label="Cancelar Remessa" class="p-button-danger"
-                        (click)="testarCancelarRemessa()"></button>
-                </div>
+        <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="bg-red-600 px-6 py-4">
+                <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                    <i class="pi pi-ban"></i> Cancelamento
+                </h3>
             </div>
 
-            <div class="mb-4">
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">IDs Parcelas
-                    (CSV)</label>
-                <div class="p-inputgroup">
-                    <input pInputText [(ngModel)]="idsParcela" placeholder="Ex: 10, 20" />
-                    <button type="button" pButton icon="pi pi-times" label="Cancelar Parcela" class="p-button-danger"
-                        (click)="testarCancelarParcelas()"></button>
+            <div class="p-6">
+                <div class="mb-6">
+                    <label class="text-sm font-bold text-gray-800 dark:text-gray-200 block mb-2">
+                        IDs Remessas (Inteiras)
+                    </label>
+                    <div class="p-inputgroup">
+                        <input pInputText [(ngModel)]="idsRemessa" placeholder="Ex: 123, 456" class="w-full" />
+                        <button type="button" pButton icon="pi pi-times" label="Cancelar" class="p-button-danger"
+                            (click)="testarCancelarRemessa()" pTooltip="Cancela remessas completas na Imobtech"
+                            tooltipPosition="top"></button>
+                    </div>
+                    <small class="text-gray-500 dark:text-gray-400 mt-1 block">Separe múltiplos IDs por vírgula</small>
+                </div>
+
+                <div class="mb-2">
+                    <label class="text-sm font-bold text-gray-800 dark:text-gray-200 block mb-2">IDs Parcelas
+                        (Avulsas)</label>
+                    <div class="p-inputgroup">
+                        <input pInputText [(ngModel)]="idsParcela" placeholder="Ex: 10, 20" class="w-full" />
+                        <button type="button" pButton icon="pi pi-times" label="Cancelar"
+                            class="p-button-danger p-button-outlined" (click)="testarCancelarParcelas()"
+                            pTooltip="Cancela parcelas individuais específicas" tooltipPosition="top"></button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Pix & Rateios -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-            <h3 class="font-bold mb-4 dark:text-gray-200">Consultas Rápidas</h3>
-
-            <div class="mb-4">
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">CPF/CNPJ (Pix)</label>
-                <div class="p-inputgroup">
-                    <input pInputText [(ngModel)]="cpfPix" placeholder="000.000.000-00" />
-                    <button type="button" pButton icon="pi pi-check" label="Validar Pix" class="p-button-success"
-                        (click)="testarPix()"></button>
-                </div>
+        <!-- Consultas Rápidas -->
+        <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="bg-blue-600 px-6 py-4">
+                <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                    <i class="pi pi-search"></i> Consultas Rápidas
+                </h3>
             </div>
 
-            <div class="mb-4">
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">ID Parcela
-                    (Rateios)</label>
-                <div class="p-inputgroup">
-                    <p-inputNumber [(ngModel)]="idParcelaRateio" placeholder="ID Parcela" mode="decimal"
-                        [useGrouping]="false" class="w-full"></p-inputNumber>
-                    <button type="button" pButton icon="pi pi-search" label="Buscar Rateios"
-                        (click)="testarRateios()"></button>
+            <div class="p-6">
+                <!-- PIX Validator -->
+                <div class="mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
+                    <label
+                        class="text-sm font-bold text-gray-800 dark:text-gray-200 block mb-2 flex items-center gap-2">
+                        <i class="pi pi-id-card text-blue-500"></i> Validação de Chave PIX
+                    </label>
+                    <div class="p-inputgroup">
+                        <input pInputText [(ngModel)]="cpfPix" placeholder="CPF/CNPJ do recebedor" class="w-full" />
+                        <button type="button" pButton icon="pi pi-check" label="Validar" class="p-button-success"
+                            (click)="testarPix()" pTooltip="Verifica se o CPF/CNPJ possui chave Pix cadastrada"
+                            tooltipPosition="top"></button>
+                    </div>
+                </div>
+
+                <!-- Rateios Finder -->
+                <div class="mb-2">
+                    <label
+                        class="text-sm font-bold text-gray-800 dark:text-gray-200 block mb-2 flex items-center gap-2">
+                        <i class="pi pi-percentage text-blue-500"></i> Consulta de Rateios
+                    </label>
+                    <div class="p-inputgroup">
+                        <p-inputNumber [(ngModel)]="idParcelaRateio" placeholder="ID da Parcela" mode="decimal"
+                            [useGrouping]="false" class="w-full"></p-inputNumber>
+                        <button type="button" pButton icon="pi pi-search" label="Buscar" (click)="testarRateios()"
+                            pTooltip="Retorna os beneficiários e valores de rateio" tooltipPosition="top"></button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Renegociação -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 col-span-2">
-            <h3 class="font-bold mb-4 dark:text-gray-200">Renegociação</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="flex flex-col">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">ID Parcela
-                        Antiga</label>
-                    <p-inputNumber [(ngModel)]="renegIdAntiga" mode="decimal" [useGrouping]="false"
-                        styleClass="w-full"></p-inputNumber>
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">ID Parcela
-                        Nova</label>
-                    <p-inputNumber [(ngModel)]="renegIdNova" mode="decimal" [useGrouping]="false"
-                        styleClass="w-full"></p-inputNumber>
-                </div>
-                <div class="md:col-span-3">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">JSON Nova
-                        Parcela</label>
-                    <textarea pInputTextarea [(ngModel)]="renegJson" [rows]="5"
-                        style="width: 100%; font-family: monospace;"></textarea>
-                    <div class="mt-2">
-                        <p-button label="Executar Renegociação" icon="pi pi-refresh" (onClick)="testarRenegociacao()"
-                            styleClass="w-full"></p-button>
+        <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 col-span-1 lg:col-span-2 overflow-hidden">
+            <div class="bg-purple-600 px-6 py-4">
+                <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                    <i class="pi pi-refresh"></i> Simulação de Renegociação
+                </h3>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <div class="flex flex-col lg:col-span-1">
+                        <label class="text-sm font-bold text-gray-800 dark:text-gray-200 block mb-2">ID Parcela
+                            Antiga</label>
+                        <p-inputNumber [(ngModel)]="renegIdAntiga" mode="decimal" [useGrouping]="false"
+                            styleClass="w-full" placeholder="Ex: 1001"></p-inputNumber>
+                    </div>
+
+                    <div class="flex flex-col lg:col-span-1">
+                        <label class="text-sm font-bold text-gray-800 dark:text-gray-200 block mb-2">ID Parcela
+                            Nova</label>
+                        <p-inputNumber [(ngModel)]="renegIdNova" mode="decimal" [useGrouping]="false"
+                            styleClass="w-full" placeholder="Ex: 1002"></p-inputNumber>
+                    </div>
+
+                    <div class="lg:col-span-3">
+                        <label
+                            class="text-sm font-bold text-gray-800 dark:text-gray-200 block mb-2 flex justify-between">
+                            <span>JSON Nova Parcela</span>
+                            <span class="text-xs text-gray-400 font-normal">Edite para simular</span>
+                        </label>
+                        <div class="relative">
+                            <textarea pInputTextarea [(ngModel)]="renegJson" [rows]="4"
+                                style="width: 100%; font-family: monospace; font-size: 0.9em; background-color: #f8fafc; color: #1e293b;"></textarea>
+                            <p-button label="Executar Renegociação" icon="pi pi-play" (onClick)="testarRenegociacao()"
+                                styleClass="p-button-sm p-button-help absolute bottom-2 right-2 shadow-md"
+                                pTooltip="Envia requisição de renegociação" tooltipPosition="left"></p-button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -90,10 +138,25 @@
 
     <!-- Logs Window -->
     <div
-        class="bg-black text-green-400 p-4 rounded-lg font-mono text-xs h-64 overflow-y-auto shadow-inner border border-gray-700">
-        <div *ngFor="let log of logs" class="mb-1 border-b border-gray-800 pb-1 break-all">
-            {{ log }}
+        class="bg-slate-900 text-emerald-400 rounded-xl font-mono text-sm shadow-2xl border border-slate-700 flex flex-col h-96 overflow-hidden">
+        <div class="bg-slate-800 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
+            <span class="flex items-center gap-2 font-bold text-slate-300"><i class="pi pi-terminal"></i> Terminal de
+                Logs</span>
+            <span class="text-xs text-slate-500 uppercase tracking-widest font-bold">Real-time monitor</span>
         </div>
-        <div *ngIf="logs.length === 0" class="text-gray-500 italic">Nenhum log disponível.</div>
+        <div class="p-4 overflow-y-auto flex-1 space-y-2 custom-scrollbar">
+            <div *ngFor="let log of logs"
+                class="break-all border-l-2 border-emerald-500/20 pl-3 py-1 hover:bg-slate-800/50 transition-colors">
+                <span class="text-slate-500 text-xs font-bold mr-2">[{{log.substring(1, 9)}}]</span>
+                <span [innerHTML]="log.substring(11)" class="leading-relaxed"></span>
+            </div>
+            <div *ngIf="logs.length === 0"
+                class="text-slate-600 italic flex items-center justify-center h-full opacity-50">
+                <div class="flex flex-col items-center gap-2">
+                    <i class="pi pi-inbox text-3xl"></i>
+                    <span>Aguardando interações...</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

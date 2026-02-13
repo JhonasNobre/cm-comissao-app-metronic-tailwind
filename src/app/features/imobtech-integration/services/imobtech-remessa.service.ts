@@ -65,11 +65,27 @@ export class ImobtechRemessaService {
         return this.http.post<void>(`${this.baseUrl}/reprogramar-vencimento`, request);
     }
 
+    /**
+     * Exclui uma remessa localmente (apenas se não enviada/erro)
+     */
+    excluirRemessa(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/remessas/${id}`);
+    }
+
+    /**
+     * Cancela uma remessa na Imobtech
+     */
+    cancelarRemessa(id: string, empresaId: string): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/remessas/${id}/cancelar`, {
+            params: { empresaId }
+        });
+    }
+
     // ========================================================================
     // MÉTODOS DE DIAGNÓSTICO (LABORATÓRIO)
     // ========================================================================
 
-    cancelarRemessa(empresaId: string, ids: number[]): Observable<any> {
+    cancelarRemessaBulk(empresaId: string, ids: number[]): Observable<any> {
         return this.http.request('delete', `${this.baseUrl}/diagnostico/remessas`, {
             params: { empresaId },
             body: ids

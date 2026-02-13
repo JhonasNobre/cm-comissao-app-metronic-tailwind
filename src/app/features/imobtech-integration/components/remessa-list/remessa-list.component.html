@@ -9,11 +9,13 @@
       </span>
     </div>
     <div class="flex items-center gap-2.5">
-      <button class="kt-btn kt-btn-primary" (click)="onAdd()">
+      <button class="kt-btn kt-btn-primary" (click)="onAdd()"
+        pTooltip="Abre o formulário para criar uma remessa manual de teste" tooltipPosition="bottom">
         <i class="ki-filled ki-plus"></i>
         Nova Remessa
       </button>
-      <button class="kt-btn kt-btn-warning" (click)="abrirReprogramar()">
+      <button class="kt-btn kt-btn-warning" (click)="abrirReprogramar()"
+        pTooltip="Reprograma o vencimento de uma parcela/boleto no sistema Imobtech" tooltipPosition="bottom">
         <i class="ki-filled ki-calendar"></i>
         Reprogramar Vencimento
       </button>
@@ -26,76 +28,128 @@
     <app-generic-p-table tableName="remessas-imobtech-list" [tableData]="remessas" [columnDefinition]="columns"
       [rows]="20" [displayCreateAction]="false" [displayDetailAction]="true" [displayEditAction]="false"
       [displayDeleteAction]="false" (detail)="onViewDetails($event)">
+
+      <!-- Custom Actions Template -->
+      <ng-template #customActions let-rowData>
+        <!-- Botão Reprocessar -->
+        <button type="button" class="btn btn-icon btn-sm btn-light-warning" aria-label="Reprocessar"
+          pTooltip="Reprocessar" tooltipPosition="top" *ngIf="rowData.statusDescricao === 'Erro'"
+          (click)="reprocessar(rowData.id)">
+          <i class="ki-filled ki-arrows-circle"></i>
+        </button>
+
+        <!-- Botão Cancelar (Remoto) -->
+        <button type="button" class="btn btn-icon btn-sm btn-light-warning text-orange-500"
+          aria-label="Cancelar na Imobtech" pTooltip="Cancelar na Imobtech" tooltipPosition="top"
+          *ngIf="rowData.imobtechRemessaId && rowData.statusDescricao !== 'Cancelado' && rowData.statusDescricao !== 'Processado'"
+          (click)="cancelar(rowData)">
+          <i class="ki-filled ki-cross-circle"></i>
+        </button>
+
+        <!-- Botão Excluir (Local) -->
+        <button type="button" class="btn btn-icon btn-sm btn-light-danger" aria-label="Excluir (Local)"
+          pTooltip="Excluir (Local)" tooltipPosition="top"
+          *ngIf="!rowData.imobtechRemessaId || rowData.statusDescricao === 'Erro'" (click)="excluir(rowData)">
+          <i class="ki-filled ki-trash"></i>
+        </button>
+      </ng-template>
+
     </app-generic-p-table>
   </div>
 </div>
 
 <!-- Modal Detalhes -->
-<p-dialog header="Detalhes da Remessa" [(visible)]="detailVisible" [modal]="true" [style]="{width: '600px'}"
-  [draggable]="false" [resizable]="false">
+<p-toast></p-toast>
+<app-confirm-dialog></app-confirm-dialog>
+<p-dialog header="Detalhes da Remessa" [(visible)]="detailVisible" [modal]="true" [style]="{width: '700px'}"
+  [draggable]="false" [resizable]="false" appendTo="body">
 
   <ng-template pTemplate="content">
-    <div *ngIf="loadingDetails" class="flex justify-center py-8">
-      <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+    <div *ngIf="loadingDetails" class="flex justify-center py-20">
+      <i class="pi pi-spin pi-spinner text-primary text-4xl"></i>
     </div>
 
-    <div *ngIf="!loadingDetails && selectedRemessa" class="flex flex-col gap-4">
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="text-sm font-semibold text-gray-600">ID Interno</label>
-          <p class="text-base">{{ selectedRemessa.id }}</p>
+    <div *ngIf="!loadingDetails && selectedRemessa" class="flex flex-col gap-6 p-2">
+      <!-- Cabeçalho de Status -->
+      <div class="flex items-center justify-between border-b pb-4">
+        <div class="flex flex-col">
+          <span class="text-xs font-bold uppercase text-gray-400 tracking-wider">Identificador Imobtech</span>
+          <h2 class="text-2xl font-bold text-gray-800">{{ selectedRemessa.imobtechRemessaId || 'Não Gerado' }}</h2>
         </div>
-        <div>
-          <label class="text-sm font-semibold text-gray-600">ID Venda Interna</label>
-          <p class="text-base">#{{ selectedRemessa.idVendaInterna }}</p>
-        </div>
-        <div>
-          <label class="text-sm font-semibold text-gray-600">Imobtech Remessa ID</label>
-          <p class="text-base">{{ selectedRemessa.imobtechRemessaId || 'N/A' }}</p>
-        </div>
-        <div>
-          <label class="text-sm font-semibold text-gray-600">Status</label>
-          <p>
-            <span
-              class="kt-badge kt-badge-{{ getStatusSeverity(selectedRemessa.statusDescricao) }} kt-badge-outline rounded-[30px]">
-              <span class="kt-badge-dot size-1.5"></span>
-              {{ selectedRemessa.statusDescricao }}
-            </span>
-          </p>
-        </div>
-        <div>
-          <label class="text-sm font-semibold text-gray-600">Data de Envio</label>
-          <p class="text-base">{{ selectedRemessa.dataEnvio ? (selectedRemessa.dataEnvio | date:'dd/MM/yyyy HH:mm:ss') :
-            'Não enviado' }}</p>
-        </div>
-        <div>
-          <label class="text-sm font-semibold text-gray-600">Data de Processamento</label>
-          <p class="text-base">{{ selectedRemessa.dataProcessamento ? (selectedRemessa.dataProcessamento |
-            date:'dd/MM/yyyy HH:mm:ss') : 'Não processado' }}</p>
-        </div>
-        <div>
-          <label class="text-sm font-semibold text-gray-600">Tentativas</label>
-          <p class="text-base">{{ selectedRemessa.tentativasReprocessamento }}</p>
-        </div>
-        <div>
-          <label class="text-sm font-semibold text-gray-600">Valor Total</label>
-          <p class="text-base font-semibold text-green-600">{{ selectedRemessa.valorTotal | currency:'BRL' }}</p>
+        <div class="flex flex-col items-end">
+          <span
+            class="kt-badge kt-badge-{{ getStatusSeverity(selectedRemessa.statusDescricao) }} kt-badge-outline rounded-[30px] px-3 py-1">
+            <span class="kt-badge-dot size-2"></span>
+            <span class="font-semibold">{{ selectedRemessa.statusDescricao }}</span>
+          </span>
+          <span class="text-[10px] text-gray-500 mt-1 uppercase">Processado em: {{ selectedRemessa.dataProcessamento |
+            date:'dd/MM/yyyy HH:mm' }}</span>
         </div>
       </div>
 
-      <div *ngIf="selectedRemessa.mensagemErro" class="mt-4">
-        <label class="text-sm font-semibold text-red-600">Mensagem de Erro</label>
-        <div class="bg-red-50 border border-red-200 rounded p-3 mt-2">
-          <p class="text-sm text-red-800">{{ selectedRemessa.mensagemErro }}</p>
+      <!-- Grid de Informações -->
+      <div class="grid grid-cols-2 gap-x-8 gap-y-6">
+        <div class="flex flex-col">
+          <span class="text-xs font-semibold text-gray-500 mb-1">ID Interno do Sistema</span>
+          <span class="text-sm font-medium text-gray-700 bg-gray-50 p-2 rounded border border-dashed">{{
+            selectedRemessa.id }}</span>
         </div>
+        <div class="flex flex-col">
+          <span class="text-xs font-semibold text-gray-500 mb-1">ID da Venda (Contrato)</span>
+          <span class="text-base font-bold text-primary">#{{ selectedRemessa.idVendaInterna }}</span>
+        </div>
+
+        <div class="flex flex-col">
+          <span class="text-xs font-semibold text-gray-500 mb-1">Data de Envio</span>
+          <div class="flex items-center gap-2">
+            <i class="ki-filled ki-calendar text-gray-400"></i>
+            <span class="text-sm text-gray-700">{{ selectedRemessa.dataEnvio ? (selectedRemessa.dataEnvio |
+              date:'dd/MM/yyyy HH:mm:ss') : 'Aguardando envio' }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col">
+          <span class="text-xs font-semibold text-gray-500 mb-1">Valor do Pagamento</span>
+          <span class="text-lg font-bold text-green-600">{{ selectedRemessa.valorTotal | currency:'BRL' }}</span>
+        </div>
+      </div>
+
+      <!-- Seção de Erro (Visualização Premium) -->
+      <div *ngIf="selectedRemessa.mensagemErro"
+        class="bg-light-danger rounded-xl p-5 border border-dashed border-danger/30">
+        <div class="flex items-center gap-3 mb-2">
+          <i class="ki-filled ki-information-5 text-danger text-xl"></i>
+          <span class="text-sm font-bold text-danger uppercase">Erro no Processamento</span>
+        </div>
+        <p class="text-sm text-gray-700 leading-relaxed">{{ selectedRemessa.mensagemErro }}</p>
+        <div class="mt-3 text-[10px] text-danger/70 font-medium">Tentativas realizadas: {{
+          selectedRemessa.tentativasReprocessamento }} de 5</div>
+      </div>
+
+      <!-- Placeholder para Rateios (Próxima Fase) -->
+      <div class="mt-2 border-t pt-4">
+        <button class="btn btn-sm btn-light-primary w-full justify-start" (click)="testarRateios()">
+          <i class="ki-filled ki-chart-line-star"></i>
+          Ver Extrato de Rateios (Diagnóstico)
+        </button>
       </div>
     </div>
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Fechar" icon="pi pi-times" class="p-button-text" (click)="closeDetailModal()"></button>
-    <button *ngIf="selectedRemessa && selectedRemessa.statusDescricao === 'Erro'" pButton label="Reprocessar"
-      icon="pi pi-refresh" class="p-button-warning" (click)="reprocessar(selectedRemessa.id)"></button>
+    <div class="flex justify-between w-full">
+      <div>
+        <button *ngIf="selectedRemessa && selectedRemessa.statusDescricao === 'Erro'" class="btn btn-warning btn-sm"
+          (click)="reprocessar(selectedRemessa.id)">
+          <i class="ki-filled ki-arrows-circle"></i>
+          Forçar Reprocessamento
+        </button>
+      </div>
+      <button class="btn btn-secondary btn-sm" (click)="closeDetailModal()">
+        <i class="ki-filled ki-cross"></i>
+        Fechar
+      </button>
+    </div>
   </ng-template>
 </p-dialog>
 

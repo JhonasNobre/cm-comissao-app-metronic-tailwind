@@ -11,6 +11,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageService } from 'primeng/api';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
     selector: 'app-imobtech-diagnostic',
@@ -22,7 +23,9 @@ import { MessageService } from 'primeng/api';
         ButtonModule,
         InputTextModule,
         InputNumberModule,
-        TextareaModule
+        InputNumberModule,
+        TextareaModule,
+        TooltipModule
     ],
     providers: [MessageService],
     templateUrl: './imobtech-diagnostic.component.html'
@@ -70,7 +73,7 @@ export class ImobtechDiagnosticComponent implements OnInit {
         if (!this.idsRemessa) return;
         const ids = this.idsRemessa.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
         this.log('Cancelando Remessas:', ids);
-        this.service.cancelarRemessa(this.empresaId, ids).subscribe({
+        this.service.cancelarRemessaBulk(this.empresaId, ids).subscribe({
             next: (res) => {
                 this.log('Sucesso Cancelar Remessa', res);
                 this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Remessas canceladas' });
