@@ -7,6 +7,7 @@ import { LoadingOverlayComponent } from './shared/components/ui/loading-overlay/
 import { LoadingService } from './core/services/loading.service';
 import { CommonModule } from '@angular/common';
 import { MetronicInitService } from './core/services/metronic-init.service';
+import { NotificationService } from './core/services/notification.service';
 
 @Component({
   selector: 'body[app-root]',
@@ -29,6 +30,7 @@ export class AppComponent {
   private document = inject(DOCUMENT);
   private renderer = inject(Renderer2);
   private metronicInitService = inject(MetronicInitService);
+  private notificationService = inject(NotificationService);
 
   private demoClassMap: Record<string, string> = {
     demo1: 'demo1 kt-sidebar-fixed kt-header-fixed',
