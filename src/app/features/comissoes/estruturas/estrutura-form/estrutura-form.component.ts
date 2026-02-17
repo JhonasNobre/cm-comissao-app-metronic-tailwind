@@ -238,21 +238,46 @@ export class EstruturaFormComponent implements OnInit {
             liberacaoAutomaticaQuitacao: [false]
         });
 
-        // Watch TipoComissao changes to handle validation
+        // Watch TipoComissao changes to handle validation and mapping
         this.levelForm.get('tipoComissao')?.valueChanges.subscribe(val => {
             const tipoBonificacaoControl = this.levelForm.get('tipoBonificacao');
             const origemControl = this.levelForm.get('origemPagamentoId');
+            const tipoValorControl = this.levelForm.get('tipoValor');
+            const numericVal = Number(val);
 
-            if (val >= TipoComissao.BonusPorPercentual) {
-                // tipoBonificacao não é mais necessário
+            // Mapping Logic: TipoComissao -> TipoValor & TipoBonificacao
+            if (numericVal === TipoComissao.Percentual) {
+                tipoValorControl?.setValue(TipoValor.Percentual);
+                tipoBonificacaoControl?.setValue(null);
+            } else if (numericVal === TipoComissao.ValorFixo) {
+                tipoValorControl?.setValue(TipoValor.Fixo);
+                tipoBonificacaoControl?.setValue(null);
+            } else if (numericVal === TipoComissao.Misto) {
+                tipoValorControl?.setValue(TipoValor.Misto);
+                tipoBonificacaoControl?.setValue(null);
+            } else if (numericVal === TipoComissao.BonusPorPercentual) {
+                tipoValorControl?.setValue(TipoValor.Percentual);
+                tipoBonificacaoControl?.setValue(TipoBonificacao.PorParcelamento);
+            } else if (numericVal === TipoComissao.BonusLivre) {
+                tipoValorControl?.setValue(TipoValor.Fixo);
+                tipoBonificacaoControl?.setValue(TipoBonificacao.Livre);
+            } else if (numericVal === TipoComissao.BonusMeta) {
+                tipoValorControl?.setValue(TipoValor.Fixo);
+                tipoBonificacaoControl?.setValue(TipoBonificacao.PorMeta);
+            }
+
+            // Validation Logic
+            if (numericVal >= TipoComissao.BonusPorPercentual) {
+                // tipoBonificacao não é mais necessário, pois foi setado acima
                 origemControl?.setValidators([Validators.required]);
             } else {
-                tipoBonificacaoControl?.clearValidators();
+                // tipoBonificacaoControl?.clearValidators(); // Already set to null
                 origemControl?.clearValidators();
             }
             tipoBonificacaoControl?.updateValueAndValidity();
             origemControl?.updateValueAndValidity();
         });
+
     }
 
     onAddSubordinatesFromTree(node: OrgNode) {
@@ -353,6 +378,7 @@ export class EstruturaFormComponent implements OnInit {
         this.loading.set(true);
         this.estruturaService.getById(id).subscribe({
             next: (estrutura) => {
+                console.log(estrutura)
                 if (estrutura.niveis) {
                     estrutura.niveis.forEach((n: any, i: number) => {
 

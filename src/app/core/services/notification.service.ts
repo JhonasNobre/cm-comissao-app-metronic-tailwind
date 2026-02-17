@@ -1,6 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { WebPubSubClient } from '@azure/web-pubsub-client';
-import { BehaviorSubject, Observable } from 'rxjs'; // Import BehaviorSubject and Observable
+import { BehaviorSubject, Observable } from 'rxjs';
+import { MessageService } from 'primeng/api';
 import { environment } from '../../../environments/environment';
 
 export interface NotificationEvent {
@@ -31,7 +32,7 @@ export class NotificationService implements OnDestroy {
   private notificationSubject = new BehaviorSubject<NotificationEvent | null>(null);
   public notification$ = this.notificationSubject.asObservable();
 
-  constructor() {
+  constructor(private messageService: MessageService) {
     this.initializeClient();
   }
 
@@ -75,14 +76,47 @@ export class NotificationService implements OnDestroy {
   private handleNotification(notification: NotificationEvent) {
     this.notificationSubject.next(notification);
 
-    // Here you can also trigger global toasts/alerts
-    // toastr.info(notification.content.description, notification.content.title);
+    // Trigger toast using PrimeNG MessageService based on severity
     if (notification.severity === 'CRITICAL' || notification.severity === 'ERROR') {
-      console.error(`[${notification.category}] ${notification.content.title}: ${notification.content.description}`);
+      this.error(notification.content.title, notification.content.description);
+    } else if (notification.severity === 'WARNING') {
+      this.warn(notification.content.title, notification.content.description);
     } else {
-      console.log(`[${notification.category}] ${notification.content.title}: ${notification.content.description}`);
+      this.info(notification.content.title, notification.content.description);
     }
   }
+
+  // --- Toast Methods (Restored & Flexible) ---
+
+  success(arg1: string, arg2?: string) {
+    const { title, message } = this.resolveArgs(arg1, arg2, 'Sucesso');
+    this.messageService.add({ severity: 'success', summary: title, detail: message });
+  }
+
+  error(arg1: string, arg2?: string) {
+    const { title, message } = this.resolveArgs(arg1, arg2, 'Erro');
+    this.messageService.add({ severity: 'error', summary: title, detail: message });
+  }
+
+  info(arg1: string, arg2?: string) {
+    const { title, message } = this.resolveArgs(arg1, arg2, 'Informação');
+    this.messageService.add({ severity: 'info', summary: title, detail: message });
+  }
+
+  warn(arg1: string, arg2?: string) {
+    const { title, message } = this.resolveArgs(arg1, arg2, 'Atenção');
+    this.messageService.add({ severity: 'warn', summary: title, detail: message });
+  }
+
+  private resolveArgs(arg1: string, arg2: string | undefined, defaultTitle: string): { title: string, message: string } {
+    if (arg2) {
+      // Called as (title, message)
+      return { title: arg1, message: arg2 };
+    }
+    // Called as (message)
+    return { title: defaultTitle, message: arg1 };
+  }
+
 
   async stop() {
     if (this.client) {

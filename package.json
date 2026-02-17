@@ -19,6 +19,7 @@
     "@angular/platform-browser": "^20.1.0",
     "@angular/platform-browser-dynamic": "^20.1.0",
     "@angular/router": "^20.1.0",
+    "@azure/web-pubsub-client": "^1.0.2",
     "@jsverse/transloco": "^8.2.0",
     "@primeng/themes": "^20.3.0",
     "angular-oauth2-oidc": "^20.0.2",
