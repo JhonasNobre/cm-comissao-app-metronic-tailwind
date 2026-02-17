@@ -29,6 +29,7 @@ export interface EstruturaComissaoNivel {
     idEstruturaComissao: string;
     nomeNivel: string;
     prioridade: number;
+    numeroParcelas?: number;
     idGrupo?: string;
     tipoValor: number; // TipoValor enum
     percentual?: number;
@@ -77,6 +78,7 @@ export interface CreateEstruturaComissaoNivelRequest {
     id: string;
     nomeNivel: string;
     prioridade: number;
+    numeroParcelas?: number | null;
     idGrupo?: string;
     tipoValor: number;
     percentual?: number;

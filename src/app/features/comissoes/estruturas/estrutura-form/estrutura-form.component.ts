@@ -235,7 +235,8 @@ export class EstruturaFormComponent implements OnInit {
             origemPagamentoId: [null],
             metaVendasMinima: [null],
             parcelaInicialLiberacao: [null],
-            liberacaoAutomaticaQuitacao: [false]
+            liberacaoAutomaticaQuitacao: [false],
+            numeroParcelas: [null]
         });
 
         // Watch TipoComissao changes to handle validation and mapping
@@ -603,7 +604,6 @@ export class EstruturaFormComponent implements OnInit {
 
         const data = node.data;
 
-
         // Helper to parse potential string enums
         const parseTipoValor = (val: any): number => {
             if (typeof val === 'number') return val;
@@ -650,7 +650,8 @@ export class EstruturaFormComponent implements OnInit {
             origemPagamentoId: origemPagamentoId,
             metaVendasMinima: metaVendasMinima,
             parcelaInicialLiberacao: parcelaInicialLiberacao,
-            liberacaoAutomaticaQuitacao: !!liberacaoAutomatica
+            liberacaoAutomaticaQuitacao: !!liberacaoAutomatica,
+            numeroParcelas: data.numeroParcelas || data.NumeroParcelas
         });
 
 
@@ -1022,7 +1023,13 @@ export class EstruturaFormComponent implements OnInit {
 
                 tipoComissao: data.tipoComissao !== null && data.tipoComissao !== undefined ? Number(data.tipoComissao) : null,
                 regraLiberacao: data.regraLiberacao ? Number(data.regraLiberacao) : RegraLiberacao.Diretamente,
-                prioridadePagamento: data.prioridadePagamento || 2,
+                prioridadePagamento: data.prioridade || 2, // Backend expects PrioridadePagamento in RegraParcelamento, but here we are mapping Nivel properties? 
+                // Wait, CreateEstruturaComissaoNivelRequest has Prioridade and NumeroParcelas.
+                // Prioridade in DTO maps to Backend Prioridade (Payment Priority).
+                // NumeroParcelas in DTO maps to Backend NumeroParcelas.
+
+                // So:
+                numeroParcelas: data.numeroParcelas,
 
                 // Inferir TipoBonificacao se não estiver setado mas for um nível de bônus
                 tipoBonificacao: this.inferTipoBonificacao(data),
@@ -1056,8 +1063,9 @@ export class EstruturaFormComponent implements OnInit {
 
     private inferTipoBonificacao(data: any): number | undefined {
         if (data.tipoBonificacao) return Number(data.tipoBonificacao);
+        if (data.TipoBonificacao) return Number(data.TipoBonificacao);
 
-        const tipoComissao = Number(data.tipoComissao);
+        const tipoComissao = Number(data.tipoComissao ?? data.TipoComissao);
         if (tipoComissao === TipoComissao.BonusPorPercentual) return TipoBonificacao.PorParcelamento;
         if (tipoComissao === TipoComissao.BonusLivre) return TipoBonificacao.Livre;
         if (tipoComissao === TipoComissao.BonusMeta) return TipoBonificacao.PorMeta;
@@ -1088,14 +1096,29 @@ export class EstruturaFormComponent implements OnInit {
     }
 
     private fallbackTipoComissao(data: any, resolvedTipoValue?: number): number {
-        if (data.tipoComissao) return Number(data.tipoComissao);
+        const val = data.tipoComissao ?? data.TipoComissao;
+
+        if (val !== undefined && val !== null) {
+            if (typeof val === 'number') return val;
+
+            // Handle string names from API
+            if (val === 'Percentual') return TipoComissao.Percentual;
+            if (val === 'ValorFixo') return TipoComissao.ValorFixo;
+            if (val === 'Misto') return TipoComissao.Misto;
+            if (val === 'BonusPorPercentual') return TipoComissao.BonusPorPercentual;
+            if (val === 'BonusLivre') return TipoComissao.BonusLivre;
+            if (val === 'BonusMeta') return TipoComissao.BonusMeta;
+
+            const num = Number(val);
+            if (!isNaN(num)) return num;
+        }
 
         let finalTipoValor = resolvedTipoValue;
         if (!finalTipoValor) {
-            const val = data.tipoValor ?? data.TipoValor;
-            if (val === 'Percentual') finalTipoValor = TipoValor.Percentual;
-            else if (val === 'Fixo' || val === 'ValorFixo') finalTipoValor = TipoValor.Fixo;
-            else finalTipoValor = Number(val) || TipoValor.Percentual;
+            const tVal = data.tipoValor ?? data.TipoValor;
+            if (tVal === 'Percentual') finalTipoValor = TipoValor.Percentual;
+            else if (tVal === 'Fixo' || tVal === 'ValorFixo') finalTipoValor = TipoValor.Fixo;
+            else finalTipoValor = Number(tVal) || TipoValor.Percentual;
         }
 
         return finalTipoValor === TipoValor.Percentual ? TipoComissao.Percentual : TipoComissao.ValorFixo;
