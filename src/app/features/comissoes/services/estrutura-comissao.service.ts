@@ -89,6 +89,8 @@ export class EstruturaComissaoService {
      * Envia estrutura para o sistema UAU
      */
     enviarParaUau(id: string): Observable<{ codigoUau: number }> {
-        return this.http.post<{ codigoUau: number }>(`${this.apiUrl}/${id}/enviar-uau`, {});
+        // Endpoint de integração (CQRS)
+        const url = `${environment.apiUrl}/v1/integracoes/uau/enviar-estrutura/${id}`;
+        return this.http.post<{ codigoUau: number }>(url, {});
     }
 }

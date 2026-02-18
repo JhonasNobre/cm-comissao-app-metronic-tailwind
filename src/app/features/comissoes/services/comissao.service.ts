@@ -106,4 +106,9 @@ export class ComissaoService extends BaseService {
     reprovarDocumento(idComissao: string, idDocumento: string): Observable<any> {
         return this.http.put(`${this.baseUrl}/${idComissao}/documentos/${idDocumento}/reprovar`, {});
     }
+
+    exportar(filtros: ComissaoFiltros): Observable<Blob> {
+        const params = this.buildHttpParams(filtros);
+        return this.http.get(`${this.baseUrl}/exportar`, { params, responseType: 'blob' });
+    }
 }

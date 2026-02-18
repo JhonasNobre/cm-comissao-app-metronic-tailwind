@@ -460,4 +460,38 @@ export class ComissoesListComponent implements OnInit {
             }
         });
     }
+
+    onExportarRelatorio() {
+        // Usa os filtros da aba ativa (Histórico ou Pendentes)
+        // Como o endpoint é unificado, podemos apenas passar os filtros atuais + idEmpresa
+        const filtros = this.activeTab === 'historico' ? this.filtrosHistorico : this.filtrosPendentes;
+
+        if (!filtros.idEmpresa) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Atenção',
+                detail: 'Selecione uma empresa para exportar.'
+            });
+            return;
+        }
+
+        this.loading = true;
+        this.comissaoService.exportar(filtros as any).subscribe({
+            next: (blob: Blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `relatorio_comissoes_${new Date().getTime()}.csv`;
+                link.click();
+                window.URL.revokeObjectURL(url);
+                this.loading = false;
+                this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Relatório exportado com sucesso' });
+            },
+            error: (err) => {
+                console.error(err);
+                this.loading = false;
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao exportar relatório' });
+            }
+        });
+    }
 }

@@ -8,8 +8,8 @@
                 <div class="text-sm text-gray-500">Dashboard / Listagem</div>
             </div>
 
-            <button pButton label="Exportar relatório" icon="pi pi-download"
-                class="p-button-primary p-button-sm"></button>
+            <button pButton label="Exportar relatório" icon="pi pi-download" (click)="onExportarRelatorio()"
+                class="p-button-primary p-button-sm" [loading]="loading"></button>
         </div>
 
         <!-- Custom Tabs -->
