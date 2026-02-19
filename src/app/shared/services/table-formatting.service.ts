@@ -46,13 +46,23 @@ export class TableFormattingService {
             //     break;
             // }
             case 'dateFormat':
-            // case 'dateTimeFormat': {
-            //     const dateVal = typeof raw === 'string' ? new Date(raw) : (raw as unknown as Date);
-            //     if (isNaN(dateVal.getTime())) throw new Error(`Valor de data inválido fornecido: ${raw}`);
-            //     const pipe = column.pipe === 'dateFormat' ? this.dateFormatPipe : this.dateTimeFormatPipe;
-            //     formatted = pipe.transform(dateVal, countryCustom) ?? '';
-            //     break;
-            // }
+            case 'dateTimeFormat': {
+                const dateVal = typeof raw === 'string' ? new Date(raw) : (raw as unknown as Date);
+                if (isNaN(dateVal.getTime())) throw new Error(`Valor de data inválido fornecido: ${raw}`);
+
+                // Formatação manual simples se o pipe não estiver injetado/disponível
+                const day = String(dateVal.getDate()).padStart(2, '0');
+                const month = String(dateVal.getMonth() + 1).padStart(2, '0');
+                const year = dateVal.getFullYear();
+
+                if (column.pipe === 'dateFormat') {
+                    return `${day}/${month}/${year}`;
+                }
+
+                const hours = String(dateVal.getHours()).padStart(2, '0');
+                const minutes = String(dateVal.getMinutes()).padStart(2, '0');
+                return `${day}/${month}/${year} ${hours}:${minutes}`;
+            }
             case 'zipCodeFormat':
             case 'documentFormat':
             // case 'personDocumentFormat': {

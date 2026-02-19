@@ -132,6 +132,16 @@ export class ComissoesListComponent implements OnInit {
         this.columnsPendentes = [
             { field: 'numeroParcela', header: 'Nº Parcela', sortable: true },
             { field: 'codigoVenda', header: 'Código da Venda', sortable: true },
+            {
+                field: 'statusPagamento',
+                header: 'Status de Pagamento',
+                displayAs: 'badge',
+                badgeSeverityMap: {
+                    'Atrasado': 'danger',
+                    'A receber': 'info',
+                    'Recebido': 'success'
+                }
+            },
             { field: 'produto', header: 'Produto', sortable: true },
             { field: 'imovel', header: 'Imóvel', sortable: true },
             { field: 'nome', header: 'Nome', sortable: true },
@@ -139,7 +149,7 @@ export class ComissoesListComponent implements OnInit {
             {
                 field: 'valor',
                 header: 'Valor',
-                formatter: (v) => `R$ ${v?.toFixed(2) || '0.00'}`,
+                formatter: (v) => `R$ ${v?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0,00'}`,
                 sortable: true
             },
             {
@@ -151,14 +161,16 @@ export class ComissoesListComponent implements OnInit {
             },
             {
                 field: 'status',
-                header: 'Status',
+                header: 'Status da Parcela',
                 displayAs: 'badge',
                 badgeSeverityMap: {
                     'Pendente': 'warning',
                     'Atrasado': 'danger',
+                    'Bloqueada': 'danger',
                     'Bloqueado': 'danger',
-                    'Liberado': 'success',
-                    'Paga': 'info'
+                    'Liberada': 'primary',
+                    'Liberado': 'primary',
+                    'Paga': 'success'
                 }
             }
         ];

@@ -282,13 +282,59 @@ export class EstruturaFormComponent implements OnInit {
     }
 
     onAddSubordinatesFromTree(node: OrgNode) {
-        const treeNode = this.findTreeNodeById(this.treeData, node.id);
+        // Tenta encontrar como nível (TreeNode) ou como membro de um nível
+        let treeNode = this.findTreeNodeById(this.treeData, node.id);
+
+        if (!treeNode) {
+            treeNode = this.findTreeNodeByMemberId(this.treeData, node.id);
+        }
+
         if (treeNode) {
             this.parentForNewNode = treeNode;
             this.currentLevelMembers = [];
             this.showMemberSearch = false;
-            this.initLevelForm();
+            this.levelForm.reset({
+                prioridade: 1,
+                tipoValor: TipoValor.Percentual,
+                parentId: treeNode.data.id
+            });
             this.displayLevelDialog = true;
+        } else {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Erro',
+                detail: 'Não foi possível localizar o nível correspondente na estrutura.'
+            });
+        }
+    }
+
+    onEditFromTree(node: OrgNode) {
+        let treeNode = this.findTreeNodeById(this.treeData, node.id);
+
+        if (!treeNode) {
+            treeNode = this.findTreeNodeByMemberId(this.treeData, node.id);
+        }
+
+        if (treeNode) {
+            this.editLevel(treeNode);
+        }
+    }
+
+    onAddMembersFromTree(node: OrgNode) {
+        let treeNode = this.findTreeNodeById(this.treeData, node.id);
+
+        if (!treeNode) {
+            treeNode = this.findTreeNodeByMemberId(this.treeData, node.id);
+        }
+
+        if (treeNode) {
+            this.openBulkMemberDialog(treeNode);
+        } else {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Erro',
+                detail: 'Não foi possível localizar o nível correspondente na estrutura.'
+            });
         }
     }
 
@@ -335,6 +381,20 @@ export class EstruturaFormComponent implements OnInit {
             if (node.key === id || node.data?.id === id) return node;
             if (node.children) {
                 const found = this.findTreeNodeById(node.children, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
+    private findTreeNodeByMemberId(nodes: TreeNode[], memberId: string): TreeNode | null {
+        for (const node of nodes) {
+            if (node.data?.membros) {
+                const hasMember = node.data.membros.some((m: any) => m.id === memberId);
+                if (hasMember) return node;
+            }
+            if (node.children) {
+                const found = this.findTreeNodeByMemberId(node.children, memberId);
                 if (found) return found;
             }
         }
@@ -638,21 +698,21 @@ export class EstruturaFormComponent implements OnInit {
         const liberacaoAutomatica = data.liberacaoAutomaticaQuitacao ?? data.LiberacaoAutomaticaQuitacao;
 
         this.levelForm.patchValue({
-            nomeNivel: data.nomeNivel || data.NomeNivel,
-            prioridade: data.prioridade || data.Prioridade,
+            nomeNivel: data.nomeNivel ?? data.NomeNivel,
+            prioridade: data.prioridade ?? data.Prioridade,
             tipoValor: resolvedTipoValor,
-            percentual: data.percentual || data.Percentual,
-            valorFixo: data.valorFixo || data.ValorFixo,
+            percentual: data.percentual ?? data.Percentual,
+            valorFixo: data.valorFixo ?? data.ValorFixo,
             tipoComissao: inferredTipoComissao,
             regraLiberacao: regraLiberacao,
-            prioridadePagamento: prioridadePagamento || 2,
+            prioridadePagamento: prioridadePagamento ?? 2,
             tipoBonificacao: tipoBonificacao ? Number(tipoBonificacao) : null,
             origemPagamentoId: origemPagamentoId,
             metaVendasMinima: metaVendasMinima,
             parcelaInicialLiberacao: parcelaInicialLiberacao,
             liberacaoAutomaticaQuitacao: !!liberacaoAutomatica,
-            numeroParcelas: data.numeroParcelas || data.NumeroParcelas
-        });
+            numeroParcelas: data.numeroParcelas ?? data.NumeroParcelas
+        }, { emitEvent: false });
 
 
         this.displayLevelDialog = true;
@@ -1046,8 +1106,8 @@ export class EstruturaFormComponent implements OnInit {
                 membros: data.membros ? data.membros.map((m: any) => ({
                     id: m.id,
                     nome: m.nome,
-                    usuarioId: m.usuarioId || undefined,
-                    equipeId: m.equipeId || undefined
+                    usuarioId: m.usuarioId ?? undefined,
+                    equipeId: m.equipeId ?? undefined
                 })) : []
             };
 

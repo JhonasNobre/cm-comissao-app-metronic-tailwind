@@ -91,7 +91,9 @@ export class MemberCardComponent {
     @Input() expanded = true;
 
     @Output() toggleExpand = new EventEmitter<void>();
-    @Output() addSubordinates = new EventEmitter<OrgNode>();
+    @Output() addSubordinates = new EventEmitter<OrgNode>(); // Agora para NOVO SUBNÍVEL
+    @Output() addMembers = new EventEmitter<OrgNode>();       // Para INTEGRANTES EM MASSA
+    @Output() editNode = new EventEmitter<OrgNode>();
     @Output() removeFromStructure = new EventEmitter<OrgNode>();
 
     menuItems: MenuItem[] = [];
@@ -99,9 +101,19 @@ export class MemberCardComponent {
     ngOnInit() {
         this.menuItems = [
             {
-                label: 'Adicionar subordinados',
+                label: 'Vincular integrantes',
                 icon: 'pi pi-user-plus',
+                command: () => this.addMembers.emit(this.node)
+            },
+            {
+                label: 'Novo subnível',
+                icon: 'pi pi-sitemap',
                 command: () => this.addSubordinates.emit(this.node)
+            },
+            {
+                label: 'Editar nível',
+                icon: 'pi pi-pencil',
+                command: () => this.editNode.emit(this.node)
             },
             {
                 label: 'Remover',

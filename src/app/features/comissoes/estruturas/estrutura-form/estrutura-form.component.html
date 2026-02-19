@@ -177,6 +177,7 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 h-full p-0 overflow-hidden flex flex-col relative"
                 style="min-height: 600px;">
                 <app-hierarchy-tree [data]="orgData" (addSubordinates)="onAddSubordinatesFromTree($event)"
+                    (addMembers)="onAddMembersFromTree($event)" (editNode)="onEditFromTree($event)"
                     (removeNode)="onRemoveFromTree($event)" class="w-full h-full block">
                 </app-hierarchy-tree>
             </div>

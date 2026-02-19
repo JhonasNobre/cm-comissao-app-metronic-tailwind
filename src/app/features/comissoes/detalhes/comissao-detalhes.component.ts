@@ -86,15 +86,15 @@ export class ComissaoDetalhesComponent implements OnInit {
 
     // View Model para Detalhes da Venda
     detalhesDisplay = {
-        produto: 'Carregando...',
-        imovel: 'Carregando...',
-        equipe: 'Carregando...',
-        cliente: 'Carregando...',
-        corretor: 'Carregando...',
-        cidade: 'Carregando...',
+        produto: '',
+        imovel: '',
+        equipe: '',
+        cliente: '',
+        corretor: '',
+        cidade: '',
         valorVenda: 0,
-        valorRecebido: 'Indisponível',
-        taxaRecebida: 'Indisponível'
+        valorRecebido: 'R$ 0,00',
+        taxaRecebida: '0%'
     };
 
     // Dados de Pagamento (Cliente -> Incorporadora)
@@ -103,6 +103,7 @@ export class ComissaoDetalhesComponent implements OnInit {
     // Dados de Comissão (Incorporadora -> Corretor)
     parcelasComissaoDisplay: any[] = [];
     selectedParcelasComissao: any[] = [];
+    totalPercentualParticipantes: number = 0;
 
     ngOnInit() {
         this.route.paramMap.subscribe(params => {
@@ -198,12 +199,12 @@ export class ComissaoDetalhesComponent implements OnInit {
         }
 
         this.detalhesDisplay = {
-            produto: (this.comissao as any).produto || this.comissao.nomeEstrutura || 'Não informado',
-            imovel: this.venda?.imovel || 'Não informado',
-            equipe: 'Não informado',
-            cliente: this.venda?.nomeCliente || 'Não informado',
-            corretor: nomeCorretor,
-            cidade: this.detalhesDisplay.cidade || 'Não informado',
+            produto: (this.comissao as any).produto || this.comissao.nomeEstrutura || 'Não Importado',
+            imovel: this.comissao.imovel || this.venda?.imovel || 'Não Importado',
+            equipe: this.comissao.equipe && this.comissao.equipe !== 'Não informado' ? this.comissao.equipe : 'Não Importado',
+            cliente: this.comissao.nomeCliente && this.comissao.nomeCliente !== 'Não informado' ? this.comissao.nomeCliente : (this.venda?.nomeCliente || 'Não Importado'),
+            corretor: 'Não Importado', // Dados da venda original ainda não importados do legado
+            cidade: this.comissao.cidade || 'Não Importado',
             valorVenda: this.comissao.valorVenda,
             valorRecebido: this.comissao.valorComissaoRecebido
                 ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(this.comissao.valorComissaoRecebido)
@@ -212,6 +213,9 @@ export class ComissaoDetalhesComponent implements OnInit {
                 ? `${this.comissao.taxaComissaoRecebida}%`
                 : '0%'
         };
+
+        // Calcula total de percentuais
+        this.totalPercentualParticipantes = this.comissao.itens?.reduce((acc, item) => acc + (item.percentualAplicado || 0), 0) || 0;
 
         if (this.comissao.parcelas) {
             this.parcelasComissaoDisplay = this.comissao.parcelas.map(p => {
@@ -284,7 +288,14 @@ export class ComissaoDetalhesComponent implements OnInit {
                 const currentUser = this.authService.currentUserValue;
                 if (!currentUser) return;
 
-                this.comissaoService.aprovar(this.comissao!.id, currentUser.id).subscribe({
+                const userId = currentUser.id || currentUser.sub || currentUser.nameid || currentUser.Id;
+                if (!userId) {
+                    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'ID do usuário não encontrado na sessão.' });
+                    this.saving = false;
+                    return;
+                }
+
+                this.comissaoService.aprovar(this.comissao!.id, userId).subscribe({
                     next: () => {
                         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Comissão aprovada!' });
                         this.loadDetalhes(this.comissao!.id);
@@ -312,7 +323,14 @@ export class ComissaoDetalhesComponent implements OnInit {
         const currentUser = this.authService.currentUserValue;
         if (!currentUser) return;
 
-        this.comissaoService.rejeitar(this.comissao.id, currentUser.id, this.motivoRejeicao).subscribe({
+        const userId = currentUser.id || currentUser.sub || currentUser.nameid || currentUser.Id;
+        if (!userId) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'ID do usuário não encontrado na sessão.' });
+            this.saving = false;
+            return;
+        }
+
+        this.comissaoService.rejeitar(this.comissao.id, userId, this.motivoRejeicao).subscribe({
             next: () => {
                 this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Comissão rejeitada!' });
                 this.rejeicaoVisible = false;
@@ -340,7 +358,10 @@ export class ComissaoDetalhesComponent implements OnInit {
                 const currentUser = this.authService.currentUserValue;
                 if (!currentUser || !this.comissao) return;
 
-                this.comissaoService.liberarParcelaManual(this.comissao.id, parcela.id, currentUser.id).subscribe({
+                const userId = currentUser.id || currentUser.sub || currentUser.nameid || currentUser.Id;
+                if (!userId) return;
+
+                this.comissaoService.liberarParcelaManual(this.comissao.id, parcela.id, userId).subscribe({
                     next: () => {
                         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Parcela liberada!' });
                         this.loadDetalhes(this.comissao!.id);
@@ -365,10 +386,13 @@ export class ComissaoDetalhesComponent implements OnInit {
                 const currentUser = this.authService.currentUserValue;
                 if (!currentUser) return;
 
+                const userId = currentUser.id || currentUser.sub || currentUser.nameid || currentUser.Id;
+                if (!userId) return;
+
                 const ids = this.selectedParcelasComissao.map(p => p.id);
                 this.saving = true;
 
-                this.comissaoService.liberarParcelasEmMassa(ids, currentUser.id).subscribe({
+                this.comissaoService.liberarParcelasEmMassa(ids, userId).subscribe({
                     next: () => {
                         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Comissões liberadas com sucesso!' });
                         this.selectedParcelasComissao = [];
@@ -404,7 +428,7 @@ export class ComissaoDetalhesComponent implements OnInit {
         const currentUser = this.authService.currentUserValue;
         if (!currentUser) return;
 
-        const idResponsavel = currentUser.id || '00000000-0000-0000-0000-000000000000';
+        const idResponsavel = currentUser.id || currentUser.sub || currentUser.nameid || currentUser.Id || '00000000-0000-0000-0000-000000000000';
 
         this.saving = true;
         this.comissaoService.uploadDocumento(

@@ -59,6 +59,11 @@ export interface Comissao {
     // Novos Campos
     valorComissaoRecebido?: number;
     taxaComissaoRecebida?: number;
+    imovel?: string;
+    cidade?: string;
+    nomeCliente?: string;
+    corretor?: string;
+    equipe?: string;
 
     itens?: ItemComissao[];
     parcelas?: ParcelaComissao[];

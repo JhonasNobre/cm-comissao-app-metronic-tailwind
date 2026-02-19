@@ -139,7 +139,7 @@
 
             <!-- Tab 2: Parcelas de comissão -->
             <p-tabpanel value="2">
-                <div class="flex justify-end gap-2 mb-4 mt-4">
+                <div class="flex justify-end gap-2 mb-4 mt-4" *ngIf="comissao.status === EStatusComissao.Aprovada">
                     <button pButton pRipple label="Cancelar"
                         class="p-button-text p-button-secondary p-button-sm"></button>
                     <button pButton pRipple label="Liberar Comissões" class="p-button-primary p-button-sm"
@@ -151,7 +151,9 @@
                         styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '70rem' }">
                         <ng-template pTemplate="header">
                             <tr class="text-xs text-gray-400 uppercase bg-gray-50">
-                                <th style="width: 4rem"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
+                                <th style="width: 4rem" *ngIf="comissao.status === EStatusComissao.Aprovada">
+                                    <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                                </th>
                                 <th>Nº DA PARCELA</th>
                                 <th>CÓDIGO DA VENDA</th>
                                 <th>STATUS DE PAGAMENTO</th>
@@ -166,7 +168,10 @@
                         </ng-template>
                         <ng-template pTemplate="body" let-p>
                             <tr class="text-sm border-b">
-                                <td><p-tableCheckbox [value]="p"></p-tableCheckbox></td>
+                                <td *ngIf="comissao.status === EStatusComissao.Aprovada">
+                                    <p-tableCheckbox [value]="p"
+                                        *ngIf="p.status === EStatusParcela.Pendente"></p-tableCheckbox>
+                                </td>
                                 <td class="py-3">{{p.numeroParcela}}</td>
                                 <td>{{p.codigoVenda}}</td>
                                 <td>
@@ -211,7 +216,7 @@
 
                         <div class="flex justify-between items-center pt-4 font-bold">
                             <span>Total Distribuição</span>
-                            <span>100%</span>
+                            <span>{{totalPercentualParticipantes}}%</span>
                         </div>
                     </div>
                 </div>
@@ -261,7 +266,8 @@
                                         </div>
                                     </div>
                                     <div *ngIf="getDocumentosPorCategoria(1).length === 0"
-                                        class="text-center text-gray-400 py-4">Nenhum documento</div>
+                                        class="text-center text-gray-400 py-4">
+                                        Nenhum documento</div>
                                 </div>
                             </p-accordion-content>
                         </p-accordion-panel>
@@ -294,7 +300,8 @@
                                         </div>
                                     </div>
                                     <div *ngIf="getDocumentosPorCategoria(2).length === 0"
-                                        class="text-center text-gray-400 py-4">Nenhum documento</div>
+                                        class="text-center text-gray-400 py-4">
+                                        Nenhum documento</div>
                                 </div>
                             </p-accordion-content>
                         </p-accordion-panel>
@@ -327,7 +334,8 @@
                                         </div>
                                     </div>
                                     <div *ngIf="getDocumentosPorCategoria(3).length === 0"
-                                        class="text-center text-gray-400 py-4">Nenhum documento</div>
+                                        class="text-center text-gray-400 py-4">
+                                        Nenhum documento</div>
                                 </div>
                             </p-accordion-content>
                         </p-accordion-panel>
@@ -360,7 +368,8 @@
                                         </div>
                                     </div>
                                     <div *ngIf="getDocumentosPorCategoria(0).length === 0"
-                                        class="text-center text-gray-400 py-4">Nenhum documento</div>
+                                        class="text-center text-gray-400 py-4">
+                                        Nenhum documento</div>
                                 </div>
                             </p-accordion-content>
                         </p-accordion-panel>

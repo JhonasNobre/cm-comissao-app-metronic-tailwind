@@ -43,6 +43,8 @@ interface NodePosition {
                             [expanded]="isExpanded(pos.node.id)"
                             (toggleExpand)="onToggleExpand(pos.node.id)"
                             (addSubordinates)="onAddSubordinates($event)"
+                            (addMembers)="onAddMembers($event)"
+                            (editNode)="onEditNode($event)"
                             (removeFromStructure)="onRemove($event)">
                         </app-member-card>
                     </div>
@@ -88,6 +90,8 @@ export class HierarchyTreeComponent implements OnChanges, AfterViewInit {
     @Input() data: OrgNode[] | OrgNode | null = null;
 
     @Output() addSubordinates = new EventEmitter<OrgNode>();
+    @Output() addMembers = new EventEmitter<OrgNode>();
+    @Output() editNode = new EventEmitter<OrgNode>();
     @Output() removeNode = new EventEmitter<OrgNode>();
 
     // Layout constants
@@ -234,6 +238,14 @@ export class HierarchyTreeComponent implements OnChanges, AfterViewInit {
 
     onAddSubordinates(node: OrgNode): void {
         this.addSubordinates.emit(node);
+    }
+
+    onAddMembers(node: OrgNode): void {
+        this.addMembers.emit(node);
+    }
+
+    onEditNode(node: OrgNode): void {
+        this.editNode.emit(node);
     }
 
     onRemove(node: OrgNode): void {
