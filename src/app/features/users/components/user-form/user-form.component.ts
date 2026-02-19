@@ -465,8 +465,6 @@ export class UserFormComponent implements OnInit {
 
             updatePayload.permissoesIndividuais = permissoesIndividuais.length > 0 ? permissoesIndividuais : undefined;
 
-            console.log('📤 Enviando permissões individuais:', permissoesIndividuais);
-
             this.service.update(updatePayload, this.userId).subscribe({
                 next: () => {
                     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Usuário atualizado com sucesso' });
@@ -504,8 +502,6 @@ export class UserFormComponent implements OnInit {
                 limiteDescontoMaximoIndividual: formValue.limiteDescontoMaximoIndividual,
                 quantidadeMaximaReservasIndividual: formValue.quantidadeMaximaReservasIndividual
             };
-
-            console.log('📤 Create payload:', createPayload);
 
             this.service.create(createPayload).subscribe({
                 next: () => {

@@ -203,7 +203,7 @@ export class EstruturasListComponent implements OnInit {
         if (!this.filtros.idEmpresa) return;
 
         this.loading = true;
-        this.estruturaService.getAll(this.filtros).subscribe({
+        this.estruturaService.getByEmpresa(this.filtros.idEmpresa, this.filtros).subscribe({
             next: (result) => {
                 this.estruturas = result.items;
                 this.totalRecords = result.totalItems;

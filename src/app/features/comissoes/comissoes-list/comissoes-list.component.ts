@@ -102,12 +102,14 @@ export class ComissoesListComponent implements OnInit {
             this.filtrosPendentes.idEmpresa = idEmpresa;
             this.filtrosHistorico.idEmpresa = idEmpresa;
 
-            if (idEmpresa) {
-                this.loadData();
-            } else {
-                this.pendentes = [];
-                this.historico = [];
-            }
+            // Limpamos os dados imediatamente ao trocar de empresa
+            this.pendentes = [];
+            this.historico = [];
+
+            // Não chamamos loadData() aqui. 
+            // Como a empresa é um filtro essencial, o componente p-table (via lazyLoad)
+            // ou o estado inicial dos filtros já deve disparar a primeira carga.
+            // Se o idEmpresa for undefined, as funções loadX já possuem guardas.
         });
     }
 
@@ -130,17 +132,6 @@ export class ComissoesListComponent implements OnInit {
         this.columnsPendentes = [
             { field: 'numeroParcela', header: 'Nº Parcela', sortable: true },
             { field: 'codigoVenda', header: 'Código da Venda', sortable: true },
-            {
-                field: 'statusPagamento',
-                header: 'Status de Pagamento',
-                displayAs: 'badge',
-                badgeSeverityMap: {
-                    'Atrasado': 'danger',
-                    'A receber': 'info',
-                    'Recebido': 'success'
-                },
-                sortable: true
-            },
             { field: 'produto', header: 'Produto', sortable: true },
             { field: 'imovel', header: 'Imóvel', sortable: true },
             { field: 'nome', header: 'Nome', sortable: true },
@@ -164,9 +155,10 @@ export class ComissoesListComponent implements OnInit {
                 displayAs: 'badge',
                 badgeSeverityMap: {
                     'Pendente': 'warning',
+                    'Atrasado': 'danger',
                     'Bloqueado': 'danger',
                     'Liberado': 'success',
-                    'Pagar': 'info'
+                    'Paga': 'info'
                 }
             }
         ];

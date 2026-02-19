@@ -9,6 +9,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { Router } from '@angular/router';
 
 import { VendaService } from '../services/venda.service';
+import { EmpresaSelectorService } from '../../../core/services/empresa-selector.service';
 import { VendaImportada, VendaFiltros } from '../models/venda.model';
 import { ComissaoService } from '../../comissoes/services/comissao.service';
 import { EstruturaComissaoService } from '../../comissoes/services/estrutura-comissao.service';
@@ -40,6 +41,7 @@ export class VendasImportadasListaComponent implements OnInit {
     private authService = inject(AuthService);
     private router = inject(Router);
     private messageService = inject(MessageService);
+    private empresaSelectorService = inject(EmpresaSelectorService);
 
     vendas: VendaImportada[] = [];
     totalRecords = 0;
@@ -63,7 +65,14 @@ export class VendasImportadasListaComponent implements OnInit {
 
     ngOnInit() {
         this.initializeColumns();
-        this.loadEstruturas();
+
+        this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
+            if (ids.length > 0) {
+                this.loadEstruturas(ids[0]);
+            } else {
+                this.estruturas = [];
+            }
+        });
     }
 
     initializeColumns() {
@@ -125,8 +134,8 @@ export class VendasImportadasListaComponent implements OnInit {
         });
     }
 
-    loadEstruturas() {
-        this.estruturaService.getAll({ pagina: 1, tamanhoPagina: 100, ativo: true }).subscribe({
+    loadEstruturas(idEmpresa: string) {
+        this.estruturaService.getByEmpresa(idEmpresa, { pagina: 1, tamanhoPagina: 100, ativo: true }).subscribe({
             next: (data) => {
                 this.estruturas = data.items;
             }
@@ -143,8 +152,6 @@ export class VendasImportadasListaComponent implements OnInit {
         if (!this.vendaSelecionada || !this.estruturaSelecionada) return;
 
         const currentUser = this.authService.currentUserValue;
-
-        console.log('CurrentUser Claims:', currentUser);
 
         if (!currentUser) {
             this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Sessão inválida. Faça login novamente.' });

@@ -25,24 +25,20 @@ export class EmpresaSelectionComponent implements OnInit {
     step: 'select-company' | 'select-platform' = 'select-company';
 
     ngOnInit(): void {
-        console.log('[EmpresaSelection] Componente inicializado.');
         this.loadUserData();
         this.loadEmpresas();
     }
 
     private loadUserData(): void {
         const claims = this.authService.getUserInfo();
-        console.log('[EmpresaSelection] Claims do usuário:', claims);
         if (claims) {
             this.userName = claims.name || claims.preferred_username || 'Usuário';
         }
     }
 
     private loadEmpresas(): void {
-        console.log('[EmpresaSelection] Inscrevendo no observável de empresas...');
         // Tentar obter do seletor (já carregado pelo AuthService)
         this.empresaSelectorService.userEmpresas$.subscribe(empresas => {
-            console.log('[EmpresaSelection] Recebeu empresas do serviço:', empresas.length, empresas);
             if (empresas.length > 0) {
                 this.empresas = empresas;
                 this.loading = false;
@@ -107,7 +103,6 @@ export class EmpresaSelectionComponent implements OnInit {
         if (!this.selectedEmpresaId || !this.selectedPlatform) return;
 
         const selectedEmpresa = this.empresas.find(e => e.id === this.selectedEmpresaId);
-        console.log('[PlatformSelection] Empresa selecionada para redirecionamento:', selectedEmpresa);
 
         if (this.selectedPlatform === 'sales') {
             // Plataforma de Vendas (Legado)
@@ -123,7 +118,6 @@ export class EmpresaSelectionComponent implements OnInit {
                 }
 
                 // Redireciona externamente
-                console.log('[PlatformSelection] Redirecionando para Legado:', url);
                 window.location.href = url;
             } else {
                 console.error('[PlatformSelection] Configuração de domínio legado ausente:', selectedEmpresa);
@@ -132,7 +126,6 @@ export class EmpresaSelectionComponent implements OnInit {
         } else {
             // Plataforma de Comissionamento (Novo)
             if (selectedEmpresa) {
-                console.log('[PlatformSelection] Acessando Comissionamento (Novo)...');
                 this.empresaSelectorService.setSelectedEmpresas([this.selectedEmpresaId]);
                 this.router.navigate(['/']);
             }

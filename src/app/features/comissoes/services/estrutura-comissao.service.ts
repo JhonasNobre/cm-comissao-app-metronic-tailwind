@@ -19,16 +19,16 @@ export class EstruturaComissaoService {
     constructor(private http: HttpClient) { }
 
     /**
-     * Lista todas as estruturas com filtros opcionais
+     * Lista as estruturas de uma empresa específica
      */
-    getAll(filtros?: EstruturaComissaoFiltros): Observable<PagedResult<EstruturaComissao>> {
+    getByEmpresa(idEmpresa: string, filtros?: Partial<EstruturaComissaoFiltros>): Observable<PagedResult<EstruturaComissao>> {
         let params = new HttpParams();
+        params = params.set('idEmpresa', idEmpresa);
 
         if (filtros) {
             if (filtros.busca) params = params.set('busca', filtros.busca);
             if (filtros.tipoComissao !== undefined) params = params.set('tipoComissao', filtros.tipoComissao.toString());
             if (filtros.ativo !== undefined) params = params.set('ativo', filtros.ativo.toString());
-            if (filtros.idEmpresa) params = params.set('idEmpresa', filtros.idEmpresa);
             if (filtros.pagina) params = params.set('pagina', filtros.pagina.toString());
             if (filtros.tamanhoPagina) params = params.set('tamanhoPagina', filtros.tamanhoPagina.toString());
         }

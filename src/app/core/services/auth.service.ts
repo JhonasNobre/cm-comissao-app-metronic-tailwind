@@ -105,7 +105,6 @@ export class AuthService {
      * @param suppressAutoSelect Se true, não auto-seleciona empresa no EmpresaSelectorService (usado no login)
      */
     private setSession(token: string, refreshToken?: string, suppressAutoSelect = false): void {
-        console.log('[AuthService] setSession: Gravando token e atualizando estado. Auto-seleção suprimida:', suppressAutoSelect);
         localStorage.setItem(this.TOKEN_KEY, token);
         if (refreshToken) {
             localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
@@ -254,11 +253,9 @@ export class AuthService {
      */
     private updateEmpresaSelector(suppressAutoSelect = false): void {
         const empresas = this.getEmpresas();
-        console.log('[AuthService] updateEmpresaSelector: Empresas encontradas no token:', empresas.length, empresas);
 
         if (empresas.length > 0) {
             if (suppressAutoSelect) {
-                console.log('[AuthService] Suprimindo auto-seleção (Login Flow). Apenas populando lista.');
                 // Se o seletor tiver um método para apenas popular, usaríamos ele. 
                 // Por enquanto, passamos a lista para o seletor.
                 this.empresaSelectorService.setUserEmpresas(empresas);

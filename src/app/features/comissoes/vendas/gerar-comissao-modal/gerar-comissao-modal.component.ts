@@ -9,6 +9,7 @@ import { VendaImportada } from '../../models/venda-importada.model';
 import { EstruturaComissaoService } from '../../services/estrutura-comissao.service';
 import { ComissaoService } from '../../services/comissao.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { EmpresaSelectorService } from '../../../../core/services/empresa-selector.service';
 import { MessageService } from 'primeng/api';
 
 @Component({
@@ -29,6 +30,7 @@ export class GerarComissaoModalComponent implements OnInit {
     private comissaoService = inject(ComissaoService);
     private authService = inject(AuthService);
     private messageService = inject(MessageService);
+    private empresaSelectorService = inject(EmpresaSelectorService);
 
     @Input() visible = false;
     @Output() visibleChange = new EventEmitter<boolean>();
@@ -41,13 +43,17 @@ export class GerarComissaoModalComponent implements OnInit {
     saving = false;
 
     ngOnInit() {
-        this.loadEstruturas();
+        this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
+            if (ids.length > 0) {
+                this.loadEstruturas(ids[0]);
+            }
+        });
     }
 
-    loadEstruturas() {
+    loadEstruturas(idEmpresa: string) {
         this.loading = true;
-        // Busca estruturas ativas
-        this.estruturaService.getAll({ ativo: true, pagina: 1, tamanhoPagina: 100 }).subscribe({
+        // Busca estruturas ativas da empresa selecionada
+        this.estruturaService.getByEmpresa(idEmpresa, { ativo: true, pagina: 1, tamanhoPagina: 100 }).subscribe({
             next: (result) => {
                 this.estruturas = result.items.map(e => ({ label: e.nome, value: e.id }));
                 this.loading = false;

@@ -23,20 +23,31 @@ import { EmpresaSelectorService } from '../../core/services/empresa-selector.ser
       <div class="grid grid-cols-1 gap-6 mb-8">
         <!-- Ações de Sincronização -->
         <div class="card p-5 bg-white shadow-sm border border-gray-100">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="flex flex-col">
+              <label class="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Data Inicial</label>
+              <input type="date" [(ngModel)]="dataInicio" class="form-input rounded-lg border-gray-200 focus:border-primary transition-all">
+            </div>
+            <div class="flex flex-col">
+              <label class="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Data Final</label>
+              <input type="date" [(ngModel)]="dataFim" class="form-input rounded-lg border-gray-200 focus:border-primary transition-all">
+            </div>
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             <button class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 transition-all group"
                     (click)="sincronizarProdutos()" [disabled]="loading">
               <i class="pi pi-box text-3xl mb-3 text-gray-400 group-hover:text-primary" [class.animate-spin]="loadingProducts"></i>
               <span class="font-bold text-gray-700 group-hover:text-primary">Sincronizar Produtos</span>
-              <span class="text-xs text-gray-400 mt-1">Importa os últimos 20 produtos</span>
+              <span class="text-xs text-gray-400 mt-1">Importa os produtos do legado</span>
             </button>
 
             <button class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 transition-all group"
                     (click)="sincronizarVendas()" [disabled]="loading">
               <i class="pi pi-shopping-cart text-3xl mb-3 text-gray-400 group-hover:text-primary" [class.animate-spin]="loadingSales"></i>
               <span class="font-bold text-gray-700 group-hover:text-primary">Sincronizar Vendas</span>
-              <span class="text-xs text-gray-400 mt-1">Importa as últimas 20 vendas</span>
+              <span class="text-xs text-gray-400 mt-1">Sincroniza vendas no período selecionado</span>
             </button>
 
           </div>
@@ -85,6 +96,9 @@ export class LegacySyncComponent {
   loadingSales: boolean = false;
   lastResult: SyncResult | null = null;
   error: string | null = null;
+  
+  dataInicio: string = '2025-01-01';
+  dataFim: string = new Date().toISOString().substring(0, 10);
 
   constructor(private syncService: LegacySyncService) { }
 
@@ -110,7 +124,7 @@ export class LegacySyncComponent {
   sincronizarVendas() {
     this.resetState();
     this.loadingSales = true;
-    this.syncService.sincronizarVendas().subscribe({
+    this.syncService.sincronizarVendas(this.dataInicio, this.dataFim).subscribe({
       next: (res: SyncResult) => {
         this.lastResult = res;
         this.loadingSales = false;

@@ -482,24 +482,18 @@ export class ComissaoDetalhesComponent implements OnInit {
             }
             this.docsPorCategoria[targetCat].push(dNormalizado);
         });
-
-        console.log('Documentos organizados:', this.docsPorCategoria);
     }
 
     aprovarDocumento(doc: ComissaoDocumento) {
-        console.log('Botão de aprovar clicado para documento:', doc);
         if (!this.comissao) {
             console.error('Comissão não carregada');
             return;
         }
-
-        console.log('Chamando confirmationService.confirm');
         this.confirmationService.confirm({
             message: 'Tem certeza que deseja aprovar este documento?',
             header: 'Confirmar Aprovação',
             icon: 'pi pi-check',
             accept: () => {
-                console.log('Confirmação aceita, chamando serviço de aprovação');
                 this.comissaoService.aprovarDocumento(this.comissao!.id, doc.id).subscribe({
                     next: () => {
                         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Documento aprovado!' });

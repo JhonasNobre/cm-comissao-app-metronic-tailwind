@@ -43,17 +43,14 @@ export class NotificationService implements OnDestroy {
       this.client = new WebPubSubClient(negotiateUrl);
 
       this.client.on('connected', (e: any) => {
-        console.log('Web PubSub connected', e);
         this.isConnectedSubject.next(true);
       });
 
       this.client.on('disconnected', (e: any) => {
-        console.log('Web PubSub disconnected', e);
         this.isConnectedSubject.next(false);
       });
 
       this.client.on('server-message', (e: any) => {
-        console.log('Received message:', e.message.data);
         if (e.message.data) {
           try {
             // Assuming data is JSON
@@ -66,8 +63,6 @@ export class NotificationService implements OnDestroy {
       });
 
       await this.client.start();
-      console.log('Web PubSub client started');
-
     } catch (error) {
       console.error('Failed to connect to Web PubSub:', error);
     }

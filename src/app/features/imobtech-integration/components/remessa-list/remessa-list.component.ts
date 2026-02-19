@@ -99,7 +99,6 @@ export class RemessaListComponent implements OnInit {
     }
 
     onViewDetails(remessa: RemessaDto): void {
-        console.log('Abrindo detalhes para a remessa:', remessa);
         this.loadingDetails = true;
         this.detailVisible = true;
 
@@ -276,7 +275,6 @@ export class RemessaListComponent implements OnInit {
 
         this.remessaService.obterRateiosDiagnostico(empresaId, this.selectedRemessa.idVendaInterna).subscribe({
             next: (res) => {
-                console.log('Rateios da Remessa:', res);
                 this.messageService.add({
                     severity: 'info',
                     summary: 'Rateios (Log)',

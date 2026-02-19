@@ -36,7 +36,6 @@ export class EmpresaSelectorService {
      * Quando há múltiplas, NÃO auto-seleciona - o usuário deve escolher na tela de seleção.
      */
     setUserEmpresas(empresas: EmpresaInfo[]): void {
-        console.log('[EmpresaSelectorService] setUserEmpresas: Definindo lista de empresas:', empresas.length, empresas);
         this.userEmpresasSubject.next(empresas);
 
         // Validação de Segurança: Verificar se a seleção atual (do storage) é válida para este usuário
@@ -44,7 +43,6 @@ export class EmpresaSelectorService {
         const validSelection = currentSelection.filter(id => empresas.some(e => e.id === id));
 
         if (currentSelection.length > 0 && validSelection.length !== currentSelection.length) {
-            console.warn('[EmpresaSelectorService] Seleção anterior inválida para este usuário. Limpando seleção.');
 
             if (validSelection.length > 0) {
                 // Se sobrou alguma válida, mantém apenas ela
@@ -54,8 +52,6 @@ export class EmpresaSelectorService {
                 this.selectedEmpresaIdsSubject.next([]);
                 localStorage.removeItem(this.STORAGE_KEY);
             }
-        } else {
-            console.log('[EmpresaSelectorService] Seleção atual validada com sucesso:', currentSelection);
         }
 
         // Auto-seleciona SOMENTE se o usuário tem apenas 1 empresa
@@ -63,13 +59,8 @@ export class EmpresaSelectorService {
             const empresaId = empresas[0].id;
             // Só auto-seleciona se já não estiver selecionada (evita loop/spam)
             if (!validSelection.includes(empresaId)) {
-                console.log('[EmpresaSelectorService] Auto-selecionando empresa única:', empresaId);
                 this.setSelectedEmpresas([empresaId]);
             }
-        } else if (empresas.length > 1) {
-            console.log('[EmpresaSelectorService] Múltiplas empresas detectadas. Aguardando seleção manual.');
-        } else {
-            console.log('[EmpresaSelectorService] Lista de empresas vazia.');
         }
     }
 
@@ -77,7 +68,6 @@ export class EmpresaSelectorService {
      * Define as empresas selecionadas
      */
     setSelectedEmpresas(ids: string[]): void {
-        console.log('[EmpresaSelectorService] setSelectedEmpresas: Definindo IDs selecionados:', ids);
         this.selectedEmpresaIdsSubject.next(ids);
         this.saveToStorage(ids);
     }
@@ -111,7 +101,6 @@ export class EmpresaSelectorService {
      * Limpa a seleção (usado no logout)
      */
     clear(): void {
-        console.log('[EmpresaSelectorService] clear: Limpando dados de empresas e seleção.');
         this.userEmpresasSubject.next([]);
         this.selectedEmpresaIdsSubject.next([]);
         localStorage.removeItem(this.STORAGE_KEY);
