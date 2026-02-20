@@ -6,14 +6,8 @@ export interface EstruturaComissao {
     nome: string;
     descricao?: string;
     idEmpresa: string;
-    idEmpreendimento?: string;
     tipoComissao?: number; // TipoComissao enum
-    valorPercentual?: number;
-    valorFixoInicial?: number;
-    regraLiberacao?: number; // RegraLiberacao enum
-    percentualLiberacao?: number;
-    parcelaLiberacao?: number;
-    tipoRateio?: number; // TipoRateio enum
+    valorComissao?: number; // Valor do Bolo (decimal do backend)
     origem: number;
     dataVigenciaInicio?: Date;
     dataVigenciaFim?: Date;
@@ -61,14 +55,8 @@ export interface CreateEstruturaComissaoRequest {
     nome: string;
     descricao?: string;
     idEmpresa: string;
-    idEmpreendimento?: string;
     tipoComissao?: number;
-    valorPercentual?: number;
-    valorFixoInicial?: number;
-    regraLiberacao?: number;
-    percentualLiberacao?: number;
-    parcelaLiberacao?: number;
-    tipoRateio?: number;
+    valorComissao?: number; // Valor da Comissão Total (O Bolo)
     dataVigenciaInicio?: Date;
     dataVigenciaFim?: Date;
     niveis: CreateEstruturaComissaoNivelRequest[];

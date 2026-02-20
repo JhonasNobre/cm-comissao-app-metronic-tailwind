@@ -408,13 +408,8 @@ export class EstruturaFormComponent implements OnInit {
             nome: ['', [Validators.required, Validators.maxLength(100)]],
             descricao: ['', [Validators.maxLength(500)]],
             status: ['Ativo', [Validators.required]],
-            tipoComissao: [null],
-            valorPercentual: [null, [Validators.min(0), Validators.max(100)]],
-            valorFixoInicial: [null, [Validators.min(0)]],
-            tipoRateio: [null],
-            regraLiberacao: [RegraLiberacao.Diretamente],
-            percentualLiberacao: [null, [Validators.min(0), Validators.max(100)]],
-            parcelaLiberacao: [null, [Validators.min(1)]]
+            tipoComissao: [TipoComissao.Percentual],
+            valorComissao: [null, [Validators.min(0)]]
         });
     }
 
@@ -452,13 +447,8 @@ export class EstruturaFormComponent implements OnInit {
                     nome: estrutura.nome,
                     descricao: estrutura.descricao,
                     status: estrutura.ativo ? 'Ativo' : 'Inativo',
-                    tipoComissao: typeof estrutura.tipoComissao === 'string' ? TipoComissao[estrutura.tipoComissao as keyof typeof TipoComissao] : estrutura.tipoComissao,
-                    valorPercentual: estrutura.valorPercentual,
-                    valorFixoInicial: estrutura.valorFixoInicial,
-                    tipoRateio: typeof estrutura.tipoRateio === 'string' ? TipoRateio[estrutura.tipoRateio as keyof typeof TipoRateio] : estrutura.tipoRateio,
-                    regraLiberacao: (typeof estrutura.regraLiberacao === 'string' ? RegraLiberacao[estrutura.regraLiberacao as keyof typeof RegraLiberacao] : estrutura.regraLiberacao) ?? RegraLiberacao.Diretamente,
-                    percentualLiberacao: estrutura.percentualLiberacao,
-                    parcelaLiberacao: estrutura.parcelaLiberacao
+                    tipoComissao: typeof estrutura.tipoComissao === 'string' ? TipoComissao[estrutura.tipoComissao as keyof typeof TipoComissao] : (estrutura.tipoComissao ?? TipoComissao.Percentual),
+                    valorComissao: estrutura.valorComissao ?? 0
                 });
 
                 if (estrutura.niveis && estrutura.niveis.length > 0) {
@@ -678,7 +668,7 @@ export class EstruturaFormComponent implements OnInit {
         const inferredTipoComissao = this.inferTipoComissao(data, resolvedTipoValor);
 
         const parseRegraLiberacao = (val: any): number => {
-            const root = this.form.get('regraLiberacao')?.value || RegraLiberacao.Diretamente;
+            const root = RegraLiberacao.Diretamente;
             if (!val) return root;
             if (typeof val === 'number') return val;
             if (val === 'Diretamente') return RegraLiberacao.Diretamente;
@@ -1020,16 +1010,12 @@ export class EstruturaFormComponent implements OnInit {
             const formValue = this.form.value;
             const levelsRequest = this.flattenTreeRecursive(this.treeData);
 
-            // Sanitização: Se não tem valor global, não manda o tipo para evitar erro de validação
-            const sanitizedTipoComissao = (formValue.valorPercentual == null && formValue.valorFixoInicial == null)
-                ? null
-                : formValue.tipoComissao;
-
             const request: UpdateEstruturaComissaoRequest = {
                 ...formValue,
                 id: this.estruturaId || '',
                 versao: this.versaoAtual,
-                tipoComissao: sanitizedTipoComissao,
+                tipoComissao: formValue.tipoComissao ?? TipoComissao.Percentual,
+                valorComissao: formValue.valorComissao ?? 0,
                 niveis: levelsRequest
             };
 

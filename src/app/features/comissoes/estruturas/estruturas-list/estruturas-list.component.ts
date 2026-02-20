@@ -11,7 +11,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { EstruturaComissaoService } from '../../services/estrutura-comissao.service';
 import { EstruturaComissao, EstruturaComissaoFiltros } from '../../models/estrutura-comissao.model';
-import { TipoComissaoLabels, TipoComissao, RegraLiberacao, TipoRateio } from '../../models/enums';
+import { TipoComissaoLabels, TipoComissao } from '../../models/enums';
 import { EmpresaSelectorService } from '../../../../core/services/empresa-selector.service';
 import { GenericPTableComponent } from '../../../../shared/components/ui/generic-p-table/generic-p-table.component';
 import { ColumnHeader } from '../../../../shared/models/column-header.model';
@@ -60,7 +60,6 @@ export class EstruturasListComponent implements OnInit {
         idCidade?: string;
         idCargo?: string;
         idUsuario?: string;
-        tipoLiberacao?: number;
     } = {
             busca: '',
             ativo: undefined,
@@ -75,10 +74,7 @@ export class EstruturasListComponent implements OnInit {
     cidadeOptions: SelectOption[] = [];
     cargoOptions: SelectOption[] = [];
     pessoaOptions: SelectOption[] = [];
-    tipoLiberacaoOptions: SelectOption[] = [
-        { label: 'Automático', value: 'automatico' },
-        { label: 'Manual', value: 'manual' }
-    ];
+
     statusOptions: SelectOption[] = [
         { label: 'Ativo', value: true },
         { label: 'Inativo', value: false }
@@ -120,39 +116,25 @@ export class EstruturasListComponent implements OnInit {
             {
                 field: 'tipoComissao',
                 header: 'Forma de Cálculo',
-                formatter: (v) => TipoComissaoLabels[v as TipoComissao] || 'Desconhecido',
+                formatter: (v) => {
+                    const val = typeof v === 'string' ? TipoComissao[v as keyof typeof TipoComissao] : v;
+                    return TipoComissaoLabels[val as TipoComissao] || 'Desconhecido';
+                },
                 sortable: true
             },
             {
-                field: 'valorPercentual',
+                field: 'valorComissao',
                 header: 'Valor',
                 formatter: (v, item) => {
-                    if (item?.valorPercentual) return `${item.valorPercentual}%`;
-                    if (item?.valorFixoInicial) return `R$ ${item.valorFixoInicial}`;
-                    return '-';
-                }
-            },
-            {
-                field: 'regraLiberacao',
-                header: 'Tipo de Liberação',
-                formatter: (v) => {
-                    const labels: Record<number, string> = {
-                        [RegraLiberacao.Diretamente]: 'Direta',
-                        [RegraLiberacao.Percentual]: 'Automática',
-                        [RegraLiberacao.Parcela]: 'Manual'
-                    };
-                    return labels[v] || 'Automática';
-                }
-            },
-            {
-                field: 'tipoRateio',
-                header: 'Prioridade',
-                formatter: (v) => {
-                    const labels: Record<number, string> = {
-                        [TipoRateio.Linear]: 'Linear',
-                        [TipoRateio.Prioritario]: 'Primeiro'
-                    };
-                    return labels[v] || 'Linear';
+                    const tipo = typeof item?.tipoComissao === 'string'
+                        ? TipoComissao[item.tipoComissao as keyof typeof TipoComissao]
+                        : item?.tipoComissao;
+
+                    const valor = item?.valorComissao ?? 0;
+
+                    if (tipo === TipoComissao.Percentual) return `${valor}%`;
+                    if (tipo === TipoComissao.ValorFixo) return `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                    return valor > 0 ? `${valor}` : '-';
                 }
             },
             {

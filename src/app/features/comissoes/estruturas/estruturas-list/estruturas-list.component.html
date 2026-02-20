@@ -78,15 +78,7 @@
                 </p-select>
             </div>
 
-            <!-- Tipo -->
-            <div class="flex items-center gap-2">
-                <i class="ki-filled ki-category text-gray-400"></i>
-                <span class="text-sm text-gray-600">Tipo:</span>
-                <p-select [(ngModel)]="filtros.tipoLiberacao" [options]="tipoLiberacaoOptions"
-                    placeholder="Mostrar tudo" [showClear]="true" styleClass="min-w-[140px]"
-                    (onChange)="onFilterChange()" appendTo="body">
-                </p-select>
-            </div>
+
 
             <!-- Status -->
             <div class="flex items-center gap-2">
