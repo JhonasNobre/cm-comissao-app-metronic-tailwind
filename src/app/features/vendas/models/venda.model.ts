@@ -9,6 +9,8 @@ export interface VendaImportada {
     sistemaOrigem: number;
     statusImportacao: number;
     parcelasPagamento?: any[];
+    quemAprovouLegado?: string;
+    percentualComissaoLegado?: number;
 }
 
 export interface VendaFiltros {

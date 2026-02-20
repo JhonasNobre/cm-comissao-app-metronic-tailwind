@@ -27,4 +27,8 @@ export class LegacySyncService {
 
         return this.http.post<SyncResult>(`${this.apiUrl}/vendas`, {}, { params });
     }
+
+    sincronizarUsuarios(): Observable<SyncResult> {
+        return this.http.post<SyncResult>(`${this.apiUrl}/usuarios`, {});
+    }
 }

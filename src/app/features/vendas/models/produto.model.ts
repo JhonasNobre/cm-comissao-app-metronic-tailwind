@@ -6,6 +6,7 @@ export interface ProdutoImportado {
     uf?: string;
     tipoProduto: number;
     status: number;
+    codigoObra?: string;
 }
 
 export interface ProdutoFiltros {

@@ -81,6 +81,7 @@ export class VendasImportadasListaComponent implements OnInit {
             { field: 'nomeCliente', header: 'Cliente', filter: true },
             { field: 'dataVenda', header: 'Data Venda', displayAs: 'date', pipeArgs: 'dd/MM/yyyy' },
             { field: 'valorTotalVenda', header: 'Valor', displayAs: 'currency' },
+            { field: 'quemAprovouLegado', header: 'Aprovador (A)' },
             {
                 field: 'statusDisplay',
                 header: 'Status',

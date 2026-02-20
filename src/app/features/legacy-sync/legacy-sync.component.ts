@@ -34,20 +34,27 @@ import { EmpresaSelectorService } from '../../core/services/empresa-selector.ser
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             
             <button class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 transition-all group"
                     (click)="sincronizarProdutos()" [disabled]="loading">
               <i class="pi pi-box text-3xl mb-3 text-gray-400 group-hover:text-primary" [class.animate-spin]="loadingProducts"></i>
-              <span class="font-bold text-gray-700 group-hover:text-primary">Sincronizar Produtos</span>
-              <span class="text-xs text-gray-400 mt-1">Importa os produtos do legado</span>
+              <span class="font-bold text-gray-700 group-hover:text-primary">Produtos</span>
+              <span class="text-xs text-gray-400 mt-1">Importa do legado</span>
             </button>
 
             <button class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 transition-all group"
                     (click)="sincronizarVendas()" [disabled]="loading">
               <i class="pi pi-shopping-cart text-3xl mb-3 text-gray-400 group-hover:text-primary" [class.animate-spin]="loadingSales"></i>
-              <span class="font-bold text-gray-700 group-hover:text-primary">Sincronizar Vendas</span>
-              <span class="text-xs text-gray-400 mt-1">Sincroniza vendas no período selecionado</span>
+              <span class="font-bold text-gray-700 group-hover:text-primary">Vendas</span>
+              <span class="text-xs text-gray-400 mt-1">Sincroniza no período</span>
+            </button>
+
+            <button class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-primary hover:bg-primary/5 transition-all group"
+                    (click)="sincronizarUsuarios()" [disabled]="loading">
+              <i class="pi pi-users text-3xl mb-3 text-gray-400 group-hover:text-primary" [class.animate-spin]="loadingUsers"></i>
+              <span class="font-bold text-gray-700 group-hover:text-primary">Usuários</span>
+              <span class="text-xs text-gray-400 mt-1">Sincroniza CPF/CRECI/Login</span>
             </button>
 
           </div>
@@ -94,16 +101,17 @@ import { EmpresaSelectorService } from '../../core/services/empresa-selector.ser
 export class LegacySyncComponent {
   loadingProducts: boolean = false;
   loadingSales: boolean = false;
+  loadingUsers: boolean = false;
   lastResult: SyncResult | null = null;
   error: string | null = null;
-  
+
   dataInicio: string = '2025-01-01';
   dataFim: string = new Date().toISOString().substring(0, 10);
 
   constructor(private syncService: LegacySyncService) { }
 
   get loading(): boolean {
-    return this.loadingProducts || this.loadingSales;
+    return this.loadingProducts || this.loadingSales || this.loadingUsers;
   }
 
   sincronizarProdutos() {
@@ -132,6 +140,21 @@ export class LegacySyncComponent {
       error: (err: any) => {
         this.error = err.error?.message || err.message;
         this.loadingSales = false;
+      }
+    });
+  }
+
+  sincronizarUsuarios() {
+    this.resetState();
+    this.loadingUsers = true;
+    this.syncService.sincronizarUsuarios().subscribe({
+      next: (res: SyncResult) => {
+        this.lastResult = res;
+        this.loadingUsers = false;
+      },
+      error: (err: any) => {
+        this.error = err.error?.message || err.message;
+        this.loadingUsers = false;
       }
     });
   }

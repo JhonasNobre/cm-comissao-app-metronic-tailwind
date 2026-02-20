@@ -47,6 +47,7 @@ export class ProdutosImportadosListaComponent implements OnInit {
     initializeColumns() {
         this.columns = [
             { field: 'codigoLegado', header: 'Código Legado' },
+            { field: 'codigoObra', header: 'Obra' },
             { field: 'nome', header: 'Produto', filter: true },
             { field: 'nomeCidade', header: 'Cidade' },
             { field: 'uf', header: 'UF' },
