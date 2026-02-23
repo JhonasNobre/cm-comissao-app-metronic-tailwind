@@ -184,7 +184,7 @@ import { LegacyService, LegacyVendaDto, LegacyAnexoDto } from '../../../core/ser
   `
 })
 export class LegacyTestComponent {
-  codigoEmpresaLegado: number = 62; // Default para o teste do Jhonas
+  codigoEmpresaLegado: number = 62;
   loading: boolean = false;
 
   // Venda

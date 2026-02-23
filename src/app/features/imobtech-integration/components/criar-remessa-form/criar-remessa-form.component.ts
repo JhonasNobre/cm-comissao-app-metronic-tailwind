@@ -232,7 +232,7 @@ export class CriarRemessaFormComponent implements OnInit {
   cliente = {
     cpfCnpj: '01140852183',
     nome: 'teste',
-    email: 'jhonasboni@gmail.com',
+    email: 'atendimento@clickmenos.com.br',
     logradouro: 'Rua São Clemente',
     numero: '0',
     complemento: '',
@@ -430,7 +430,7 @@ export class CriarRemessaFormComponent implements OnInit {
     this.cliente = {
       cpfCnpj: '01140852183',
       nome: 'teste',
-      email: 'jhonasboni@gmail.com',
+      email: 'atendimento@clickmenos.com.br',
       logradouro: 'Rua São Clemente',
       numero: '0',
       complemento: '',
