@@ -308,21 +308,21 @@ export class AuthService {
      * Verifica se o usuário é administrador
      */
     isAdmin(): boolean {
-        return this.hasRole('Admin') || this.hasRole('admin-clickmenos');
+        return this.hasRole('ROLE_ADMIN') || this.hasRole('admin-clickmenos') || this.hasRole('Admin');
     }
 
     /**
      * Verifica se o usuário é gestor
      */
     isGestor(): boolean {
-        return this.hasRole('Gestor') || this.hasRole('gestor-imobiliaria');
+        return this.hasRole('ROLE_GERENTE') || this.hasRole('gestor-imobiliaria') || this.hasRole('Gestor');
     }
 
     /**
     * Verifica se o usuário é vendedor
     */
     isVendedor(): boolean {
-        return this.hasRole('Vendedor') || this.hasRole('corretor');
+        return this.hasRole('ROLE_CORRETOR') || this.hasRole('corretor') || this.hasRole('Vendedor');
     }
 
     /**
