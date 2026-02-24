@@ -108,9 +108,13 @@ export class EstruturaFormComponent implements OnInit {
 
     // Node Editing State
     editingNode: TreeNode | null = null;
-    parentForNewNode: TreeNode | null = null;
+    parentForNewNode: TreeNode | null = null; // Agora representa o NÍVEL onde as pessoas entrarão
     currentLevelMembers: any[] = [];
     selectedMemberToAdd: any;
+
+    // Gestor State
+    membroGestorIdForNewMember: string | null = null;
+    membrosDisponiveisParaGestor: { label: string, value: string }[] = [];
 
 
     // Enums for template access
@@ -282,30 +286,12 @@ export class EstruturaFormComponent implements OnInit {
     }
 
     onAddSubordinatesFromTree(node: OrgNode) {
-        // Tenta encontrar como nível (TreeNode) ou como membro de um nível
-        let treeNode = this.findTreeNodeById(this.treeData, node.id);
-
-        if (!treeNode) {
-            treeNode = this.findTreeNodeByMemberId(this.treeData, node.id);
-        }
-
-        if (treeNode) {
-            this.parentForNewNode = treeNode;
-            this.currentLevelMembers = [];
-            this.showMemberSearch = false;
-            this.levelForm.reset({
-                prioridade: 1,
-                tipoValor: TipoValor.Percentual,
-                parentId: treeNode.data.id
-            });
-            this.displayLevelDialog = true;
-        } else {
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Erro',
-                detail: 'Não foi possível localizar o nível correspondente na estrutura.'
-            });
-        }
+        // Se a pessoa clicou num membro para adicionar um subordinado a ele
+        // 'node' é o membro. Devemos abrir o modal de adicionar integrantes,
+        // pré-selecionando ele como gestor.
+        // Mas também precisamos que o usuário informe em QUAL NÍVEL o novo 
+        // integrante vai entrar (já que não selecionou na esquerda).
+        this.openBulkMemberDialog(null, node.id);
     }
 
     onEditFromTree(node: OrgNode) {
@@ -508,111 +494,97 @@ export class EstruturaFormComponent implements OnInit {
 
     // --- Tree Logic ---
     private buildTreeFromLevels(levels: any[]): TreeNode[] {
-        const map = new Map<string, TreeNode>();
-        const roots: TreeNode[] = [];
-
-        levels.forEach(lvl => {
-            map.set(lvl.id, {
-                key: lvl.id,
-                label: lvl.nomeNivel,
-                data: { ...lvl, membros: lvl.membros || [] },
-                expanded: true,
-                children: [],
-                type: (lvl.tipoComissao >= TipoComissao.BonusPorPercentual || lvl.tipoComissao >= 4 || lvl.tipoBonificacao || lvl.TipoBonificacao) ? 'bonus' : 'person'
-            });
-        });
-
-        levels.forEach(lvl => {
-            const node = map.get(lvl.id)!;
-            if (lvl.parentId) {
-                const parent = map.get(lvl.parentId);
-                if (parent) {
-                    parent.children?.push(node);
-                } else {
-                    roots.push(node);
-                }
-            } else {
-                roots.push(node);
-            }
-        });
-
-        return roots;
+        // Níveis agora são apenas uma lista flat, sem hierarquia entre si.
+        return levels.map(lvl => ({
+            key: lvl.id,
+            label: lvl.nomeNivel,
+            data: { ...lvl, membros: lvl.membros || [] },
+            expanded: true,
+            children: [], // Níveis não têm mais filhos (subníveis)
+            type: (lvl.tipoComissao >= TipoComissao.BonusPorPercentual || lvl.tipoComissao >= 4 || lvl.tipoBonificacao || lvl.TipoBonificacao) ? 'bonus' : 'person'
+        }));
     }
 
-    // Convert TreeNode[] to OrgNode[] for the visual hierarchy tree
-    // Each root level becomes a separate tree in the diagram
+    // Convert flatten list of Levels and their Members into OrgNode[]
     private updateOrgTreeData(): void {
         if (this.treeData.length === 0) {
             this.orgData = [];
             return;
         }
 
-        // Convert each root-level TreeNode to an OrgNode
-        // This allows multiple trees (including Bonus) to be displayed side by side
-        this.orgData = this.treeData.map((node, index) =>
-            this.convertTreeNodeToOrgNode(node, index === 0, 1)
-        );
-    }
+        const allMembros: any[] = [];
+        const membroMap = new Map<string, any>();
+        const rolesMap = new Map<string, string>(); // membro.id -> roleName
+        const isBonusMap = new Map<string, boolean>();
 
-    private convertTreeNodeToOrgNode(node: TreeNode, isFirst: boolean, level: number): OrgNode {
-        const membros = node.data?.membros || [];
-        // Check both node.type AND data.tipoComissao for bonus detection
-        const isBonus = node.type === 'bonus' ||
-            node.data?.tipoComissao >= TipoComissao.BonusPorPercentual ||
-            node.data?.tipoComissao >= 4;
-        const levelName = node.label || 'Sem nome';
-        const role = isBonus ? 'Bônus' : levelName;
+        // 1. Extrair todos os membros
+        this.treeData.forEach(lvl => {
+            const isBonus = lvl.type === 'bonus' || lvl.data?.tipoComissao >= TipoComissao.BonusPorPercentual || lvl.data?.tipoComissao >= 4;
+            const role = isBonus ? 'Bônus' : (lvl.label || 'Sem nome');
 
-        // Convert children levels first
-        const childrenLevels = node.children?.map(child => this.convertTreeNodeToOrgNode(child, false, level + 1)) || [];
-
-        // If this level has members, each member becomes a node
-        if (membros.length > 0) {
-            // Create a node for each member
-            // IMPORTANT: Only the FIRST member gets the children levels to avoid duplication
-            const memberNodes: OrgNode[] = membros.map((membro: any, idx: number) => ({
-                id: membro.id || `${node.key}-member-${idx}`,
-                name: membro.nome,
-                role: role,
-                people: idx === 0 && childrenLevels.length > 0 ? this.countDescendants(childrenLevels) : 0,
-                first: isFirst && idx === 0,
-                last: childrenLevels.length === 0,
-                isBonus: isBonus,
-                avatar: membro.fotoUrl || null,
-                // Only the first member gets the sublevel children (to avoid duplication)
-                children: idx === 0 && childrenLevels.length > 0 ? childrenLevels : undefined
-            }));
-
-            // For normal levels with 1 member: return member directly (no container)
-            // For Bonus or multiple members: always use container
-            if (!isBonus && memberNodes.length === 1) {
-                return memberNodes[0];
+            if (lvl.data && lvl.data.membros) {
+                lvl.data.membros.forEach((m: any) => {
+                    // Garantir que os campos vitais existam
+                    m.nivelId = lvl.data.id;
+                    allMembros.push(m);
+                    membroMap.set(m.id, m);
+                    rolesMap.set(m.id, role);
+                    isBonusMap.set(m.id, isBonus);
+                });
             }
+        });
 
-            // Level container with members as children
-            return {
-                id: node.key || '',
-                name: levelName,
-                role: isBonus ? 'Bônus por Performance' : `Nível Hierárquico ${level}`,
-                people: membros.length,
-                first: isFirst,
+        const roots: OrgNode[] = [];
+        const orgNodeMap = new Map<string, OrgNode>();
+
+        // 2. Criar os OrgNodes
+        allMembros.forEach(m => {
+            const orgNode: OrgNode = {
+                id: m.id,
+                name: m.nome,
+                role: rolesMap.get(m.id) || '',
+                people: 0,
+                first: false,
                 last: false,
-                isBonus: isBonus,
-                children: memberNodes
+                isBonus: isBonusMap.get(m.id) || false,
+                avatar: m.fotoUrl || null,
+                children: []
             };
-        }
+            orgNodeMap.set(m.id, orgNode);
+        });
 
-        // No members - show the level name as the node
-        return {
-            id: node.key || '',
-            name: levelName,
-            role: isBonus ? 'Bônus por Performance' : `Nível Hierárquico ${level}`,
-            people: 0,
-            first: isFirst,
-            last: childrenLevels.length === 0,
-            isBonus: isBonus,
-            children: childrenLevels.length > 0 ? childrenLevels : undefined
+        // 3. Montar a hierarquia via membroGestorId
+        allMembros.forEach(m => {
+            const node = orgNodeMap.get(m.id)!;
+            if (m.membroGestorId && orgNodeMap.has(m.membroGestorId)) {
+                // Adiciona como filho do gestor
+                const gestorNode = orgNodeMap.get(m.membroGestorId)!;
+                if (!gestorNode.children) gestorNode.children = [];
+                gestorNode.children.push(node);
+            } else {
+                // Sem pai = raiz
+                roots.push(node);
+            }
+        });
+
+        // Função recursiva para atualizar contagem e status
+        const updateHierarchyMetadata = (nodes: OrgNode[], isRoot: boolean) => {
+            nodes.forEach((node, index) => {
+                node.first = isRoot && index === 0;
+                node.last = !node.children || node.children.length === 0;
+
+                if (node.children && node.children.length > 0) {
+                    updateHierarchyMetadata(node.children, false);
+                    node.people = this.countDescendants(node.children);
+                } else {
+                    node.people = 0;
+                    node.children = undefined;
+                }
+            });
         };
+
+        updateHierarchyMetadata(roots, true);
+        this.orgData = roots;
     }
 
     private countDescendants(nodes: OrgNode[]): number {
@@ -642,9 +614,7 @@ export class EstruturaFormComponent implements OnInit {
         this.openLevelDialog(null);
     }
 
-    addChildLevel(parent: TreeNode) {
-        this.openLevelDialog(parent);
-    }
+    // Removido addChildLevel pois a árvore de Níveis é flat
 
     editLevel(node: TreeNode) {
         this.editingNode = node;
@@ -722,13 +692,21 @@ export class EstruturaFormComponent implements OnInit {
     }
 
     // --- Bulk Member Logic ---
-    openBulkMemberDialog(parentNode: TreeNode | null) {
+    openBulkMemberDialog(parentNode: TreeNode | null, gestorPreSelecionadoId?: string) {
         this.parentForNewNode = parentNode;
         this.selectedMembersForBulk = [];
         this.bulkMemberSearch = '';
         this.selectedBulkMemberType = 'usuario';
+        this.membroGestorIdForNewMember = gestorPreSelecionadoId || null;
 
-        // Load initial list if empty
+        // Preencher a lista de gestores potenciais (qualquer membro já alocado)
+        const allActive = this.getAllActiveMembersDetail();
+        this.membrosDisponiveisParaGestor = allActive.map(m => ({
+            label: `${m.nome} (${m.levelName})`,
+            value: m.id
+        }));
+
+        // Load initial list se vazio
         if (this.allUsersForBulk.length === 0) {
             this.userService.list({ size: 100 }).subscribe(users => {
                 this.allUsersForBulk = users;
@@ -747,27 +725,26 @@ export class EstruturaFormComponent implements OnInit {
     // Grouped members for display
     groupedMembersForBulk: { name: string, members: UserListDTO[] }[] = [];
 
+    getAllActiveMembersDetail(): { id: string, nome: string, levelName: string }[] {
+        const details: { id: string, nome: string, levelName: string }[] = [];
+        this.treeData.forEach(node => {
+            if (node.data && node.data.membros) {
+                node.data.membros.forEach((m: any) => {
+                    details.push({
+                        id: m.id,
+                        nome: m.nome,
+                        levelName: node.label || 'Nível'
+                    });
+                });
+            }
+        });
+        return details;
+    }
+
     // Helper to get all active member IDs from the tree
     getAllActiveMemberIds(): Set<string> {
         const activeIds = new Set<string>();
-
-        const traverse = (nodes: TreeNode[]) => {
-            nodes.forEach(node => {
-                if (node.data && node.data.membros) {
-                    node.data.membros.forEach((m: EstruturaComissaoMembro) => {
-                        if (m.usuarioId) activeIds.add(m.usuarioId);
-                        if (m.equipeId) activeIds.add(m.equipeId);
-                        // Also add the ID itself if no specific user/team ID (legacy or direct link)
-                        if (!m.usuarioId && !m.equipeId && m.id) activeIds.add(m.id);
-                    });
-                }
-                if (node.children) {
-                    traverse(node.children);
-                }
-            });
-        };
-
-        traverse(this.treeData);
+        this.getAllActiveMembersDetail().forEach(d => activeIds.add(d.id));
         return activeIds;
     }
 
@@ -861,38 +838,40 @@ export class EstruturaFormComponent implements OnInit {
     saveBulkMembers() {
         if (this.selectedMembersForBulk.length === 0) return;
 
-        // Create member objects from selections
-        const newMembers: EstruturaComissaoMembro[] = this.selectedMembersForBulk.map(m => ({
-            id: crypto.randomUUID(),
-            idNivel: this.parentForNewNode?.data?.id || '',
-            nome: (m as any).nome,
-            usuarioId: this.selectedBulkMemberType === 'usuario' ? m.id : undefined,
-            equipeId: this.selectedBulkMemberType === 'equipe' ? m.id : undefined
-        }));
-
-        if (this.parentForNewNode) {
-            // Add members to the existing level (not as a new child level)
-            if (!this.parentForNewNode.data.membros) {
-                this.parentForNewNode.data.membros = [];
-            }
-
-            // Add new members to the parent node's member list
-            this.parentForNewNode.data.membros.push(...newMembers);
-
-            this.messageService.add({
-                severity: 'success',
-                summary: 'Sucesso',
-                detail: `${newMembers.length} integrante(s) adicionado(s) ao nível "${this.parentForNewNode.label}"`
-            });
-        } else {
-            // If no parent is selected, show an error - members must belong to a level
+        // Se o usuário iniciou o modal vazio (ex: clicou num membro pra add subordinado),
+        // ele DEVE ter um nível de destino. Como ainda não fizemos um dropdown de nível no modal,
+        // garantimos que o parentForNewNode exista (veremos isso no HTML depois, forçando a seleção de nível caso seja null).
+        if (!this.parentForNewNode) {
             this.messageService.add({
                 severity: 'warn',
                 summary: 'Atenção',
-                detail: 'Selecione um nível para adicionar os integrantes.'
+                detail: 'Selecione em qual nível hierárquico estes integrantes entrarão.'
             });
             return;
         }
+
+        // Create member objects from selections
+        const newMembers: EstruturaComissaoMembro[] = this.selectedMembersForBulk.map(m => ({
+            id: crypto.randomUUID(),
+            idNivel: this.parentForNewNode!.data?.id || '',
+            nome: (m as any).nome,
+            usuarioId: this.selectedBulkMemberType === 'usuario' ? m.id : undefined,
+            equipeId: this.selectedBulkMemberType === 'equipe' ? m.id : undefined,
+            membroGestorId: this.membroGestorIdForNewMember || undefined, // Preenchido no dropdown
+        }));
+
+        if (!this.parentForNewNode.data.membros) {
+            this.parentForNewNode.data.membros = [];
+        }
+
+        // Add new members to the parent node's member list
+        this.parentForNewNode.data.membros.push(...newMembers);
+
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Sucesso',
+            detail: `${newMembers.length} integrante(s) adicionado(s) ao nível "${this.parentForNewNode.label}"`
+        });
 
         this.updateOrgTreeData();
         this.displayBulkMemberDialog = false;
@@ -935,43 +914,12 @@ export class EstruturaFormComponent implements OnInit {
                 label: value.nomeNivel,
                 data: { ...value, id: newId, membros: finalMembers },
                 expanded: true,
-                children: [],
+                children: [], // Níveis são flat agora
                 type: isBonus ? 'bonus' : 'person'
             };
-            // Bônus is always added at root level (independent from hierarchy)
-            if (isBonus) {
-                newNode.data.parentId = null;
-                this.treeData = [...this.treeData, newNode];
-            } else {
-                // NEW: use form's parentId to be robust
-                const targetParentId = value.parentId;
 
-                // Try to find parent by ID if parentForNewNode is missing but parentId exists
-                let targetParent = this.parentForNewNode;
-                if (!targetParent && targetParentId) {
-                    targetParent = this.findTreeNodeById(this.treeData, targetParentId);
-
-                    if (!targetParent) {
-                        this.messageService.add({
-                            severity: 'error',
-                            summary: 'Erro de Hierarquia',
-                            detail: 'O nível pai selecionado não foi encontrado.'
-                        });
-                        return;
-                    }
-                }
-
-                if (targetParent) {
-                    if (!targetParent.children) targetParent.children = [];
-                    targetParent.children.push(newNode);
-                    // Use data.id for safer persistence link
-                    newNode.data.parentId = targetParent.data.id;
-                } else {
-                    // Se não tem pai, garante que o parentId seja nulo para persistência
-                    newNode.data.parentId = null;
-                    this.treeData = [...this.treeData, newNode];
-                }
-            }
+            // Adiciona o novo nível diretamente na raiz
+            this.treeData = [...this.treeData, newNode];
         }
 
         this.updateOrgTreeData();
@@ -1008,7 +956,7 @@ export class EstruturaFormComponent implements OnInit {
         try {
             this.saving.set(true);
             const formValue = this.form.value;
-            const levelsRequest = this.flattenTreeRecursive(this.treeData);
+            const levelsRequest = this.mapTreeDataToRequests(this.treeData);
 
             const request: UpdateEstruturaComissaoRequest = {
                 ...formValue,
@@ -1051,7 +999,7 @@ export class EstruturaFormComponent implements OnInit {
         }
     }
 
-    private flattenTreeRecursive(nodes: TreeNode[]): CreateEstruturaComissaoNivelRequest[] {
+    private mapTreeDataToRequests(nodes: TreeNode[]): CreateEstruturaComissaoNivelRequest[] {
         let result: CreateEstruturaComissaoNivelRequest[] = [];
 
         for (const node of nodes) {
@@ -1069,19 +1017,14 @@ export class EstruturaFormComponent implements OnInit {
 
                 tipoComissao: data.tipoComissao !== null && data.tipoComissao !== undefined ? Number(data.tipoComissao) : null,
                 regraLiberacao: data.regraLiberacao ? Number(data.regraLiberacao) : RegraLiberacao.Diretamente,
-                prioridadePagamento: data.prioridade || 2, // Backend expects PrioridadePagamento in RegraParcelamento, but here we are mapping Nivel properties? 
-                // Wait, CreateEstruturaComissaoNivelRequest has Prioridade and NumeroParcelas.
-                // Prioridade in DTO maps to Backend Prioridade (Payment Priority).
-                // NumeroParcelas in DTO maps to Backend NumeroParcelas.
+                prioridadePagamento: data.prioridade || 2,
 
-                // So:
                 numeroParcelas: data.numeroParcelas,
 
                 // Inferir TipoBonificacao se não estiver setado mas for um nível de bônus
                 tipoBonificacao: this.inferTipoBonificacao(data),
 
                 origemPagamentoId: data.origemPagamentoId || undefined,
-                parentId: data.parentId || undefined,
 
                 metaVendasMinima: data.metaVendasMinima,
                 parcelaInicialLiberacao: data.parcelaInicialLiberacao,
@@ -1093,16 +1036,12 @@ export class EstruturaFormComponent implements OnInit {
                     id: m.id,
                     nome: m.nome,
                     usuarioId: m.usuarioId ?? undefined,
-                    equipeId: m.equipeId ?? undefined
+                    equipeId: m.equipeId ?? undefined,
+                    membroGestorId: m.membroGestorId ?? undefined
                 })) : []
             };
 
             result.push(req);
-
-            if (node.children && node.children.length > 0) {
-                node.children.forEach(child => child.data.parentId = node.data.id || node.key);
-                result = result.concat(this.flattenTreeRecursive(node.children));
-            }
         }
         return result;
     }

@@ -37,7 +37,6 @@ export interface EstruturaComissaoNivel {
     liberacaoAutomaticaQuitacao?: boolean;
     tipoDistribuicao?: number;
     metaVendasMinima?: number;
-    parentId?: string;
     membros: EstruturaComissaoMembro[];
 }
 
@@ -47,6 +46,7 @@ export interface EstruturaComissaoMembro {
     usuarioId?: string;
     equipeId?: string;
     nome: string;
+    membroGestorId?: string;
 }
 
 // DTOs para requests
@@ -82,7 +82,6 @@ export interface CreateEstruturaComissaoNivelRequest {
     liberacaoAutomaticaQuitacao?: boolean;
     tipoDistribuicao?: number;
     metaVendasMinima?: number;
-    parentId?: string;
     membros: CreateEstruturaComissaoMembroRequest[];
     regrasParcelamento?: RegraParcelamentoBonificacaoRequest[];
 }
@@ -103,6 +102,7 @@ export interface CreateEstruturaComissaoMembroRequest {
     nome: string;
     usuarioId?: string;
     equipeId?: string;
+    membroGestorId?: string;
 }
 
 export interface UpdateEstruturaComissaoRequest extends CreateEstruturaComissaoRequest {

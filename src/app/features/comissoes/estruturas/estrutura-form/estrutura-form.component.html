@@ -55,18 +55,20 @@
                     <label class="text-xs font-medium text-gray-600 uppercase tracking-wide">Tipo de Comissão *</label>
                     <p-select formControlName="tipoComissao"
                         [options]="[{label: 'Percentual', value: 1}, {label: 'Valor Fixo', value: 2}]"
-                        styleClass="w-full" placeholder="Selecione" appendTo="body"
-                        optionLabel="label" optionValue="value"></p-select>
+                        styleClass="w-full" placeholder="Selecione" appendTo="body" optionLabel="label"
+                        optionValue="value"></p-select>
                 </div>
 
                 <!-- Valor da Comissão (condicional) -->
                 <div class="flex flex-col gap-1.5">
                     @if (form.get('tipoComissao')?.value === TipoComissao.Percentual) {
-                    <label class="text-xs font-medium text-gray-600 uppercase tracking-wide">Percentual da Comissão *</label>
-                    <p-inputNumber formControlName="valorComissao" [min]="0" [max]="100" suffix="%"
-                        styleClass="w-full" inputStyleClass="w-full" placeholder="Ex: 5%" />
+                    <label class="text-xs font-medium text-gray-600 uppercase tracking-wide">Percentual da Comissão
+                        *</label>
+                    <p-inputNumber formControlName="valorComissao" [min]="0" [max]="100" suffix="%" styleClass="w-full"
+                        inputStyleClass="w-full" placeholder="Ex: 5%" />
                     } @else {
-                    <label class="text-xs font-medium text-gray-600 uppercase tracking-wide">Valor Fixo da Comissão *</label>
+                    <label class="text-xs font-medium text-gray-600 uppercase tracking-wide">Valor Fixo da Comissão
+                        *</label>
                     <p-inputNumber formControlName="valorComissao" mode="currency" currency="BRL" locale="pt-BR"
                         styleClass="w-full" inputStyleClass="w-full" placeholder="R$ 0,00" />
                     }
@@ -152,6 +154,12 @@
                                     </div>
                                     <div class="flex gap-1">
                                         <button type="button"
+                                            class="w-6 h-6 flex items-center justify-center rounded hover:bg-green-100"
+                                            (click)="$event.stopPropagation(); openBulkMemberDialog(node)"
+                                            pTooltip="Adicionar Pessoas" tooltipPosition="top">
+                                            <i class="ki-filled ki-user-square text-xs text-green-600"></i>
+                                        </button>
+                                        <button type="button"
                                             class="w-6 h-6 flex items-center justify-center rounded hover:bg-blue-100"
                                             (click)="$event.stopPropagation(); editLevel(node)" pTooltip="Editar"
                                             tooltipPosition="top">
@@ -165,20 +173,6 @@
                                         </button>
                                     </div>
                                 </div>
-                                <!-- Renderiza filhos recursivamente -->
-                                @if (node.children && node.children.length > 0) {
-                                <div class="ml-4 mt-2 space-y-2 border-l-2 border-gray-200 pl-3">
-                                    <ng-container
-                                        *ngTemplateOutlet="levelTemplate; context: { $implicit: node.children, depth: depth + 1 }"></ng-container>
-                                </div>
-                                }
-                                <!-- Botão para adicionar subnível neste nó -->
-                                <button type="button"
-                                    class="text-blue-600 hover:text-blue-700 text-xs flex items-center gap-1 mt-2"
-                                    (click)="$event.stopPropagation(); addChildLevel(node)">
-                                    <i class="ki-filled ki-plus text-xs"></i>
-                                    <span>Adicionar subnível</span>
-                                </button>
                             </div>
                             }
                         </ng-template>
@@ -385,8 +379,27 @@
     [header]="'Adicionar integrantes em massa'" styleClass="p-fluid">
 
     <div class="mb-4">
-        <p class="text-sm text-gray-500 mb-4">Adicionando {{ parentForNewNode ? 'pessoa(s) do nível "' +
-            parentForNewNode.label + '"' : 'integrantes' }}</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-semibold uppercase text-gray-500 tracking-wide">Nível Hierárquico <span
+                        class="text-red-500">*</span></label>
+                <p-select [options]="treeData" [(ngModel)]="parentForNewNode" optionLabel="label" styleClass="w-full"
+                    placeholder="Selecione o Nível" appendTo="body">
+                </p-select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-semibold uppercase text-gray-500 tracking-wide">Respondendo Para (Gestor
+                    Direto)</label>
+                <p-select [options]="membrosDisponiveisParaGestor" [(ngModel)]="membroGestorIdForNewMember"
+                    optionLabel="label" optionValue="value" styleClass="w-full" placeholder="Selecione (Opcional)"
+                    [showClear]="true" appendTo="body" [filter]="true" filterBy="label">
+                </p-select>
+                <small class="text-gray-500 text-xs">Define a posição no organograma.</small>
+            </div>
+        </div>
+
+        <p class="text-sm font-semibold text-gray-700 mb-3">Pesquisar e Selecionar Integrantes</p>
 
         <div class="flex gap-2 mb-4">
             <span class="p-input-icon-left flex-1">
