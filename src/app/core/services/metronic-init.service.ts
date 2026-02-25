@@ -64,7 +64,14 @@ export class MetronicInitService {
   }
 
   initMenus() {
-    KTMenu.init();
+    // NEVER call KTMenu.init() here — it registers a new set of click handlers on
+    // document.body every time. core.bundle.js already calls KTMenu.init() via
+    // KTComponents.init() at script load, registering handlers once. Each extra
+    // KTMenu.init() from Angular adds another set, making clicks toggle an even
+    // number of times (open→close→open→close = nothing). Only createInstances()
+    // is safe: it creates instances for DOM elements without adding more handlers,
+    // and it's idempotent (skips already-initialized elements).
+    KTMenu.createInstances();
   }
 
   initDropdowns() {

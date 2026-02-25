@@ -81,6 +81,8 @@
             "groups": "Grupos da Equipe",
             "add_group": "Adicionar Grupo",
             "no_groups": "Nenhum grupo cadastrado nesta equipe.",
+            "description": "Descrição da Equipe",
+            "description_placeholder": "Descreva o propósito desta equipe",
             "group_name": "Nome do Grupo",
             "group_desc": "Descrição do Grupo",
             "new_group": "Novo Grupo",

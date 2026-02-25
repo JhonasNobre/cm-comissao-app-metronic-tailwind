@@ -7,8 +7,12 @@ export interface GrupoEquipe {
     id: string;
     nome: string;
     idEquipe: string;
+    idEmpresa?: string;
     descricao?: string;
-    cor?: string;
+    cor: string;
+    ativo?: boolean;
+    quantidadeEquipes?: number;
+    isNew?: boolean;
 }
 
 @Injectable({
@@ -22,6 +26,10 @@ export class TeamGroupService extends BaseService {
 
     listByTeam(teamId: string): Observable<GrupoEquipe[]> {
         return this.http.get<GrupoEquipe[]>(`${this.baseUrl}?idEquipe=${teamId}`);
+    }
+
+    listByCompany(idEmpresa: string): Observable<GrupoEquipe[]> {
+        return this.http.get<GrupoEquipe[]>(`${this.baseUrl}?idEmpresa=${idEmpresa}&apenasAtivos=true`);
     }
 
     get(id: string): Observable<GrupoEquipe> {

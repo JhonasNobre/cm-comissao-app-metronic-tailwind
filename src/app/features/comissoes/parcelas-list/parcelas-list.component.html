@@ -1,6 +1,5 @@
 <div class="card p-0">
     <p-toast></p-toast>
-    <p-confirmDialog header="Confirmação" icon="pi pi-exclamation-triangle"></p-confirmDialog>
 
     <!-- Header Section -->
     <div class="p-6 pb-0">
@@ -42,23 +41,30 @@
                         <i class="pi pi-chevron-down text-xs text-gray-400"></i>
                     </div>
 
-                    <!-- Equipe (Placeholder) -->
+                    <!-- Equipe -->
                     <div class="flex items-center gap-2 cursor-not-allowed opacity-50">
                         <span class="text-xs font-medium text-gray-500">Equipe</span>
                         <span class="text-xs font-bold text-gray-700">Mostrar tudo</span>
                         <i class="pi pi-chevron-down text-xs text-gray-400"></i>
                     </div>
 
-                    <!-- Cidade (Placeholder) -->
+                    <!-- Cidade -->
                     <div class="flex items-center gap-2 cursor-not-allowed opacity-50">
                         <span class="text-xs font-medium text-gray-500">Cidade</span>
                         <span class="text-xs font-bold text-gray-700">Mostrar tudo</span>
                         <i class="pi pi-chevron-down text-xs text-gray-400"></i>
                     </div>
 
-                    <!-- Cargos (Placeholder) -->
+                    <!-- Cargos -->
                     <div class="flex items-center gap-2 cursor-not-allowed opacity-50">
                         <span class="text-xs font-medium text-gray-500">Cargos</span>
+                        <span class="text-xs font-bold text-gray-700">Mostrar tudo</span>
+                        <i class="pi pi-chevron-down text-xs text-gray-400"></i>
+                    </div>
+
+                    <!-- Nome -->
+                    <div class="flex items-center gap-2 cursor-not-allowed opacity-50">
+                        <span class="text-xs font-medium text-gray-500">Nome</span>
                         <span class="text-xs font-bold text-gray-700">Mostrar tudo</span>
                         <i class="pi pi-chevron-down text-xs text-gray-400"></i>
                     </div>
@@ -82,6 +88,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Menu de ações — instância única, compartilhada por todas as linhas -->
+    <p-menu #actionMenu [model]="menuItens" [popup]="true" appendTo="body"></p-menu>
 
     <!-- Table Section -->
     <div class="p-6 pt-2">
@@ -111,7 +120,8 @@
 
             <ng-template pTemplate="body" let-parcela>
                 <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                    <td><p-tableCheckbox [value]="parcela" [disabled]="parcela.statusParcela !== 1"></p-tableCheckbox>
+                    <td>
+                        <p-tableCheckbox [value]="parcela" [disabled]="!isPendente(parcela.statusParcela)"></p-tableCheckbox>
                     </td>
                     <td class="text-sm font-bold ml-2">
                         <span class="bg-gray-50 text-gray-500 px-2 py-1 rounded">{{ parcela.numeroParcela }}</span>
@@ -134,44 +144,89 @@
                             styleClass="uppercase text-[10px] px-2 py-1"></p-tag>
                     </td>
                     <td class="text-center">
-                        <button class="btn btn-icon btn-sm btn-light-primary w-8 h-8 rounded-full"
-                            (click)="actionMenu.toggle($event)">
-                            <i class="pi pi-ellipsis-v text-sm"></i>
+                        <button
+                            class="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 cursor-pointer border-0 bg-transparent"
+                            (click)="abrirMenu($event, parcela, actionMenu)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="5" r="2"/>
+                                <circle cx="12" cy="12" r="2"/>
+                                <circle cx="12" cy="19" r="2"/>
+                            </svg>
                         </button>
-                        <p-menu #actionMenu [model]="getActions(parcela)" [popup]="true" appendTo="body"></p-menu>
                     </td>
                 </tr>
             </ng-template>
         </p-table>
     </div>
 
-    <!-- Dialog Bloqueio -->
-    <p-dialog header="Bloquear Parcela" [(visible)]="displayBloqueioDialog" [modal]="true" [style]="{width: '400px'}">
-        <div class="flex flex-col gap-4">
-            <label class="font-bold">Motivo do Bloqueio</label>
-            <textarea pTextarea [(ngModel)]="motivoBloqueio" rows="5" class="w-full"></textarea>
+    <!-- ─── Modal: Liberar Comissão (Individual) ──────────────────────────────── -->
+    <p-dialog [(visible)]="displayLiberacaoDialog" [modal]="true" [closable]="true" [style]="{width: '420px'}">
+        <ng-template pTemplate="header">
+            <span class="font-bold text-base">Confirmação</span>
+        </ng-template>
+        <div class="flex flex-col gap-2 py-2">
+            <p class="font-semibold text-gray-900">Tem certeza que deseja liberar essa comissão?</p>
+            <p class="text-sm text-gray-500">As comissões serão pagas automaticamente após liberação.</p>
         </div>
         <ng-template pTemplate="footer">
-            <p-button label="Cancelar" icon="pi pi-times" (onClick)="displayBloqueioDialog = false"
-                styleClass="p-button-text"></p-button>
-            <p-button label="Bloquear" icon="pi pi-lock" (onClick)="confirmarBloqueio()" styleClass="p-button-danger"
-                [disabled]="!motivoBloqueio"></p-button>
+            <p-button label="Cancelar" styleClass="p-button-text"
+                (onClick)="displayLiberacaoDialog = false"></p-button>
+            <p-button label="Sim, liberar" styleClass="p-button-primary"
+                (onClick)="confirmarLiberacao()"></p-button>
         </ng-template>
     </p-dialog>
 
-    <!-- Dialog Cancelamento -->
-    <p-dialog header="Cancelar Comissão" [(visible)]="displayCancelamentoDialog" [modal]="true"
-        [style]="{width: '400px'}">
-        <div class="flex flex-col gap-4">
-            <label class="font-bold">Motivo do Cancelamento</label>
-            <p class="text-sm text-red-500">Atenção: Esta ação cancelará toda a comissão e suas parcelas.</p>
-            <textarea pTextarea [(ngModel)]="motivoCancelamento" rows="5" class="w-full"></textarea>
+    <!-- ─── Modal: Liberar Comissões em Massa ─────────────────────────────────── -->
+    <p-dialog [(visible)]="displayLiberacaoMassaDialog" [modal]="true" [closable]="true" [style]="{width: '420px'}">
+        <ng-template pTemplate="header">
+            <span class="font-bold text-base">Confirmação</span>
+        </ng-template>
+        <div class="flex flex-col gap-2 py-2">
+            <p class="font-semibold text-gray-900">Tem certeza que deseja liberar comissões bloqueadas?</p>
+            <p class="text-sm text-gray-500">
+                Foram encontradas <strong>{{ selectedParcelas.length }}</strong> comissões selecionadas que podem ser
+                liberadas no momento.
+            </p>
         </div>
         <ng-template pTemplate="footer">
-            <p-button label="Voltar" icon="pi pi-times" (onClick)="displayCancelamentoDialog = false"
-                styleClass="p-button-text"></p-button>
-            <p-button label="Confirmar Cancelamento" icon="pi pi-check" (onClick)="confirmarCancelamento()"
-                styleClass="p-button-danger" [disabled]="!motivoCancelamento"></p-button>
+            <p-button label="Cancelar" styleClass="p-button-text"
+                (onClick)="displayLiberacaoMassaDialog = false"></p-button>
+            <p-button label="Sim, liberar" styleClass="p-button-primary"
+                (onClick)="confirmarLiberacaoMassa()"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- ─── Modal: Bloquear Comissão ──────────────────────────────────────────── -->
+    <p-dialog [(visible)]="displayBloqueioDialog" [modal]="true" [closable]="true" [style]="{width: '420px'}">
+        <ng-template pTemplate="header">
+            <span class="font-bold text-base">Confirmação</span>
+        </ng-template>
+        <div class="flex flex-col gap-2 py-2">
+            <p class="font-semibold text-gray-900">Tem certeza que deseja bloquear essa comissão?</p>
+            <p class="text-sm text-gray-500">Essa ação pode impactar o pagamento automático.</p>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Cancelar" styleClass="p-button-text"
+                (onClick)="displayBloqueioDialog = false"></p-button>
+            <p-button label="Sim, bloquear" styleClass="p-button-danger"
+                (onClick)="confirmarBloqueio()"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- ─── Modal: Cancelar Comissão ──────────────────────────────────────────── -->
+    <p-dialog [(visible)]="displayCancelamentoDialog" [modal]="true" [closable]="true" [style]="{width: '420px'}">
+        <ng-template pTemplate="header">
+            <span class="font-bold text-base">Confirmação</span>
+        </ng-template>
+        <div class="flex flex-col gap-2 py-2">
+            <p class="font-semibold text-gray-900">Tem certeza que deseja cancelar essa comissão?</p>
+            <p class="text-sm text-gray-500">Essa ação é irreversível.</p>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Cancelar" styleClass="p-button-text"
+                (onClick)="displayCancelamentoDialog = false"></p-button>
+            <p-button label="Sim, cancelar" styleClass="p-button-danger"
+                (onClick)="confirmarCancelamento()"></p-button>
         </ng-template>
     </p-dialog>
 </div>

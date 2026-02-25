@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Table, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -9,12 +10,10 @@ import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
-import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { ComissaoService } from '../services/comissao.service';
 import { EStatusParcela, ParcelaComissaoGridDto } from '../models/comissao.model';
 import { Subject } from 'rxjs';
@@ -35,12 +34,10 @@ import { ActivatedRoute } from '@angular/router';
     TagModule,
     TooltipModule,
     DialogModule,
-    TextareaModule,
     ToastModule,
-    ConfirmDialogModule,
     MenuModule
   ],
-  providers: [MessageService, ConfirmationService],
+  providers: [MessageService],
   templateUrl: './parcelas-list.component.html',
   styleUrl: './parcelas-list.component.scss'
 })
@@ -73,24 +70,26 @@ export class ParcelasListComponent implements OnInit {
     { label: 'A receber', value: 'A receber' }
   ];
 
-  // Ações
-  displayBloqueioDialog = false;
-  motivoBloqueio = '';
-  parcelaSelecionada?: ParcelaComissaoGridDto;
-
-  displayCancelamentoDialog = false;
-  motivoCancelamento = '';
-
+  // Seleção em massa
   selectedParcelas: ParcelaComissaoGridDto[] = [];
 
+  // Menu de ações — instância única fora da tabela
+  menuItens: MenuItem[] = [];
+
+  // Modals
+  parcelaSelecionada?: ParcelaComissaoGridDto;
+  displayLiberacaoDialog = false;
+  displayLiberacaoMassaDialog = false;
+  displayBloqueioDialog = false;
+  displayCancelamentoDialog = false;
+
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   constructor(
     private comissaoService: ComissaoService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
   ) {
-    // Debounce busca
     this.termoBuscaUpdate.pipe(
       debounceTime(500),
       distinctUntilChanged()
@@ -107,10 +106,6 @@ export class ParcelasListComponent implements OnInit {
       if (params['dataFim']) {
         this.filtroDataFim = new Date(params['dataFim']);
       }
-
-      // Se tiver filtros na URL, a tabela vai carregar automaticamente via lazyLoad?
-      // O lazyLoad é disparado pelo p-table na inicialização.
-      // Apenas garantimos que os filtros estejam preenchidos antes disso.
     });
   }
 
@@ -135,7 +130,7 @@ export class ParcelasListComponent implements OnInit {
         this.totalRecords = res.totalItems;
         this.loading = false;
       },
-      error: (err) => {
+      error: () => {
         this.loading = false;
         this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao carregar parcelas' });
       }
@@ -150,151 +145,163 @@ export class ParcelasListComponent implements OnInit {
     this.termoBuscaUpdate.next(valor);
   }
 
-  // Ações Menu
-  getActions(parcela: ParcelaComissaoGridDto): MenuItem[] {
-    const actions: MenuItem[] = [];
+  // ─── Helpers de Status (API retorna string via JsonStringEnumConverter) ──────
 
-    // Bloquear
-    if (parcela.statusParcela !== EStatusParcela.Bloqueada &&
-      parcela.statusParcela !== EStatusParcela.Paga &&
-      parcela.statusParcela !== EStatusParcela.Cancelada) {
-      actions.push({
-        label: 'Bloquear Parcela',
-        icon: 'pi pi-lock',
-        styleClass: 'text-red-500',
-        command: () => this.abrirBloqueio(parcela)
-      });
-    }
-
-    // Desbloquear
-    if (parcela.statusParcela === EStatusParcela.Bloqueada) {
-      actions.push({
-        label: 'Desbloquear Parcela',
-        icon: 'pi pi-unlock',
-        styleClass: 'text-green-500',
-        command: () => this.desbloquear(parcela)
-      });
-    }
-
-    // Cancelar
-    actions.push({
-      label: 'Cancelar Comissão',
-      icon: 'pi pi-ban',
-      command: () => this.abrirCancelamento(parcela)
-    });
-
-    return actions;
+  /** Normaliza statusParcela para o nome da enum, independente de vir como
+   *  número (ex: 1) ou string (ex: "Pendente") da API. */
+  private parseStatus(status: any): string {
+    if (typeof status === 'string') return status;
+    return EStatusParcela[status as number] ?? '';
   }
 
-  // Bloqueio
+  isPendente(status: any): boolean {
+    return this.parseStatus(status) === 'Pendente';
+  }
+
+  // ─── Menu de Ações ────────────────────────────────────────────────────────────
+
+  /** Chamado pelo botão "..." de cada linha — monta o menu e o abre */
+  abrirMenu(event: Event, parcela: ParcelaComissaoGridDto, menu: any) {
+    const status = this.parseStatus(parcela.statusParcela);
+    const bloqueada = status === 'Bloqueada';
+    const encerrada = status === 'Paga' || status === 'Cancelada';
+
+    this.menuItens = [
+      {
+        label: 'Ver detalhes',
+        icon: 'pi pi-eye',
+        command: () => this.verDetalhes(parcela)
+      },
+      {
+        label: 'Bloquear Comissão',
+        icon: 'pi pi-lock',
+        disabled: bloqueada || encerrada,
+        command: () => this.abrirBloqueio(parcela)
+      },
+      {
+        label: 'Liberar Comissão',
+        icon: 'pi pi-unlock',
+        disabled: encerrada,
+        command: () => this.abrirLiberacao(parcela)
+      },
+      {
+        label: 'Cancelar Comissão',
+        icon: 'pi pi-ban',
+        styleClass: 'text-red-500',
+        disabled: encerrada,
+        command: () => this.abrirCancelamento(parcela)
+      }
+    ];
+
+    menu.toggle(event);
+  }
+
+  verDetalhes(parcela: ParcelaComissaoGridDto) {
+    this.router.navigate(['/comissoes/detalhes', parcela.idComissao]);
+  }
+
+  // ─── Liberação Individual ─────────────────────────────────────────────────────
+
+  abrirLiberacao(parcela: ParcelaComissaoGridDto) {
+    this.parcelaSelecionada = parcela;
+    this.displayLiberacaoDialog = true;
+  }
+
+  confirmarLiberacao() {
+    if (!this.parcelaSelecionada) return;
+    this.comissaoService.liberarParcelaManual(
+      this.parcelaSelecionada.idComissao,
+      this.parcelaSelecionada.id,
+      'current-user-id'
+    ).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'A comissão foi liberada.' });
+        this.displayLiberacaoDialog = false;
+        this.dt.reset();
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar comissão.' })
+    });
+  }
+
+  // ─── Liberação em Massa ───────────────────────────────────────────────────────
+
+  liberarSelecionadas() {
+    if (!this.selectedParcelas.length) return;
+    this.displayLiberacaoMassaDialog = true;
+  }
+
+  confirmarLiberacaoMassa() {
+    const ids = this.selectedParcelas.map(p => p.id);
+    this.comissaoService.liberarParcelasEmMassa(ids, 'current-user-id').subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Parcelas liberadas com sucesso.' });
+        this.displayLiberacaoMassaDialog = false;
+        this.selectedParcelas = [];
+        this.dt.reset();
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar parcelas.' })
+    });
+  }
+
+  // ─── Bloqueio ─────────────────────────────────────────────────────────────────
+
   abrirBloqueio(parcela: ParcelaComissaoGridDto) {
     this.parcelaSelecionada = parcela;
-    this.motivoBloqueio = '';
     this.displayBloqueioDialog = true;
   }
 
   confirmarBloqueio() {
-    if (!this.parcelaSelecionada || !this.motivoBloqueio) return;
-
-    this.comissaoService.bloquearParcela(this.parcelaSelecionada.id, this.parcelaSelecionada.idComissao, this.motivoBloqueio).subscribe({
+    if (!this.parcelaSelecionada) return;
+    this.comissaoService.bloquearParcela(this.parcelaSelecionada.id, this.parcelaSelecionada.idComissao, '').subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Parcela bloqueada com sucesso' });
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'A comissão foi bloqueada.' });
         this.displayBloqueioDialog = false;
-        this.dt.reset(); // Recarrega
+        this.dt.reset();
       },
-      error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao bloquear parcela' });
-      }
+      error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao bloquear comissão.' })
     });
   }
 
-  // Desbloqueio
-  desbloquear(parcela: ParcelaComissaoGridDto) {
-    this.confirmationService.confirm({
-      message: 'Tem certeza que deseja desbloquear esta parcela?',
-      header: 'Confirmar Desbloqueio',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.comissaoService.desbloquearParcela(parcela.id, parcela.idComissao).subscribe({
-          next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Parcela desbloqueada com sucesso' });
-            this.dt.reset();
-          },
-          error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao desbloquear parcela' })
-        });
-      }
-    });
-  }
+  // ─── Cancelamento ─────────────────────────────────────────────────────────────
 
-  // Liberação em Massa
-  liberarSelecionadas() {
-    if (!this.selectedParcelas.length) return;
-
-    const ids = this.selectedParcelas.map(p => p.id);
-
-    this.confirmationService.confirm({
-      message: `Tem certeza que deseja liberar ${ids.length} parcelas selecionadas?`,
-      header: 'Confirmar Liberação em Massa',
-      icon: 'pi pi-check-circle',
-      accept: () => {
-        this.comissaoService.liberarParcelasEmMassa(ids, 'current-user-id').subscribe({ // TODO: Get User ID from AuthService
-          next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Parcelas liberadas com sucesso' });
-            this.selectedParcelas = [];
-            this.dt.reset();
-          },
-          error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar parcelas' })
-        });
-      }
-    });
-  }
-
-  // Cancelar Comissão
   abrirCancelamento(parcela: ParcelaComissaoGridDto) {
     this.parcelaSelecionada = parcela;
-    this.motivoCancelamento = '';
     this.displayCancelamentoDialog = true;
   }
 
   confirmarCancelamento() {
-    if (!this.parcelaSelecionada || !this.motivoCancelamento) return;
-
-    this.confirmationService.confirm({
-      message: 'Isso cancelará TODA a comissão vinculada a esta parcela. Deseja continuar?',
-      header: 'ATENÇÃO: Cancelar Comissão',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.comissaoService.cancelarComissao(this.parcelaSelecionada!.idComissao, this.motivoCancelamento, 'current-user-id').subscribe({
-          next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Comissão cancelada com sucesso' });
-            this.displayCancelamentoDialog = false;
-            this.dt.reset();
-          },
-          error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao cancelar comissão' })
-        });
-      }
+    if (!this.parcelaSelecionada) return;
+    this.comissaoService.cancelarComissao(this.parcelaSelecionada.idComissao, '', 'current-user-id').subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'A comissão foi cancelada.' });
+        this.displayCancelamentoDialog = false;
+        this.dt.reset();
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao cancelar comissão.' })
     });
   }
 
-  getStatusSeverity(status: EStatusParcela): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | undefined {
-    switch (status) {
-      case EStatusParcela.Pendente: return 'warn';
-      case EStatusParcela.Liberada: return 'info';
-      case EStatusParcela.Paga: return 'success';
-      case EStatusParcela.Cancelada: return 'danger';
-      case EStatusParcela.Bloqueada: return 'danger';
-      default: return 'secondary';
+  // ─── Helpers de Status ────────────────────────────────────────────────────────
+
+  getStatusSeverity(status: any): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined {
+    switch (this.parseStatus(status)) {
+      case 'Pendente':  return 'secondary';
+      case 'Liberada':  return 'success';   // Verde
+      case 'Paga':      return 'success';
+      case 'Cancelada': return 'warn';      // Amarelo
+      case 'Bloqueada': return 'danger';    // Vermelho
+      default:          return 'secondary';
     }
   }
 
-  getStatusLabel(status: EStatusParcela): string {
-    switch (status) {
-      case EStatusParcela.Pendente: return 'Pendente';
-      case EStatusParcela.Liberada: return 'Liberada';
-      case EStatusParcela.Paga: return 'Paga';
-      case EStatusParcela.Cancelada: return 'Cancelada';
-      case EStatusParcela.Bloqueada: return 'Bloqueada';
-      default: return 'Desconhecido';
+  getStatusLabel(status: any): string {
+    switch (this.parseStatus(status)) {
+      case 'Pendente':  return 'Pendente';
+      case 'Liberada':  return 'Liberado';
+      case 'Paga':      return 'Pago';
+      case 'Cancelada': return 'Cancelado';
+      case 'Bloqueada': return 'Bloqueado';
+      default:          return 'Pendente';
     }
   }
 }

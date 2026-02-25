@@ -36,6 +36,13 @@ const routes: Routes = [
             ),
     },
     {
+        path: 'detalhes/:id',
+        loadComponent: () =>
+            import('./detalhes/comissao-detalhes.component').then(
+                (m) => m.ComissaoDetalhesComponent
+            ),
+    },
+    {
         path: 'legacy-test',
         loadComponent: () =>
             import('./legacy-test/legacy-test.component').then(

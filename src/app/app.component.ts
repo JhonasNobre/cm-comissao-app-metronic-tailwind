@@ -49,7 +49,7 @@ export class AppComponent {
   constructor() {
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
       this.updateDemo();
-      this.metronicInitService.init();
+      setTimeout(() => this.metronicInitService.init(), 0);
     });
     this.updateDemo();
   }

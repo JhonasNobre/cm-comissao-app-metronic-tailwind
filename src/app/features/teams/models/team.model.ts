@@ -1,6 +1,7 @@
 export interface Team {
     id: string;
     nome: string;
+    descricao?: string;
     perfilAcessoId?: string;
     perfilAcessoNome?: string;
     limiteDescontoMaximo?: number;
@@ -13,6 +14,7 @@ export interface Team {
 export interface TeamListDTO {
     id: string;
     nome: string;
+    descricao?: string;
     perfilAcessoNome?: string;
     quantidadeUsuarios: number;
     criadoEm: Date;
@@ -20,6 +22,7 @@ export interface TeamListDTO {
 
 export interface TeamCreateDTO {
     nome: string;
+    descricao?: string;
     perfilAcessoId?: string;
     restricaoHorario?: any;
     groups?: any[];
@@ -28,7 +31,16 @@ export interface TeamCreateDTO {
 export interface TeamUpdateDTO {
     id: string;
     nome: string;
+    descricao?: string;
     perfilAcessoId?: string;
     restricaoHorario?: any;
     groups?: any[];
+}
+
+export interface MembroEquipe {
+    usuarioId: string;
+    nome: string;
+    email: string;
+    perfilNome: string;
+    grupoEquipeId: string;
 }
