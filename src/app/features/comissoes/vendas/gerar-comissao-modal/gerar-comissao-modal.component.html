@@ -11,20 +11,26 @@
             </div>
         </div>
 
-        <div class="flex flex-col gap-2">
-            <label class="font-medium required">Estrutura de Comissão</label>
-            <p-select [options]="estruturas" [(ngModel)]="selectedEstrutura" placeholder="Selecione uma estrutura"
-                [filter]="true" filterBy="label" [showClear]="true" styleClass="w-full" appendTo="body">
-            </p-select>
-            <small class="text-gray-500">Selecione a regra de comissão a ser aplicada.</small>
+        @if (semEstruturaVinculada) {
+        <div class="p-3 bg-amber-50 rounded border border-amber-200 flex items-start gap-2">
+            <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5 flex-shrink-0"></i>
+            <p class="text-sm text-amber-800">
+                Esta venda não possui uma estrutura de comissão vinculada. Vincule uma estrutura antes de gerar a comissão.
+            </p>
         </div>
+        } @else {
+        <div class="p-3 bg-green-50 rounded border border-green-100 flex items-center gap-2">
+            <i class="pi pi-check-circle text-green-600 flex-shrink-0"></i>
+            <p class="text-sm text-green-800">Estrutura de comissão vinculada. Clique em <strong>Gerar Comissão</strong> para confirmar.</p>
+        </div>
+        }
     </div>
 
     <ng-template pTemplate="footer">
         <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="close()">
         </button>
         <button pButton pRipple label="Gerar Comissão" icon="pi pi-check" class="p-button-primary" (click)="confirmar()"
-            [loading]="saving" [disabled]="!selectedEstrutura">
+            [loading]="saving" [disabled]="semEstruturaVinculada">
         </button>
     </ng-template>
 </p-dialog>

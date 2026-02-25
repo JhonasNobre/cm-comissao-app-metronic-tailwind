@@ -13,6 +13,7 @@ export interface EstruturaComissao {
     dataVigenciaFim?: Date;
     versao: number;
     ativo: boolean;
+    gerarAutomaticamente: boolean;
     niveis: EstruturaComissaoNivel[];
     criadoEm: Date;
     atualizadoEm?: Date;
@@ -57,6 +58,7 @@ export interface CreateEstruturaComissaoRequest {
     idEmpresa: string;
     tipoComissao?: number;
     valorComissao?: number; // Valor da Comissão Total (O Bolo)
+    gerarAutomaticamente: boolean;
     dataVigenciaInicio?: Date;
     dataVigenciaFim?: Date;
     niveis: CreateEstruturaComissaoNivelRequest[];
@@ -75,8 +77,7 @@ export interface CreateEstruturaComissaoNivelRequest {
     tipoComissao?: number | null;
     regraLiberacao?: number | null;
     prioridadePagamento?: number | null;
-    // Campos de Bônus 
-    tipoBonificacao?: number;
+    // Campos de Bônus
     origemPagamentoId?: string;
     parcelaInicialLiberacao?: number;
     liberacaoAutomaticaQuitacao?: boolean;

@@ -395,7 +395,8 @@ export class EstruturaFormComponent implements OnInit {
             descricao: ['', [Validators.maxLength(500)]],
             status: ['Ativo', [Validators.required]],
             tipoComissao: [TipoComissao.Percentual],
-            valorComissao: [null, [Validators.min(0)]]
+            valorComissao: [null, [Validators.min(0)]],
+            gerarAutomaticamente: [false]
         });
     }
 
@@ -434,7 +435,8 @@ export class EstruturaFormComponent implements OnInit {
                     descricao: estrutura.descricao,
                     status: estrutura.ativo ? 'Ativo' : 'Inativo',
                     tipoComissao: typeof estrutura.tipoComissao === 'string' ? TipoComissao[estrutura.tipoComissao as keyof typeof TipoComissao] : (estrutura.tipoComissao ?? TipoComissao.Percentual),
-                    valorComissao: estrutura.valorComissao ?? 0
+                    valorComissao: estrutura.valorComissao ?? 0,
+                    gerarAutomaticamente: estrutura.gerarAutomaticamente ?? false
                 });
 
                 if (estrutura.niveis && estrutura.niveis.length > 0) {
@@ -1020,9 +1022,6 @@ export class EstruturaFormComponent implements OnInit {
                 prioridadePagamento: data.prioridade || 2,
 
                 numeroParcelas: data.numeroParcelas,
-
-                // Inferir TipoBonificacao se não estiver setado mas for um nível de bônus
-                tipoBonificacao: this.inferTipoBonificacao(data),
 
                 origemPagamentoId: data.origemPagamentoId || undefined,
 

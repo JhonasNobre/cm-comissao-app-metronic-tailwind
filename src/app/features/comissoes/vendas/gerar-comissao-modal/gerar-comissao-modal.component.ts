@@ -1,15 +1,11 @@
-import { Component, EventEmitter, Input, Output, OnInit, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
-import { SelectModule } from 'primeng/select';
 
 import { VendaImportada } from '../../models/venda-importada.model';
-import { EstruturaComissaoService } from '../../services/estrutura-comissao.service';
 import { ComissaoService } from '../../services/comissao.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { EmpresaSelectorService } from '../../../../core/services/empresa-selector.service';
 import { MessageService } from 'primeng/api';
 
 @Component({
@@ -17,59 +13,44 @@ import { MessageService } from 'primeng/api';
     standalone: true,
     imports: [
         CommonModule,
-        FormsModule,
         DialogModule,
-        ButtonModule,
-        SelectModule
+        ButtonModule
     ],
     templateUrl: './gerar-comissao-modal.component.html',
     styleUrl: './gerar-comissao-modal.component.scss'
 })
-export class GerarComissaoModalComponent implements OnInit {
-    private estruturaService = inject(EstruturaComissaoService);
+export class GerarComissaoModalComponent {
     private comissaoService = inject(ComissaoService);
     private authService = inject(AuthService);
     private messageService = inject(MessageService);
-    private empresaSelectorService = inject(EmpresaSelectorService);
 
     @Input() visible = false;
     @Output() visibleChange = new EventEmitter<boolean>();
     @Input() venda: VendaImportada | null = null;
     @Output() onGerada = new EventEmitter<void>();
 
-    estruturas: any[] = [];
-    selectedEstrutura: string | null = null;
-    loading = false;
     saving = false;
 
-    ngOnInit() {
-        this.empresaSelectorService.selectedEmpresaIds$.subscribe(ids => {
-            if (ids.length > 0) {
-                this.loadEstruturas(ids[0]);
-            }
-        });
-    }
-
-    loadEstruturas(idEmpresa: string) {
-        this.loading = true;
-        // Busca estruturas ativas da empresa selecionada
-        this.estruturaService.getByEmpresa(idEmpresa, { ativo: true, pagina: 1, tamanhoPagina: 100 }).subscribe({
-            next: (result) => {
-                this.estruturas = result.items.map(e => ({ label: e.nome, value: e.id }));
-                this.loading = false;
-            },
-            error: () => this.loading = false
-        });
+    get semEstruturaVinculada(): boolean {
+        return !!this.venda && !this.venda.idEstruturaComissao;
     }
 
     close() {
         this.visible = false;
         this.visibleChange.emit(false);
-        this.selectedEstrutura = null;
     }
 
     confirmar() {
-        if (!this.venda || !this.selectedEstrutura) return;
+        if (!this.venda) return;
+
+        if (!this.venda.idEstruturaComissao) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Atenção',
+                detail: 'Esta venda não possui uma estrutura de comissão vinculada. Use a opção "Vincular Estrutura" antes de gerar a comissão.'
+            });
+            return;
+        }
 
         this.saving = true;
         const currentUser = this.authService.currentUserValue;
@@ -82,7 +63,6 @@ export class GerarComissaoModalComponent implements OnInit {
 
         const command = {
             idVendaImportada: this.venda.id,
-            idEstruturaComissao: this.selectedEstrutura,
             usuarioId: currentUser.id
         };
 
@@ -94,8 +74,8 @@ export class GerarComissaoModalComponent implements OnInit {
                 this.saving = false;
             },
             error: (err) => {
-                console.error(err);
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao gerar comissão.' });
+                const mensagem = err?.error?.errors?.[0] || 'Erro ao gerar comissão.';
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: mensagem });
                 this.saving = false;
             }
         });

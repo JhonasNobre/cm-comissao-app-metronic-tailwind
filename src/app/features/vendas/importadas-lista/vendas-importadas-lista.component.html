@@ -32,17 +32,26 @@
     <ng-template pTemplate="content">
         <div class="flex flex-col gap-4 py-2" *ngIf="vendaSelecionada">
             <div class="bg-gray-50 p-3 rounded border">
-                <p><strong>Cliente:</strong> {{ vendaSelecionada.nomeCliente }}</p>
-                <p><strong>Valor Base:</strong> {{ vendaSelecionada.valorTotalVenda | currency:'BRL' }}</p>
+                <p class="font-medium text-gray-900">{{ vendaSelecionada.nomeCliente || 'Cliente N/A' }}</p>
+                <div class="flex justify-between mt-1">
+                    <span class="text-xs text-gray-500">Código: {{ vendaSelecionada.idVendaLegado }}</span>
+                    <span class="font-bold text-primary">{{ vendaSelecionada.valorTotalVenda | currency:'BRL' }}</span>
+                </div>
             </div>
 
-            <div class="flex flex-col gap-2">
-                <label class="required font-medium">Selecione a Estrutura de Comissão</label>
-                <p-select [options]="estruturas" [(ngModel)]="estruturaSelecionada" optionLabel="nome"
-                    placeholder="Selecione..." [filter]="true" filterBy="nome" styleClass="w-full" appendTo="body">
-                </p-select>
-                <small class="text-gray-500">A estrutura define as regras e percentuais de comissão.</small>
+            @if (semEstruturaVinculada) {
+            <div class="p-3 bg-amber-50 rounded border border-amber-200 flex items-start gap-2">
+                <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5 flex-shrink-0"></i>
+                <p class="text-sm text-amber-800">
+                    Esta venda não possui uma estrutura de comissão vinculada. Vincule uma estrutura antes de gerar a comissão.
+                </p>
             </div>
+            } @else {
+            <div class="p-3 bg-green-50 rounded border border-green-100 flex items-center gap-2">
+                <i class="pi pi-check-circle text-green-600 flex-shrink-0"></i>
+                <p class="text-sm text-green-800">Estrutura de comissão vinculada. Clique em <strong>Confirmar e Gerar</strong> para continuar.</p>
+            </div>
+            }
         </div>
     </ng-template>
 
@@ -50,6 +59,6 @@
         <button pButton label="Cancelar" icon="pi pi-times" class="p-button-text"
             (click)="gerarVisible = false"></button>
         <button pButton label="Confirmar e Gerar" icon="pi pi-check" class="p-button-success"
-            (click)="confirmarGeracao()" [loading]="gerando" [disabled]="!estruturaSelecionada"></button>
+            (click)="confirmarGeracao()" [loading]="gerando" [disabled]="semEstruturaVinculada"></button>
     </ng-template>
 </p-dialog>

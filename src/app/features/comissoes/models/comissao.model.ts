@@ -96,7 +96,6 @@ export interface ComissaoFiltros {
 
 export interface GerarComissaoCommand {
     idVendaImportada: string;
-    idEstruturaComissao: string;
     usuarioId: string;
 }
 

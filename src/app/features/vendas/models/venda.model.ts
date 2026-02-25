@@ -11,6 +11,7 @@ export interface VendaImportada {
     parcelasPagamento?: any[];
     quemAprovouLegado?: string;
     percentualComissaoLegado?: number;
+    idEstruturaComissao?: string;
 }
 
 export interface VendaFiltros {

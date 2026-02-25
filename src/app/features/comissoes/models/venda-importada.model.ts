@@ -20,6 +20,7 @@ export interface VendaImportada {
     dataVenda: Date;
     sistemaOrigem: ESistemaOrigem;
     statusImportacao: EStatusImportacao;
+    idEstruturaComissao?: string;
 }
 
 export interface VendaImportadaFiltros {
