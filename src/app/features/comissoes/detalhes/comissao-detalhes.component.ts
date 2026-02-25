@@ -22,6 +22,8 @@ import { Comissao, ComissaoDocumento, EStatusComissao, EStatusParcela } from '..
 import { AuthService } from '../../../core/services/auth.service';
 import { VendaService } from '../../vendas/services/venda.service';
 import { VendaImportada } from '../../vendas/models/venda.model';
+import { BonificacaoCalculadaService } from '../../bonificacao/bonificacao-calculada/services/bonificacao-calculada.service';
+import { BonificacaoCalculada, BonificacaoParcela, ETipoBonificacao, EStatusBonificacao, EStatusParcelaBonificacao } from '../../bonificacao/bonificacao-calculada/models/bonificacao-calculada.model';
 
 @Component({
     selector: 'app-comissao-detalhes',
@@ -50,6 +52,7 @@ export class ComissaoDetalhesComponent implements OnInit {
     private comissaoService = inject(ComissaoService);
     private vendaService = inject(VendaService);
     private authService = inject(AuthService);
+    private bonificacaoService = inject(BonificacaoCalculadaService);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private messageService = inject(MessageService);
@@ -83,6 +86,14 @@ export class ComissaoDetalhesComponent implements OnInit {
     // Enums
     EStatusComissao = EStatusComissao;
     EStatusParcela = EStatusParcela;
+    ETipoBonificacao = ETipoBonificacao;
+    EStatusBonificacao = EStatusBonificacao;
+    EStatusParcelaBonificacao = EStatusParcelaBonificacao;
+
+    // Bonificações
+    bonificacoes: BonificacaoCalculada[] = [];
+    loadingBonificacoes = false;
+    expandedBonificacoes: { [id: string]: boolean } = {};
 
     // View Model para Detalhes da Venda
     detalhesDisplay = {
@@ -137,6 +148,9 @@ export class ComissaoDetalhesComponent implements OnInit {
                 this.organizarDocumentos();
 
                 this.prepareDisplayData();
+
+                // Carregar Bonificações da Venda
+                this.loadBonificacoes(this.comissao.idVendaImportada);
 
                 // Carregar Venda Associada
                 if (this.comissao.idVendaImportada) {
@@ -549,6 +563,94 @@ export class ComissaoDetalhesComponent implements OnInit {
                     error: (err) => {
                         console.error(err);
                         this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao reprovar' });
+                    }
+                });
+            }
+        });
+    }
+
+    // --- Bonificações ---
+
+    loadBonificacoes(idVenda: string) {
+        if (!idVenda) return;
+        this.loadingBonificacoes = true;
+        this.bonificacaoService.getByVenda(idVenda).subscribe({
+            next: (data) => {
+                this.bonificacoes = data || [];
+                this.loadingBonificacoes = false;
+            },
+            error: (err) => {
+                console.error('Erro ao carregar bonificações', err);
+                this.loadingBonificacoes = false;
+            }
+        });
+    }
+
+    getTipoBonificacaoLabel(tipo: ETipoBonificacao): string {
+        switch (tipo) {
+            case ETipoBonificacao.PorParcelamento: return 'Por Parcelamento';
+            case ETipoBonificacao.Livre: return 'Livre';
+            case ETipoBonificacao.PorMeta: return 'Por Meta';
+            default: return 'Desconhecido';
+        }
+    }
+
+    getStatusBonificacaoLabel(status: EStatusBonificacao): string {
+        switch (status) {
+            case EStatusBonificacao.Pendente: return 'Pendente';
+            case EStatusBonificacao.PartialmenteLiberada: return 'Parcialmente Liberada';
+            case EStatusBonificacao.Liberada: return 'Liberada';
+            case EStatusBonificacao.Paga: return 'Paga';
+            case EStatusBonificacao.Cancelada: return 'Cancelada';
+            default: return 'Desconhecido';
+        }
+    }
+
+    getStatusBonificacaoSeverity(status: EStatusBonificacao): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+        switch (status) {
+            case EStatusBonificacao.Pendente: return 'warn';
+            case EStatusBonificacao.PartialmenteLiberada: return 'info';
+            case EStatusBonificacao.Liberada: return 'success';
+            case EStatusBonificacao.Paga: return 'success';
+            case EStatusBonificacao.Cancelada: return 'danger';
+            default: return 'secondary';
+        }
+    }
+
+    getStatusParcelaBonificacaoSeverity(status: EStatusParcelaBonificacao): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+        switch (status) {
+            case EStatusParcelaBonificacao.Pendente: return 'warn';
+            case EStatusParcelaBonificacao.Liberada: return 'info';
+            case EStatusParcelaBonificacao.Paga: return 'success';
+            case EStatusParcelaBonificacao.Cancelada: return 'danger';
+            default: return 'secondary';
+        }
+    }
+
+    getStatusParcelaBonificacaoLabel(status: EStatusParcelaBonificacao): string {
+        switch (status) {
+            case EStatusParcelaBonificacao.Pendente: return 'Pendente';
+            case EStatusParcelaBonificacao.Liberada: return 'Liberada';
+            case EStatusParcelaBonificacao.Paga: return 'Paga';
+            case EStatusParcelaBonificacao.Cancelada: return 'Cancelada';
+            default: return 'Desconhecido';
+        }
+    }
+
+    liberarParcelaBonificacao(bonif: BonificacaoCalculada, parcela: BonificacaoParcela) {
+        this.confirmationService.confirm({
+            message: `Confirma a liberação manual da parcela ${parcela.numeroParcela} de bonificação?`,
+            header: 'Liberar Parcela de Bonificação',
+            icon: 'pi pi-check-circle',
+            accept: () => {
+                this.bonificacaoService.liberarParcela(bonif.id, parcela.id).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Parcela de bonificação liberada!' });
+                        this.loadBonificacoes(this.comissao!.idVendaImportada);
+                    },
+                    error: (err) => {
+                        console.error(err);
+                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar parcela de bonificação' });
                     }
                 });
             }

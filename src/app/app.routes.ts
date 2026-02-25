@@ -44,6 +44,11 @@ export const routes: Routes = [
         path: 'bonificacao/origem-pagamento',
         loadComponent: () => import('./features/bonificacao/origem-pagamento/origem-pagamento-list/origem-pagamento-list.component').then(m => m.OrigemPagamentoListComponent)
       },
+      // Bonificações Calculadas (Visão Gerencial)
+      {
+        path: 'bonificacao/calculadas',
+        loadComponent: () => import('./features/bonificacao/bonificacao-calculada/lista/bonificacao-calculada-lista.component').then(m => m.BonificacaoCalculadaListaComponent)
+      },
       {
         path: 'admin/comissoes',
         loadComponent: () => import('./features/comissoes/comissoes-admin-list/comissoes-admin-list.component').then(m => m.ComissoesAdminListComponent)

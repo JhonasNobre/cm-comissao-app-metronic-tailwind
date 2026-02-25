@@ -37,6 +37,13 @@
             <p-tab value="2">Parcelas de comissão</p-tab>
             <p-tab value="3">Participantes</p-tab>
             <p-tab value="4">Documentos</p-tab>
+            <p-tab value="5">
+                <span class="flex items-center gap-1">
+                    <i class="pi pi-star"></i>
+                    Bonificações
+                    <p-badge *ngIf="bonificacoes.length > 0" [value]="bonificacoes.length.toString()" severity="info" class="ml-1" />
+                </span>
+            </p-tab>
         </p-tablist>
 
         <p-tabpanels>
@@ -183,7 +190,7 @@
                                 <td>{{p.imovel}}</td>
                                 <td>{{p.nome}}</td>
                                 <td>{{p.cargo}}</td>
-                                <td class="font-bold">{{p.valorFinal | currency:'BRL'}}</td>
+                                <td class="font-bold">{{p.valorParcela | currency:'BRL'}}</td>
                                 <td>{{p.dataVencimento | date:'dd/MM/yyyy'}}</td>
                                 <td class="text-center">
                                     <p-tag [value]="p.statusParcelaLabel"
@@ -374,6 +381,104 @@
                             </p-accordion-content>
                         </p-accordion-panel>
                     </p-accordion>
+                </div>
+            </p-tabpanel>
+
+            <!-- Tab 5: Bonificações -->
+            <p-tabpanel value="5">
+                <div class="mt-4">
+                    <!-- Loading -->
+                    <div *ngIf="loadingBonificacoes" class="flex justify-center p-10">
+                        <i class="pi pi-spin pi-spinner text-3xl text-primary"></i>
+                    </div>
+
+                    <!-- Sem bonificações -->
+                    <div *ngIf="!loadingBonificacoes && bonificacoes.length === 0"
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-10 text-center">
+                        <i class="pi pi-star text-4xl text-gray-300 block mb-3"></i>
+                        <p class="text-gray-500 font-medium">Nenhuma bonificação gerada para esta venda.</p>
+                    </div>
+
+                    <!-- Lista de bonificações -->
+                    <div *ngIf="!loadingBonificacoes && bonificacoes.length > 0">
+                        <div *ngFor="let bonif of bonificacoes" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border mb-4">
+
+                            <!-- Cabeçalho da bonificação -->
+                            <div class="flex flex-wrap items-center justify-between gap-3 p-4 border-b cursor-pointer"
+                                (click)="expandedBonificacoes[bonif.id] = !expandedBonificacoes[bonif.id]">
+                                <div class="flex items-center gap-3">
+                                    <i class="pi"
+                                        [ngClass]="expandedBonificacoes[bonif.id] ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                                    <p-tag [value]="getTipoBonificacaoLabel(bonif.tipoBonificacao)" severity="info" />
+                                    <span class="text-sm font-medium text-gray-600">
+                                        {{ bonif.itens.length }} beneficiário(s)
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-lg font-bold text-gray-800">
+                                        {{ bonif.valorTotal | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                                    </span>
+                                    <p-tag [value]="getStatusBonificacaoLabel(bonif.status)"
+                                        [severity]="getStatusBonificacaoSeverity(bonif.status)" />
+                                </div>
+                            </div>
+
+                            <!-- Parcelas expandidas -->
+                            <div *ngIf="expandedBonificacoes[bonif.id]" class="p-4">
+                                <p-table [value]="bonif.parcelas" styleClass="p-datatable-sm">
+                                    <ng-template pTemplate="header">
+                                        <tr class="text-xs text-gray-400 uppercase bg-gray-50">
+                                            <th style="width: 100px">Parcela</th>
+                                            <th>Beneficiário</th>
+                                            <th style="width: 150px">Valor</th>
+                                            <th style="width: 130px">Status</th>
+                                            <th style="width: 130px">Liberação</th>
+                                            <th style="width: 120px" class="text-center">Ação</th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template pTemplate="body" let-parcela>
+                                        <tr class="text-sm border-b">
+                                            <td class="font-medium">Nº {{ parcela.numeroParcela }}</td>
+                                            <td>
+                                                <span *ngFor="let item of bonif.itens">
+                                                    <span *ngIf="item.idUsuario === parcela.idUsuario">
+                                                        {{ item.nomeBeneficiario }}
+                                                    </span>
+                                                </span>
+                                            </td>
+                                            <td class="font-medium">
+                                                {{ parcela.valorParcela | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                                            </td>
+                                            <td>
+                                                <p-tag
+                                                    [value]="getStatusParcelaBonificacaoLabel(parcela.status)"
+                                                    [severity]="getStatusParcelaBonificacaoSeverity(parcela.status)" />
+                                            </td>
+                                            <td class="text-sm text-gray-500">
+                                                {{ parcela.dataLiberacao ? (parcela.dataLiberacao | date:'dd/MM/yyyy') : '—' }}
+                                            </td>
+                                            <td class="text-center">
+                                                <button *ngIf="parcela.status === EStatusParcelaBonificacao.Pendente && comissao.status === EStatusComissao.Aprovada"
+                                                    pButton pRipple label="Liberar" icon="pi pi-unlock" size="small"
+                                                    class="p-button-sm p-button-success p-button-outlined"
+                                                    (click)="liberarParcelaBonificacao(bonif, parcela)">
+                                                </button>
+                                                <span *ngIf="parcela.status !== EStatusParcelaBonificacao.Pendente"
+                                                    class="text-gray-400 text-xs">—</span>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template pTemplate="emptymessage">
+                                        <tr>
+                                            <td colspan="6" class="text-center p-4 text-gray-500">
+                                                Nenhuma parcela encontrada.
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </p-tabpanel>
         </p-tabpanels>
