@@ -23,7 +23,7 @@ export interface BonificacaoItem {
     id: string;
     idUsuario: string;
     nomeBeneficiario: string;
-    valorTotal: number;
+    valorTotal: number | { valor: number };
     numeroParcelas: number;
 }
 
@@ -32,9 +32,10 @@ export interface BonificacaoParcela {
     idUsuario: string;
     idItemBonificacao: string;
     numeroParcela: number;
-    valorParcela: number;
+    valorParcela: number | { valor: number };
+    dataPrevista?: Date;
     dataLiberacao?: Date;
-    status: EStatusParcelaBonificacao;
+    status: EStatusParcelaBonificacao | string;
 }
 
 export interface BonificacaoCalculada {
@@ -43,10 +44,10 @@ export interface BonificacaoCalculada {
     idVendaImportada: string;
     idEstruturaComissao: string;
     idNivel: string;
-    tipoBonificacao: ETipoBonificacao;
-    valorBase: number;
-    valorTotal: number;
-    status: EStatusBonificacao;
+    tipoBonificacao: ETipoBonificacao | string;
+    valorBase: number | { valor: number };
+    valorTotal: number | { valor: number };
+    status: EStatusBonificacao | string;
     criadoEm: Date;
     itens: BonificacaoItem[];
     parcelas: BonificacaoParcela[];

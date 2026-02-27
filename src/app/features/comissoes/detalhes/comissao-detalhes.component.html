@@ -41,7 +41,8 @@
                 <span class="flex items-center gap-1">
                     <i class="pi pi-star"></i>
                     Bonificações
-                    <p-badge *ngIf="bonificacoes.length > 0" [value]="bonificacoes.length.toString()" severity="info" class="ml-1" />
+                    <p-badge *ngIf="bonificacoes.length > 0" [value]="bonificacoes.length.toString()" severity="info"
+                        class="ml-1" />
                 </span>
             </p-tab>
         </p-tablist>
@@ -217,7 +218,8 @@
                             </div>
                             <div class="flex gap-4">
                                 <span class="font-medium">{{item.valorFinal | currency:'BRL'}}</span>
-                                <span class="text-gray-400">{{item.percentualAplicado}}%</span>
+                                <span class="text-gray-400">{{item.percentualAplicado ? item.percentualAplicado + '%' :
+                                    'fixo'}}</span>
                             </div>
                         </div>
 
@@ -401,7 +403,8 @@
 
                     <!-- Lista de bonificações -->
                     <div *ngIf="!loadingBonificacoes && bonificacoes.length > 0">
-                        <div *ngFor="let bonif of bonificacoes" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border mb-4">
+                        <div *ngFor="let bonif of bonificacoes"
+                            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border mb-4">
 
                             <!-- Cabeçalho da bonificação -->
                             <div class="flex flex-wrap items-center justify-between gap-3 p-4 border-b cursor-pointer"
@@ -416,7 +419,7 @@
                                 </div>
                                 <div class="flex items-center gap-4">
                                     <span class="text-lg font-bold text-gray-800">
-                                        {{ bonif.valorTotal | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                                        {{ getMoneyValue(bonif.valorTotal) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
                                     </span>
                                     <p-tag [value]="getStatusBonificacaoLabel(bonif.status)"
                                         [severity]="getStatusBonificacaoSeverity(bonif.status)" />
@@ -447,23 +450,25 @@
                                                 </span>
                                             </td>
                                             <td class="font-medium">
-                                                {{ parcela.valorParcela | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                                                {{ getMoneyValue(parcela.valorParcela) |
+                                                currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
                                             </td>
                                             <td>
-                                                <p-tag
-                                                    [value]="getStatusParcelaBonificacaoLabel(parcela.status)"
+                                                <p-tag [value]="getStatusParcelaBonificacaoLabel(parcela.status)"
                                                     [severity]="getStatusParcelaBonificacaoSeverity(parcela.status)" />
                                             </td>
                                             <td class="text-sm text-gray-500">
-                                                {{ parcela.dataLiberacao ? (parcela.dataLiberacao | date:'dd/MM/yyyy') : '—' }}
+                                                {{ parcela.dataLiberacao ? (parcela.dataLiberacao | date:'dd/MM/yyyy') :
+                                                (parcela.dataPrevista ? (parcela.dataPrevista | date:'dd/MM/yyyy') :
+                                                '—') }}
                                             </td>
                                             <td class="text-center">
-                                                <button *ngIf="parcela.status === EStatusParcelaBonificacao.Pendente && comissao.status === EStatusComissao.Aprovada"
-                                                    pButton pRipple label="Liberar" icon="pi pi-unlock" size="small"
+                                                <button *ngIf="canLiberarParcela(parcela)" pButton pRipple
+                                                    label="Liberar" icon="pi pi-unlock" size="small"
                                                     class="p-button-sm p-button-success p-button-outlined"
                                                     (click)="liberarParcelaBonificacao(bonif, parcela)">
                                                 </button>
-                                                <span *ngIf="parcela.status !== EStatusParcelaBonificacao.Pendente"
+                                                <span *ngIf="!isBonifParcelaPendente(parcela)"
                                                     class="text-gray-400 text-xs">—</span>
                                             </td>
                                         </tr>

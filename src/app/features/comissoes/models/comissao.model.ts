@@ -31,6 +31,7 @@ export interface ParcelaComissao {
     id: string;
     idUsuario: string;
     nomeUsuario?: string;
+    nomeNivel?: string;
     numeroParcela: number;
     valorParcela: number;
     valorRecebido?: number;

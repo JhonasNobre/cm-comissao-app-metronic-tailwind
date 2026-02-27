@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 
@@ -48,6 +48,7 @@ export const appConfig: ApplicationConfig = {
         prodMode: false,
       },
       loader: TranslocoHttpLoader
-    })
+    }),
+    { provide: LOCALE_ID, useValue: 'pt-BR' }
   ]
 };

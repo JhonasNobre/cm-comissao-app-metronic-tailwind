@@ -213,12 +213,12 @@ export class ComissaoDetalhesComponent implements OnInit {
         }
 
         this.detalhesDisplay = {
-            produto: (this.comissao as any).produto || this.comissao.nomeEstrutura || 'Não Importado',
-            imovel: this.comissao.imovel || this.venda?.imovel || 'Não Importado',
-            equipe: this.comissao.equipe && this.comissao.equipe !== 'Não informado' ? this.comissao.equipe : 'Não Importado',
-            cliente: this.comissao.nomeCliente && this.comissao.nomeCliente !== 'Não informado' ? this.comissao.nomeCliente : (this.venda?.nomeCliente || 'Não Importado'),
-            corretor: 'Não Importado', // Dados da venda original ainda não importados do legado
-            cidade: this.comissao.cidade || 'Não Importado',
+            produto: (this.comissao as any).produto || this.comissao.nomeEstrutura || 'Não informado',
+            imovel: this.comissao.imovel || (this.venda as any)?.imovel || 'Não informado',
+            equipe: this.comissao.equipe || 'Não informado',
+            cliente: this.comissao.nomeCliente || (this.venda as any)?.nomeCliente || 'Não informado',
+            corretor: nomeCorretor !== 'Não informado' ? nomeCorretor : (this.comissao.corretor || 'Não informado'),
+            cidade: this.comissao.cidade || 'Não informado',
             valorVenda: this.comissao.valorVenda,
             valorRecebido: this.comissao.valorComissaoRecebido
                 ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(this.comissao.valorComissaoRecebido)
@@ -229,12 +229,15 @@ export class ComissaoDetalhesComponent implements OnInit {
         };
 
         // Calcula total de percentuais
+        // Calcula total de percentuais dos participantes
         this.totalPercentualParticipantes = this.comissao.itens?.reduce((acc, item) => acc + (item.percentualAplicado || 0), 0) || 0;
 
         if (this.comissao.parcelas) {
             this.parcelasComissaoDisplay = this.comissao.parcelas.map(p => {
                 const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0); // Zerar horas para comparar apenas datas
                 const vencimento = p.dataVencimento ? new Date(p.dataVencimento) : null;
+                if (vencimento) vencimento.setHours(0, 0, 0, 0);
 
                 let statusPagamento = 'A receber';
                 if (p.dataPagamento) {
@@ -258,13 +261,14 @@ export class ComissaoDetalhesComponent implements OnInit {
                     produto: this.detalhesDisplay.produto,
                     imovel: this.detalhesDisplay.imovel,
                     nome: (p as any).nomeUsuario || "Nome não encontrado",
-                    cargo: "Corretor (a)",
+                    cargo: (p as any).nomeNivel || 'N/A',
                     statusPagamento: statusPagamento,
                     statusParcelaLabel: statusParcelaLabel
                 };
             });
         }
     }
+
 
     getStatusSeverity(status: EStatusComissao): 'success' | 'info' | 'warn' | 'danger' | undefined {
         switch (status) {
@@ -276,14 +280,40 @@ export class ComissaoDetalhesComponent implements OnInit {
         }
     }
 
-    getStatusLabel(status: EStatusComissao): string {
+    /** Extrai o valor numérico de um campo que pode ser number ou Moeda ({valor: N}) */
+    getMoneyValue(val: number | { valor: number } | null | undefined): number {
+        if (val == null) return 0;
+        if (typeof val === 'number') return val;
+        if (typeof val === 'object' && 'valor' in val) return val.valor;
+        return 0;
+    }
+
+    getStatusLabel(status: EStatusComissao | string): string {
+        const s = typeof status === 'string' ? status : '';
         switch (status) {
             case EStatusComissao.Pendente: return 'Pendente';
             case EStatusComissao.Aprovada: return 'Aprovada';
             case EStatusComissao.Rejeitada: return 'Rejeitada';
             case EStatusComissao.Paga: return 'Paga';
-            default: return 'Desconhecido';
+            default:
+                if (s === 'Pendente') return 'Pendente';
+                if (s === 'Aprovada') return 'Aprovada';
+                if (s === 'Rejeitada') return 'Rejeitada';
+                if (s === 'Paga') return 'Paga';
+                return 'Desconhecido';
         }
+    }
+
+    /** Helpers para o template (Bonificações) */
+    isBonifParcelaPendente(parcela: BonificacaoParcela): boolean {
+        return parcela.status === EStatusParcelaBonificacao.Pendente || parcela.status === 'Pendente';
+    }
+
+    canLiberarParcela(parcela: BonificacaoParcela): boolean {
+        if (!this.comissao) return false;
+        const statusStr = String(this.comissao.status);
+        const isAprovada = this.comissao.status === EStatusComissao.Aprovada || statusStr === 'Aprovada' || statusStr === '3';
+        return this.isBonifParcelaPendente(parcela) && isAprovada;
     }
 
     voltar() {
@@ -586,54 +616,85 @@ export class ComissaoDetalhesComponent implements OnInit {
         });
     }
 
-    getTipoBonificacaoLabel(tipo: ETipoBonificacao): string {
+    getTipoBonificacaoLabel(tipo: ETipoBonificacao | string): string {
+        const t = typeof tipo === 'string' ? tipo : '';
         switch (tipo) {
             case ETipoBonificacao.PorParcelamento: return 'Por Parcelamento';
             case ETipoBonificacao.Livre: return 'Livre';
             case ETipoBonificacao.PorMeta: return 'Por Meta';
-            default: return 'Desconhecido';
+            default:
+                if (t === 'PorParcelamento') return 'Por Parcelamento';
+                if (t === 'Livre') return 'Livre';
+                if (t === 'PorMeta') return 'Por Meta';
+                return 'Desconhecido';
         }
     }
 
-    getStatusBonificacaoLabel(status: EStatusBonificacao): string {
+    getStatusBonificacaoLabel(status: EStatusBonificacao | string): string {
+        const s = typeof status === 'string' ? status : '';
         switch (status) {
             case EStatusBonificacao.Pendente: return 'Pendente';
             case EStatusBonificacao.PartialmenteLiberada: return 'Parcialmente Liberada';
             case EStatusBonificacao.Liberada: return 'Liberada';
             case EStatusBonificacao.Paga: return 'Paga';
             case EStatusBonificacao.Cancelada: return 'Cancelada';
-            default: return 'Desconhecido';
+            default:
+                if (s === 'Pendente') return 'Pendente';
+                if (s === 'PartialmenteLiberada' || s === 'ParcialmenteLiberada') return 'Parcialmente Liberada';
+                if (s === 'Liberada') return 'Liberada';
+                if (s === 'Paga') return 'Paga';
+                if (s === 'Cancelada') return 'Cancelada';
+                return 'Desconhecido';
         }
     }
 
-    getStatusBonificacaoSeverity(status: EStatusBonificacao): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    getStatusBonificacaoSeverity(status: EStatusBonificacao | string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+        const s = typeof status === 'string' ? status : '';
         switch (status) {
             case EStatusBonificacao.Pendente: return 'warn';
             case EStatusBonificacao.PartialmenteLiberada: return 'info';
             case EStatusBonificacao.Liberada: return 'success';
             case EStatusBonificacao.Paga: return 'success';
             case EStatusBonificacao.Cancelada: return 'danger';
-            default: return 'secondary';
+            default:
+                if (s === 'Pendente') return 'warn';
+                if (s === 'PartialmenteLiberada' || s === 'ParcialmenteLiberada') return 'info';
+                if (s === 'Liberada') return 'success';
+                if (s === 'Paga') return 'success';
+                if (s === 'Cancelada') return 'danger';
+                return 'secondary';
         }
     }
 
-    getStatusParcelaBonificacaoSeverity(status: EStatusParcelaBonificacao): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    getStatusParcelaBonificacaoSeverity(status: EStatusParcelaBonificacao | string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+        const s = typeof status === 'string' ? status : '';
         switch (status) {
             case EStatusParcelaBonificacao.Pendente: return 'warn';
             case EStatusParcelaBonificacao.Liberada: return 'info';
             case EStatusParcelaBonificacao.Paga: return 'success';
             case EStatusParcelaBonificacao.Cancelada: return 'danger';
-            default: return 'secondary';
+            default:
+                if (s === 'Pendente') return 'warn';
+                if (s === 'Liberada') return 'info';
+                if (s === 'Paga') return 'success';
+                if (s === 'Cancelada') return 'danger';
+                return 'secondary';
         }
     }
 
-    getStatusParcelaBonificacaoLabel(status: EStatusParcelaBonificacao): string {
+    getStatusParcelaBonificacaoLabel(status: EStatusParcelaBonificacao | string): string {
+        const s = typeof status === 'string' ? status : '';
         switch (status) {
             case EStatusParcelaBonificacao.Pendente: return 'Pendente';
             case EStatusParcelaBonificacao.Liberada: return 'Liberada';
             case EStatusParcelaBonificacao.Paga: return 'Paga';
             case EStatusParcelaBonificacao.Cancelada: return 'Cancelada';
-            default: return 'Desconhecido';
+            default:
+                if (s === 'Pendente') return 'Pendente';
+                if (s === 'Liberada') return 'Liberada';
+                if (s === 'Paga') return 'Paga';
+                if (s === 'Cancelada') return 'Cancelada';
+                return 'Desconhecido';
         }
     }
 
