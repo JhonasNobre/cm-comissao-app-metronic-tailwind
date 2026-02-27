@@ -105,7 +105,7 @@ export class LegacySyncComponent {
   lastResult: SyncResult | null = null;
   error: string | null = null;
 
-  dataInicio: string = '2025-01-01';
+  dataInicio: string = '2026-01-01';
   dataFim: string = new Date().toISOString().substring(0, 10);
 
   constructor(private syncService: LegacySyncService) { }
