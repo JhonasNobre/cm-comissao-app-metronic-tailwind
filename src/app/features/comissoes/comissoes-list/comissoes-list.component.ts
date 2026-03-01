@@ -12,6 +12,7 @@ import { DialogModule } from 'primeng/dialog';
 import { MenuModule } from 'primeng/menu';
 import { TableModule } from 'primeng/table';
 import { BadgeModule } from 'primeng/badge';
+import { SelectModule } from 'primeng/select';
 
 import { GenericPTableComponent } from '../../../shared/components/ui/generic-p-table/generic-p-table.component';
 import { ComissaoService } from '../services/comissao.service';
@@ -35,7 +36,8 @@ import { AuthService } from '../../../core/services/auth.service';
         DialogModule,
         MenuModule,
         TableModule,
-        BadgeModule
+        BadgeModule,
+        SelectModule
     ],
     providers: [MessageService, ConfirmationService],
     templateUrl: './comissoes-list.component.html',
@@ -59,8 +61,18 @@ export class ComissoesListComponent implements OnInit {
         pagina: 1,
         tamanhoPagina: 10,
         idEmpresa: undefined as string | undefined,
-        termoBusca: ''
+        termoBusca: '',
+        statusComissao: undefined as number | undefined
     };
+
+    // Opções do filtro de status
+    statusComissaoOptions = [
+        { label: 'Pendente', value: undefined },
+        { label: 'Aprovada', value: 2 },
+        { label: 'Rejeitada', value: 3 },
+        { label: 'Paga', value: 4 },
+        { label: 'Todas', value: -1 }
+    ];
 
     // Histórico
     historico: any[] = []; // ComissaoHistorico
@@ -125,6 +137,11 @@ export class ComissoesListComponent implements OnInit {
         } else {
             this.loadHistorico();
         }
+    }
+
+    onStatusComissaoChange() {
+        this.filtrosPendentes.pagina = 1;
+        this.loadPendentes();
     }
 
     private initializeColumns(): void {
@@ -346,27 +363,26 @@ export class ComissoesListComponent implements OnInit {
 
     onLiberarParcela(parcela: any) {
         this.confirmationService.confirm({
-            message: `Deseja liberar a parcela ${parcela.numeroParcela}?`,
+            message: `Deseja liberar a parcela ${parcela.numeroParcela} e enviar à Imobtech?`,
             header: 'Confirmar Liberação',
             icon: 'pi pi-check-circle',
             accept: () => {
                 this.saving = true;
-                this.comissaoService.liberarParcelaManual(parcela.idComissao, parcela.id, 'current-user').subscribe({
-                    next: () => {
+                this.comissaoService.liberarComissaoImobtech(parcela.idComissao, {
+                    clienteQuitouAntecipado: false
+                }).subscribe({
+                    next: (res) => {
+                        const severity = res.status === 'ENVIADO_IMOBTECH' ? 'success' : (res.status === 'ERRO_ENVIO' ? 'warn' : 'info');
                         this.messageService.add({
-                            severity: 'success',
-                            summary: 'Sucesso',
-                            detail: 'Parcela liberada com sucesso'
+                            severity,
+                            summary: res.status === 'ENVIADO_IMOBTECH' ? 'Sucesso' : 'Atenção',
+                            detail: res.mensagem,
+                            life: 6000
                         });
                         this.loadData();
                         this.saving = false;
                     },
                     error: (err: any) => {
-                        this.messageService.add({
-                            severity: 'error',
-                            summary: 'Erro',
-                            detail: 'Erro ao liberar parcela'
-                        });
                         console.error(err);
                         this.saving = false;
                     }
@@ -433,33 +449,44 @@ export class ComissoesListComponent implements OnInit {
         }
 
         this.confirmationService.confirm({
-            message: `Deseja liberar ${this.selectedParcelas.length} parcela(s) selecionada(s)?`,
+            message: `Deseja liberar ${this.selectedParcelas.length} parcela(s) selecionada(s) e enviar à Imobtech?`,
             header: 'Confirmar Liberação em Lote',
             icon: 'pi pi-check-square',
             accept: () => {
                 this.saving = true;
-                const ids = this.selectedParcelas.map(p => p.id);
+                const comissaoIds = [...new Set(this.selectedParcelas.map(p => p.idComissao))];
+                let completed = 0;
+                let errors = 0;
 
-                this.comissaoService.liberarParcelasEmMassa(ids, 'current-user').subscribe({
-                    next: (result: any) => {
-                        this.messageService.add({
-                            severity: 'success',
-                            summary: 'Sucesso',
-                            detail: `Parcela(s) liberada(s) com sucesso`
-                        });
-                        this.selectedParcelas = [];
-                        this.loadData();
-                        this.saving = false;
-                    },
-                    error: (err: any) => {
-                        this.messageService.add({
-                            severity: 'error',
-                            summary: 'Erro',
-                            detail: 'Erro ao liberar parcelas em lote'
-                        });
-                        console.error(err);
-                        this.saving = false;
-                    }
+                comissaoIds.forEach(idComissao => {
+                    this.comissaoService.liberarComissaoImobtech(idComissao, {
+                        clienteQuitouAntecipado: false
+                    }).subscribe({
+                        next: (res: any) => {
+                            completed++;
+                            const severity = res.status === 'ENVIADO_IMOBTECH' ? 'success' : (res.status === 'ERRO_ENVIO' ? 'warn' : 'info');
+                            this.messageService.add({
+                                severity,
+                                summary: res.status === 'ENVIADO_IMOBTECH' ? 'Sucesso' : 'Atenção',
+                                detail: res.mensagem,
+                                life: 6000
+                            });
+                            if (completed + errors === comissaoIds.length) {
+                                this.selectedParcelas = [];
+                                this.loadData();
+                                this.saving = false;
+                            }
+                        },
+                        error: (err: any) => {
+                            errors++;
+                            console.error(err);
+                            if (completed + errors === comissaoIds.length) {
+                                this.selectedParcelas = [];
+                                this.loadData();
+                                this.saving = false;
+                            }
+                        }
+                    });
                 });
             }
         });

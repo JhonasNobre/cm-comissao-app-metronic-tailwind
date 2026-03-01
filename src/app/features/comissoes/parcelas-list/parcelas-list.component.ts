@@ -209,17 +209,22 @@ export class ParcelasListComponent implements OnInit {
 
   confirmarLiberacao() {
     if (!this.parcelaSelecionada) return;
-    this.comissaoService.liberarParcelaManual(
+    this.comissaoService.liberarComissaoImobtech(
       this.parcelaSelecionada.idComissao,
-      this.parcelaSelecionada.id,
-      'current-user-id'
+      { clienteQuitouAntecipado: false }
     ).subscribe({
-      next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'A comissão foi liberada.' });
+      next: (res) => {
+        const severity = res.status === 'ENVIADO_IMOBTECH' ? 'success' : (res.status === 'ERRO_ENVIO' ? 'warn' : 'info');
+        this.messageService.add({
+          severity,
+          summary: res.status === 'ENVIADO_IMOBTECH' ? 'Sucesso' : 'Atenção',
+          detail: res.mensagem,
+          life: 6000
+        });
         this.displayLiberacaoDialog = false;
         this.dt.reset();
       },
-      error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar comissão.' })
+      error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar comissão e enviar à Imobtech.' })
     });
   }
 
@@ -231,15 +236,40 @@ export class ParcelasListComponent implements OnInit {
   }
 
   confirmarLiberacaoMassa() {
-    const ids = this.selectedParcelas.map(p => p.id);
-    this.comissaoService.liberarParcelasEmMassa(ids, 'current-user-id').subscribe({
-      next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Parcelas liberadas com sucesso.' });
-        this.displayLiberacaoMassaDialog = false;
-        this.selectedParcelas = [];
-        this.dt.reset();
-      },
-      error: () => this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar parcelas.' })
+    // Agrupar parcelas selecionadas por idComissao
+    const comissaoIds = [...new Set(this.selectedParcelas.map(p => p.idComissao))];
+    let completed = 0;
+    let errors = 0;
+
+    comissaoIds.forEach(idComissao => {
+      this.comissaoService.liberarComissaoImobtech(idComissao, {
+        clienteQuitouAntecipado: false
+      }).subscribe({
+        next: (res) => {
+          completed++;
+          const severity = res.status === 'ENVIADO_IMOBTECH' ? 'success' : (res.status === 'ERRO_ENVIO' ? 'warn' : 'info');
+          this.messageService.add({
+            severity,
+            summary: res.status === 'ENVIADO_IMOBTECH' ? 'Sucesso' : 'Atenção',
+            detail: res.mensagem,
+            life: 6000
+          });
+          if (completed + errors === comissaoIds.length) {
+            this.displayLiberacaoMassaDialog = false;
+            this.selectedParcelas = [];
+            this.dt.reset();
+          }
+        },
+        error: () => {
+          errors++;
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: `Erro ao liberar comissão ${idComissao.substring(0, 8)}...` });
+          if (completed + errors === comissaoIds.length) {
+            this.displayLiberacaoMassaDialog = false;
+            this.selectedParcelas = [];
+            this.dt.reset();
+          }
+        }
+      });
     });
   }
 
@@ -285,23 +315,23 @@ export class ParcelasListComponent implements OnInit {
 
   getStatusSeverity(status: any): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined {
     switch (this.parseStatus(status)) {
-      case 'Pendente':  return 'secondary';
-      case 'Liberada':  return 'success';   // Verde
-      case 'Paga':      return 'success';
+      case 'Pendente': return 'secondary';
+      case 'Liberada': return 'success';   // Verde
+      case 'Paga': return 'success';
       case 'Cancelada': return 'warn';      // Amarelo
       case 'Bloqueada': return 'danger';    // Vermelho
-      default:          return 'secondary';
+      default: return 'secondary';
     }
   }
 
   getStatusLabel(status: any): string {
     switch (this.parseStatus(status)) {
-      case 'Pendente':  return 'Pendente';
-      case 'Liberada':  return 'Liberado';
-      case 'Paga':      return 'Pago';
+      case 'Pendente': return 'Pendente';
+      case 'Liberada': return 'Liberado';
+      case 'Paga': return 'Pago';
       case 'Cancelada': return 'Cancelado';
       case 'Bloqueada': return 'Bloqueado';
-      default:          return 'Pendente';
+      default: return 'Pendente';
     }
   }
 }

@@ -143,6 +143,7 @@ export interface ComissaoPendentesFiltros {
     tamanhoPagina: number;
     idEmpresa?: string;
     termoBusca?: string;
+    statusComissao?: number;
 }
 
 export interface ComissaoHistoricoFiltros {
@@ -181,4 +182,19 @@ export interface LiberarParcelasEmMassaRequest {
 export interface CancelarComissaoRequest {
     motivo: string;
     idResponsavel: string;
+}
+
+export interface LiberarComissaoImobtechRequest {
+    valorTotalVenda?: number;
+    valorTotalRecebido?: number;
+    numeroParcelaRecebida?: number;
+    clienteQuitouAntecipado: boolean;
+}
+
+export interface LiberarComissaoImobtechResponse {
+    parcelasLiberadas: number;
+    remessaId?: string;
+    status: string;
+    mensagem: string;
+    errosValidacao: string[];
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseService } from '../../../shared/services/base/base.service';
-import { Comissao, ComissaoFiltros, GerarComissaoCommand, DashboardStats, ComissaoPendente, ComissaoPendentesFiltros, ComissaoHistorico, ComissaoHistoricoFiltros, ParcelaComissaoGridDto, LiberarParcelasEmMassaRequest } from '../models/comissao.model';
+import { Comissao, ComissaoFiltros, GerarComissaoCommand, DashboardStats, ComissaoPendente, ComissaoPendentesFiltros, ComissaoHistorico, ComissaoHistoricoFiltros, ParcelaComissaoGridDto, LiberarParcelasEmMassaRequest, LiberarComissaoImobtechRequest, LiberarComissaoImobtechResponse } from '../models/comissao.model';
 import { PagedResult } from '../models/estrutura-comissao.model';
 
 @Injectable({
@@ -110,5 +110,9 @@ export class ComissaoService extends BaseService {
     exportar(filtros: ComissaoFiltros): Observable<Blob> {
         const params = this.buildHttpParams(filtros);
         return this.http.get(`${this.baseUrl}/exportar`, { params, responseType: 'blob' });
+    }
+
+    liberarComissaoImobtech(idComissao: string, request: LiberarComissaoImobtechRequest): Observable<LiberarComissaoImobtechResponse> {
+        return this.http.post<LiberarComissaoImobtechResponse>(`${this.baseUrl}/${idComissao}/liberar-imobtech`, request);
     }
 }

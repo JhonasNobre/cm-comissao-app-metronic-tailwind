@@ -36,10 +36,12 @@
                 </span>
             </div>
             <!-- Outros filtros dropdowns mocks -->
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
                 <button pButton label="Produto: Todos" class="p-button-text p-button-secondary p-button-sm"></button>
                 <button pButton label="Cidade: Todas" class="p-button-text p-button-secondary p-button-sm"></button>
-                <button pButton label="Status: Todos" class="p-button-text p-button-secondary p-button-sm"></button>
+                <p-select [options]="statusComissaoOptions" [(ngModel)]="filtrosPendentes.statusComissao"
+                    placeholder="Status: Pendente" [showClear]="false" (onChange)="onStatusComissaoChange()"
+                    styleClass="w-44"></p-select>
             </div>
         </div>
 

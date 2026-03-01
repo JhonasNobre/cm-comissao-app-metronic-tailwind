@@ -395,24 +395,31 @@ export class ComissaoDetalhesComponent implements OnInit {
 
     liberarParcela(parcela: any) {
         this.confirmationService.confirm({
-            message: `Confirma a liberação manual da parcela ${parcela.numeroParcela}?`,
-            header: 'Liberar Parcela',
+            message: `Confirma a liberação da parcela ${parcela.numeroParcela}? A remessa será enviada para a Imobtech.`,
+            header: 'Liberar Parcela e Enviar à Imobtech',
             icon: 'pi pi-check-circle',
             accept: () => {
-                const currentUser = this.authService.currentUserValue;
-                if (!currentUser || !this.comissao) return;
+                if (!this.comissao) return;
 
-                const userId = currentUser.id || currentUser.sub || currentUser.nameid || currentUser.Id;
-                if (!userId) return;
-
-                this.comissaoService.liberarParcelaManual(this.comissao.id, parcela.id, userId).subscribe({
-                    next: () => {
-                        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Parcela liberada!' });
+                this.saving = true;
+                this.comissaoService.liberarComissaoImobtech(this.comissao.id, {
+                    clienteQuitouAntecipado: false
+                }).subscribe({
+                    next: (res) => {
+                        const severity = res.status === 'ENVIADO_IMOBTECH' ? 'success' : (res.status === 'ERRO_ENVIO' ? 'warn' : 'info');
+                        this.messageService.add({
+                            severity,
+                            summary: res.status === 'ENVIADO_IMOBTECH' ? 'Sucesso' : 'Atenção',
+                            detail: res.mensagem,
+                            life: 6000
+                        });
                         this.loadDetalhes(this.comissao!.id);
+                        this.saving = false;
                     },
                     error: (err) => {
                         console.error(err);
-                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar parcela' });
+                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar parcela e enviar à Imobtech' });
+                        this.saving = false;
                     }
                 });
             }
@@ -420,32 +427,41 @@ export class ComissaoDetalhesComponent implements OnInit {
     }
 
     liberarComissoesEmMassa() {
-        if (this.selectedParcelasComissao.length === 0) return;
+        if (!this.comissao) return;
 
         this.confirmationService.confirm({
-            message: `Deseja liberar as ${this.selectedParcelasComissao.length} comissões selecionadas?`,
-            header: 'Liberação em Massa',
+            message: `Deseja liberar as parcelas pendentes e enviar a remessa à Imobtech?`,
+            header: 'Liberar Comissões e Enviar à Imobtech',
             icon: 'pi pi-check-circle',
             accept: () => {
-                const currentUser = this.authService.currentUserValue;
-                if (!currentUser) return;
-
-                const userId = currentUser.id || currentUser.sub || currentUser.nameid || currentUser.Id;
-                if (!userId) return;
-
-                const ids = this.selectedParcelasComissao.map(p => p.id);
                 this.saving = true;
 
-                this.comissaoService.liberarParcelasEmMassa(ids, userId).subscribe({
-                    next: () => {
-                        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Comissões liberadas com sucesso!' });
+                this.comissaoService.liberarComissaoImobtech(this.comissao!.id, {
+                    clienteQuitouAntecipado: false
+                }).subscribe({
+                    next: (res) => {
+                        const severity = res.status === 'ENVIADO_IMOBTECH' ? 'success' : (res.status === 'ERRO_ENVIO' ? 'warn' : 'info');
+                        this.messageService.add({
+                            severity,
+                            summary: res.status === 'ENVIADO_IMOBTECH' ? 'Sucesso' : 'Atenção',
+                            detail: res.mensagem,
+                            life: 6000
+                        });
+                        if (res.remessaId) {
+                            this.messageService.add({
+                                severity: 'info',
+                                summary: 'Remessa Imobtech',
+                                detail: `ID da remessa: ${res.remessaId}`,
+                                life: 8000
+                            });
+                        }
                         this.selectedParcelasComissao = [];
                         if (this.comissao) this.loadDetalhes(this.comissao.id);
                         this.saving = false;
                     },
                     error: (err) => {
                         console.error(err);
-                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar em massa' });
+                        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao liberar comissões e enviar à Imobtech' });
                         this.saving = false;
                     }
                 });

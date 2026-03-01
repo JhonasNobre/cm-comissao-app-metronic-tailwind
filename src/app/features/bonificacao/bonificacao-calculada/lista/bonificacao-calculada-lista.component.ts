@@ -133,8 +133,9 @@ export class BonificacaoCalculadaListaComponent implements OnInit {
     }
 
     // Labels e severities
-    getTipoBonificacaoLabel(tipo: ETipoBonificacao): string {
-        switch (tipo) {
+    getTipoBonificacaoLabel(tipo: ETipoBonificacao | string): string {
+        const t = typeof tipo === 'string' ? parseInt(tipo) : tipo;
+        switch (t) {
             case ETipoBonificacao.PorParcelamento: return 'Por Parcelamento';
             case ETipoBonificacao.Livre: return 'Livre';
             case ETipoBonificacao.PorMeta: return 'Por Meta';
@@ -142,8 +143,9 @@ export class BonificacaoCalculadaListaComponent implements OnInit {
         }
     }
 
-    getTipoBonificacaoSeverity(tipo: ETipoBonificacao): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-        switch (tipo) {
+    getTipoBonificacaoSeverity(tipo: ETipoBonificacao | string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+        const t = typeof tipo === 'string' ? parseInt(tipo) : tipo;
+        switch (t) {
             case ETipoBonificacao.PorParcelamento: return 'info';
             case ETipoBonificacao.Livre: return 'success';
             case ETipoBonificacao.PorMeta: return 'warn';
@@ -151,8 +153,9 @@ export class BonificacaoCalculadaListaComponent implements OnInit {
         }
     }
 
-    getStatusBonificacaoLabel(status: EStatusBonificacao): string {
-        switch (status) {
+    getStatusBonificacaoLabel(status: EStatusBonificacao | string): string {
+        const s = typeof status === 'string' ? parseInt(status) : status;
+        switch (s) {
             case EStatusBonificacao.Pendente: return 'Pendente';
             case EStatusBonificacao.PartialmenteLiberada: return 'Parcialmente Liberada';
             case EStatusBonificacao.Liberada: return 'Liberada';
@@ -162,8 +165,9 @@ export class BonificacaoCalculadaListaComponent implements OnInit {
         }
     }
 
-    getStatusBonificacaoSeverity(status: EStatusBonificacao): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-        switch (status) {
+    getStatusBonificacaoSeverity(status: EStatusBonificacao | string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+        const s = typeof status === 'string' ? parseInt(status) : status;
+        switch (s) {
             case EStatusBonificacao.Pendente: return 'warn';
             case EStatusBonificacao.PartialmenteLiberada: return 'info';
             case EStatusBonificacao.Liberada: return 'success';
@@ -173,8 +177,9 @@ export class BonificacaoCalculadaListaComponent implements OnInit {
         }
     }
 
-    getStatusParcelaBonificacaoLabel(status: EStatusParcelaBonificacao): string {
-        switch (status) {
+    getStatusParcelaBonificacaoLabel(status: EStatusParcelaBonificacao | string): string {
+        const s = typeof status === 'string' ? parseInt(status) : status;
+        switch (s) {
             case EStatusParcelaBonificacao.Pendente: return 'Pendente';
             case EStatusParcelaBonificacao.Liberada: return 'Liberada';
             case EStatusParcelaBonificacao.Paga: return 'Paga';
@@ -183,8 +188,9 @@ export class BonificacaoCalculadaListaComponent implements OnInit {
         }
     }
 
-    getStatusParcelaBonificacaoSeverity(status: EStatusParcelaBonificacao): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-        switch (status) {
+    getStatusParcelaBonificacaoSeverity(status: EStatusParcelaBonificacao | string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+        const s = typeof status === 'string' ? parseInt(status) : status;
+        switch (s) {
             case EStatusParcelaBonificacao.Pendente: return 'warn';
             case EStatusParcelaBonificacao.Liberada: return 'info';
             case EStatusParcelaBonificacao.Paga: return 'success';
@@ -192,6 +198,16 @@ export class BonificacaoCalculadaListaComponent implements OnInit {
             default: return 'secondary';
         }
     }
+
+    getValor(valor: number | { valor: number } | any): number {
+        if (valor === null || valor === undefined) return 0;
+        if (typeof valor === 'number') return valor;
+        if (typeof valor === 'object' && 'valor' in valor) return valor.valor;
+        return 0;
+    }
+
+
+
 
     getNomeBeneficiario(bonif: BonificacaoCalculada, parcela: BonificacaoParcela): string {
         return bonif.itens?.find(i => i.idUsuario === parcela.idUsuario)?.nomeBeneficiario || '—';
