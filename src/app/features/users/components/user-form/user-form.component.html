@@ -60,6 +60,12 @@
                                 </small>
                             </div>
 
+                            <div class="flex flex-col gap-2">
+                                <label class="font-semibold text-gray-700">Chave Pix</label>
+                                <input type="text" pInputText formControlName="chavePix" class="w-full"
+                                    placeholder="CPF, E-mail, Telefone ou Aleatória" />
+                            </div>
+
                             <div *ngIf="!isEditMode" class="flex flex-col gap-2">
                                 <label class="font-semibold text-gray-700 required">Senha</label>
                                 <p-password formControlName="senha" [toggleMask]="true" [feedback]="true"

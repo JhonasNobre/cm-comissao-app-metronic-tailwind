@@ -185,6 +185,7 @@ export interface CancelarComissaoRequest {
 }
 
 export interface LiberarComissaoImobtechRequest {
+    idParcela?: string;
     valorTotalVenda?: number;
     valorTotalRecebido?: number;
     numeroParcelaRecebida?: number;

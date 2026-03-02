@@ -211,7 +211,7 @@ export class ParcelasListComponent implements OnInit {
     if (!this.parcelaSelecionada) return;
     this.comissaoService.liberarComissaoImobtech(
       this.parcelaSelecionada.idComissao,
-      { clienteQuitouAntecipado: false }
+      { idParcela: this.parcelaSelecionada.id, clienteQuitouAntecipado: false }
     ).subscribe({
       next: (res) => {
         const severity = res.status === 'ENVIADO_IMOBTECH' ? 'success' : (res.status === 'ERRO_ENVIO' ? 'warn' : 'info');

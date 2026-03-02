@@ -66,6 +66,7 @@ export interface UserCreateDTO {
     cpf: string;
     email: string;
     telefone: string;
+    chavePix?: string;
     senha: string;
     empresaIds: string[];
 
@@ -77,6 +78,7 @@ export interface UserUpdateDTO {
     id: string;
     nomeCompleto: string;
     telefone: string;
+    chavePix?: string;
 
     perfilAcessoIds?: string[];
 

@@ -369,6 +369,7 @@ export class ComissoesListComponent implements OnInit {
             accept: () => {
                 this.saving = true;
                 this.comissaoService.liberarComissaoImobtech(parcela.idComissao, {
+                    idParcela: parcela.id,
                     clienteQuitouAntecipado: false
                 }).subscribe({
                     next: (res) => {

@@ -156,6 +156,7 @@ export class UserFormComponent implements OnInit {
             cpf: ['', [Validators.required]],
             email: ['', [Validators.required, Validators.email]],
             telefone: ['', [Validators.required]],
+            chavePix: [''],
             senha: ['', [Validators.required, Validators.minLength(8)]],
 
             perfilAcessoIds: [[]],
@@ -337,6 +338,7 @@ export class UserFormComponent implements OnInit {
                     cpf: user.cpf,
                     email: user.email,
                     telefone: user.telefone,
+                    chavePix: user.chavePix,
 
                     perfilAcessoIds: user.perfilAcessoIds || (user.perfilAcessoId ? [user.perfilAcessoId] : []),
                     empresaIds: user.empresaIds || [],
@@ -492,6 +494,7 @@ export class UserFormComponent implements OnInit {
                 senha: formValue.senha,
                 cpf: formValue.cpf,
                 telefone: formValue.telefone,
+                chavePix: formValue.chavePix,
 
                 empresaIds: formValue.empresaIds,
                 perfilAcessoIds: formValue.perfilAcessoIds,
