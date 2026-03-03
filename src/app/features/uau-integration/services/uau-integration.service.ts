@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -20,5 +20,22 @@ export class UauIntegrationService {
 
     sincronizarComissao(comissaoId: string): Observable<void> {
         return this.http.post<void>(`${this.API_URL}/sincronizar-comissao/${comissaoId}`, {});
+    }
+
+    consultarParcelasDaVenda(
+        vendaId: string,
+        dataCalculo?: string,
+        boletoAntecipado = false,
+        somenteAptasBoleto = false
+    ): Observable<any> {
+        let params = new HttpParams();
+        if (dataCalculo) params = params.set('dataCalculo', dataCalculo);
+        if (boletoAntecipado) params = params.set('boletoAntecipado', 'true');
+        if (somenteAptasBoleto) params = params.set('somenteAptasBoleto', 'true');
+        return this.http.get<any>(`${this.API_URL}/vendas/${vendaId}/parcelas`, { params });
+    }
+
+    buscarParcelasRecebidas(vendaId: string): Observable<any> {
+        return this.http.get<any>(`${this.API_URL}/vendas/${vendaId}/parcelas/recebidas`);
     }
 }

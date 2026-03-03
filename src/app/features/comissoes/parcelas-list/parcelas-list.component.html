@@ -229,4 +229,55 @@
                 (onClick)="confirmarCancelamento()"></p-button>
         </ng-template>
     </p-dialog>
+
+    <!-- ─── Modal: Remessa Imobtech ───────────────────────────────────────────── -->
+    <p-dialog header="Remessa Imobtech" [(visible)]="displayRemessaDialog" [modal]="true" [closable]="true"
+        [style]="{width: '480px'}">
+        <div class="py-4">
+            <!-- Loading -->
+            <div *ngIf="loadingRemessa" class="flex justify-center items-center py-8">
+                <i class="pi pi-spin pi-spinner text-2xl text-gray-400"></i>
+            </div>
+
+            <!-- Sem remessa -->
+            <div *ngIf="!loadingRemessa && !remessa" class="text-center py-6">
+                <i class="pi pi-inbox text-4xl text-gray-300 mb-3 block"></i>
+                <p class="text-gray-500 font-medium">Nenhuma remessa encontrada para esta parcela.</p>
+                <p class="text-gray-400 text-sm mt-1">A remessa é gerada ao liberar a parcela de comissão.</p>
+            </div>
+
+            <!-- Dados da remessa -->
+            <div *ngIf="!loadingRemessa && remessa" class="flex flex-col gap-3 text-sm">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <span class="text-gray-500">Status</span>
+                    <p-tag [value]="getRemessaStatusLabel(remessa.status)"
+                        [severity]="getRemessaStatusSeverity(remessa.status)"></p-tag>
+                </div>
+                <div class="flex justify-between items-center border-b pb-2">
+                    <span class="text-gray-500">ID Imobtech</span>
+                    <span class="font-mono text-xs font-bold">{{ remessa.imobtechRemessaId || '—' }}</span>
+                </div>
+                <div class="flex justify-between items-center border-b pb-2">
+                    <span class="text-gray-500">Valor Total</span>
+                    <span class="font-bold">{{ remessa.valorTotal | currency:'BRL' }}</span>
+                </div>
+                <div class="flex justify-between items-center border-b pb-2">
+                    <span class="text-gray-500">Data Envio</span>
+                    <span>{{ remessa.dataEnvio ? (remessa.dataEnvio | date:'dd/MM/yyyy HH:mm') : '—' }}</span>
+                </div>
+                <div class="flex justify-between items-center border-b pb-2">
+                    <span class="text-gray-500">Tentativas</span>
+                    <span>{{ remessa.tentativasReprocessamento }}</span>
+                </div>
+                <div *ngIf="remessa.mensagemErro" class="bg-red-50 border border-red-200 rounded p-3 mt-1">
+                    <p class="text-red-600 text-xs font-medium">Erro:</p>
+                    <p class="text-red-500 text-xs mt-1">{{ remessa.mensagemErro }}</p>
+                </div>
+            </div>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Fechar" styleClass="p-button-text"
+                (onClick)="displayRemessaDialog = false"></p-button>
+        </ng-template>
+    </p-dialog>
 </div>

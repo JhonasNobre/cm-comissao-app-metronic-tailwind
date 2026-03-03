@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { BaseService } from '../../../shared/services/base/base.service';
 import { Company } from '../models/company.model';
-import { CreateCompanyRequest, UpdateCompanyRequest } from '../models/company-request.dto';
+import { CreateCompanyRequest, UpdateCompanyRequest, UpdateCodigoDominioLegadoRequest } from '../models/company-request.dto';
 
 @Injectable({
     providedIn: 'root'
@@ -47,6 +47,11 @@ export class CompanyService extends BaseService {
         return this.http.get<any[]>(`${this.baseUrl}/usuario/${externalAuthId}`);
     }
 
+    updateCodigoDominioLegado(id: string, codigo: number | null): Observable<void> {
+        const body: UpdateCodigoDominioLegadoRequest = codigo;
+        return this.http.patch<void>(`${this.baseUrl}/${id}/codigo-dominio-legado`, body);
+    }
+
     /**
      * Maps backend response (Portuguese) to frontend model (English)
      */
@@ -61,7 +66,11 @@ export class CompanyService extends BaseService {
             status: response.status || 'ACTIVE',
             createdAt: new Date(response.criadoEm || response.createdAt),
             updatedAt: response.atualizadoEm ? new Date(response.atualizadoEm) : undefined,
-            photo: response.logo ? `data:image/jpeg;base64,${response.logo}` : `${this.baseUrl}/${response.id}/logo?t=${Date.now()}` // Use Data URI if available, else URL fallback
+            photo: response.logo ? `data:image/jpeg;base64,${response.logo}` : `${this.baseUrl}/${response.id}/logo?t=${Date.now()}`, // Use Data URI if available, else URL fallback
+            codigoLegado: response.codigoLegado ?? undefined,
+            codigoDominioLegado: response.codigoDominioLegado ?? undefined,
+            dominioLegado: response.dominioLegado ?? undefined,
+            ambienteLegado: response.ambienteLegado ?? undefined
         } as Company;
     }
 

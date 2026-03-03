@@ -9,7 +9,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { BaseListComponent } from '../../../../shared/components/base/base-list/base-list.component';
 import { CompanyFormService } from '../../services/company-form.service';
 import { FormItemBase } from '../../../../shared/components/ui/dynamic-form/models/form-item-base';
-import { Observable } from 'rxjs';
+import { Observable, switchMap } from 'rxjs';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { TooltipModule } from 'primeng/tooltip';
 
@@ -63,7 +63,12 @@ export class CompanyListComponent extends BaseListComponent<Company> implements 
     }
 
     protected override onEdit(object: Company, id: string | number): Observable<any> {
-        return this.companyService.update(object, id.toString());
+        const codigoDominioLegado = (object as any).codigoDominioLegado != null
+            ? Number((object as any).codigoDominioLegado)
+            : null;
+        return this.companyService.update(object, id.toString()).pipe(
+            switchMap(() => this.companyService.updateCodigoDominioLegado(id.toString(), codigoDominioLegado))
+        );
     }
 
     protected override onDelete(id: string | number): Observable<void> {

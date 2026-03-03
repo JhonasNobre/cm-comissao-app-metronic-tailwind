@@ -20,6 +20,15 @@ export class CompanyFormService {
                 value: company?.cnpj,
                 required: true,
                 order: 2
+            }),
+            new FormItemTextbox({
+                key: 'codigoDominioLegado',
+                label: 'Código Domínio Legado (UAU)',
+                placeholder: 'Ex: 62',
+                value: company?.codigoDominioLegado,
+                type: 'number',
+                required: false,
+                order: 3
             })
         ];
     }

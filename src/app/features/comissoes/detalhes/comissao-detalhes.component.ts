@@ -20,10 +20,13 @@ import { FormsModule } from '@angular/forms';
 import { ComissaoService } from '../services/comissao.service';
 import { Comissao, ComissaoDocumento, EStatusComissao, EStatusParcela } from '../models/comissao.model';
 import { AuthService } from '../../../core/services/auth.service';
-import { VendaService } from '../../vendas/services/venda.service';
+import { VendaService, ParcelaVenda, SincronizarTodasResult } from '../../vendas/services/venda.service';
 import { VendaImportada } from '../../vendas/models/venda.model';
 import { BonificacaoCalculadaService } from '../../bonificacao/bonificacao-calculada/services/bonificacao-calculada.service';
 import { BonificacaoCalculada, BonificacaoParcela, ETipoBonificacao, EStatusBonificacao, EStatusParcelaBonificacao } from '../../bonificacao/bonificacao-calculada/models/bonificacao-calculada.model';
+import { ImobtechRemessaService } from '../../imobtech-integration/services/imobtech-remessa.service';
+import { ObterRemessaResponse, StatusRemessaImobtech } from '../../imobtech-integration/models/imobtech-remessa.model';
+import { UauIntegrationService } from '../../uau-integration/services/uau-integration.service';
 
 @Component({
     selector: 'app-comissao-detalhes',
@@ -53,6 +56,8 @@ export class ComissaoDetalhesComponent implements OnInit {
     private vendaService = inject(VendaService);
     private authService = inject(AuthService);
     private bonificacaoService = inject(BonificacaoCalculadaService);
+    private imobtechRemessaService = inject(ImobtechRemessaService);
+    private uauIntegrationService = inject(UauIntegrationService);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private messageService = inject(MessageService);
@@ -89,6 +94,12 @@ export class ComissaoDetalhesComponent implements OnInit {
     ETipoBonificacao = ETipoBonificacao;
     EStatusBonificacao = EStatusBonificacao;
     EStatusParcelaBonificacao = EStatusParcelaBonificacao;
+    StatusRemessaImobtech = StatusRemessaImobtech;
+
+    // Remessa Imobtech
+    remessa: ObterRemessaResponse | null = null;
+    remessaModalVisible = false;
+    loadingRemessa = false;
 
     // Bonificações
     bonificacoes: BonificacaoCalculada[] = [];
@@ -108,8 +119,12 @@ export class ComissaoDetalhesComponent implements OnInit {
         taxaRecebida: '0%'
     };
 
-    // Dados de Pagamento (Cliente -> Incorporadora)
-    parcelasPagamento: any[] = [];
+    // Dados de Pagamento (Cliente -> Incorporadora) — carregados do banco local (sincronizados do UAU)
+    parcelasPagamento: ParcelaVenda[] = [];
+    loadingParcelasPagamento = false;
+    erroParcelasPagamento: string | null = null;
+    sincronizandoParcelas = false;
+    sincronizandoTodas = false;
 
     // Dados de Comissão (Incorporadora -> Corretor)
     parcelasComissaoDisplay: any[] = [];
@@ -171,28 +186,88 @@ export class ComissaoDetalhesComponent implements OnInit {
         this.vendaService.getById(id).subscribe({
             next: (data) => {
                 this.venda = data;
-
-                if (data.parcelasPagamento) {
-                    this.parcelasPagamento = data.parcelasPagamento.map((p: any) => ({
-                        id: p.nossoNumero || p.id,
-                        cliente: data.nomeCliente,
-                        valor: p.valor || 0,
-                        produto: data.codigoProdutoLegado || 'N/A',
-                        imovel: data.imovel || 'N/A',
-                        status: p.status || 'Aguardando',
-                        dataVencimento: p.dataVencimento
-                    }));
-                } else {
-                    this.parcelasPagamento = [];
-                }
-
                 this.prepareDisplayData();
                 this.loading = false;
+                this.loadParcelasPagamentoUau(id);
             },
             error: (err) => {
                 console.error('Erro ao carregar venda', err);
                 this.loading = false;
                 this.prepareDisplayData();
+                // Tenta carregar parcelas UAU mesmo sem os dados da venda local
+                this.loadParcelasPagamentoUau(id);
+            }
+        });
+    }
+
+    loadParcelasPagamentoUau(vendaId: string) {
+        this.loadingParcelasPagamento = true;
+        this.erroParcelasPagamento = null;
+        this.parcelasPagamento = [];
+
+        this.vendaService.getParcelas(vendaId).subscribe({
+            next: (parcelas) => {
+                this.parcelasPagamento = parcelas;
+                this.loadingParcelasPagamento = false;
+            },
+            error: (err) => {
+                console.error('Erro ao buscar parcelas locais', err);
+                const mensagem = err?.error?.errors?.[0] || err?.error?.title || 'Não foi possível carregar as parcelas.';
+                this.erroParcelasPagamento = mensagem;
+                this.loadingParcelasPagamento = false;
+            }
+        });
+    }
+
+    recarregarParcelasPagamento() {
+        if (this.comissao?.idVendaImportada) {
+            this.loadParcelasPagamentoUau(this.comissao.idVendaImportada);
+        }
+    }
+
+    sincronizarParcelasVenda() {
+        const vendaId = this.comissao?.idVendaImportada;
+        if (!vendaId) return;
+
+        this.sincronizandoParcelas = true;
+        this.vendaService.sincronizarParcelas(vendaId).subscribe({
+            next: (total) => {
+                this.sincronizandoParcelas = false;
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Sincronização concluída',
+                    detail: `${total} parcela(s) sincronizada(s) com sucesso.`
+                });
+                this.loadParcelasPagamentoUau(vendaId);
+            },
+            error: (err) => {
+                this.sincronizandoParcelas = false;
+                const mensagem = err?.error?.errors?.[0] || err?.error?.title || 'Erro ao sincronizar parcelas.';
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: mensagem });
+            }
+        });
+    }
+
+    sincronizarTodasParcelasVendas() {
+        this.sincronizandoTodas = true;
+        this.vendaService.sincronizarTodasParcelas().subscribe({
+            next: (resultado: SincronizarTodasResult) => {
+                this.sincronizandoTodas = false;
+                const detalhe = `${resultado.vendasProcessadas} venda(s) OK, ${resultado.vendasComErro} com erro, ${resultado.totalParcelasSincronizadas} parcela(s) total.`;
+                this.messageService.add({
+                    severity: resultado.vendasComErro > 0 ? 'warn' : 'success',
+                    summary: 'Sincronização global concluída',
+                    detail: detalhe,
+                    life: 8000
+                });
+                if (this.comissao?.idVendaImportada) {
+                    this.loadParcelasPagamentoUau(this.comissao.idVendaImportada);
+                }
+            },
+            error: (err) => {
+                this.sincronizandoTodas = false;
+                const mensagem = err?.error?.errors?.[0] || err?.error?.title || 'Erro ao sincronizar todas as parcelas.';
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: mensagem });
             }
         });
     }
@@ -711,6 +786,47 @@ export class ComissaoDetalhesComponent implements OnInit {
                 if (s === 'Paga') return 'Paga';
                 if (s === 'Cancelada') return 'Cancelada';
                 return 'Desconhecido';
+        }
+    }
+
+    // --- Remessa Imobtech ---
+
+    verRemessa(idParcela: string) {
+        this.remessaModalVisible = true;
+        this.loadingRemessa = true;
+        this.remessa = null;
+
+        this.imobtechRemessaService.obterRemessaPorParcelaId(idParcela).subscribe({
+            next: (res) => {
+                this.remessa = res ?? null;
+                this.loadingRemessa = false;
+            },
+            error: () => {
+                this.remessa = null;
+                this.loadingRemessa = false;
+            }
+        });
+    }
+
+    getRemessaStatusLabel(status: StatusRemessaImobtech): string {
+        switch (status) {
+            case StatusRemessaImobtech.Pendente: return 'Pendente';
+            case StatusRemessaImobtech.PendenteProcessamento: return 'Aguardando Processamento';
+            case StatusRemessaImobtech.Processado: return 'Processado';
+            case StatusRemessaImobtech.Erro: return 'Erro';
+            case StatusRemessaImobtech.Cancelado: return 'Cancelado';
+            default: return 'Desconhecido';
+        }
+    }
+
+    getRemessaStatusSeverity(status: StatusRemessaImobtech): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+        switch (status) {
+            case StatusRemessaImobtech.Processado: return 'success';
+            case StatusRemessaImobtech.PendenteProcessamento: return 'info';
+            case StatusRemessaImobtech.Pendente: return 'warn';
+            case StatusRemessaImobtech.Erro: return 'danger';
+            case StatusRemessaImobtech.Cancelado: return 'secondary';
+            default: return 'secondary';
         }
     }
 

@@ -19,6 +19,8 @@ import { EStatusParcela, ParcelaComissaoGridDto } from '../models/comissao.model
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
+import { ImobtechRemessaService } from '../../imobtech-integration/services/imobtech-remessa.service';
+import { ObterRemessaResponse, StatusRemessaImobtech } from '../../imobtech-integration/models/imobtech-remessa.model';
 
 @Component({
   selector: 'app-parcelas-list',
@@ -83,8 +85,15 @@ export class ParcelasListComponent implements OnInit {
   displayBloqueioDialog = false;
   displayCancelamentoDialog = false;
 
+  // Remessa Imobtech
+  displayRemessaDialog = false;
+  loadingRemessa = false;
+  remessa: ObterRemessaResponse | null = null;
+  StatusRemessaImobtech = StatusRemessaImobtech;
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private imobtechRemessaService = inject(ImobtechRemessaService);
 
   constructor(
     private comissaoService: ComissaoService,
@@ -173,6 +182,12 @@ export class ParcelasListComponent implements OnInit {
         command: () => this.verDetalhes(parcela)
       },
       {
+        label: 'Ver remessa',
+        icon: 'pi pi-send',
+        disabled: status === 'Pendente',
+        command: () => this.verRemessa(parcela)
+      },
+      {
         label: 'Bloquear Comissão',
         icon: 'pi pi-lock',
         disabled: bloqueada || encerrada,
@@ -198,6 +213,47 @@ export class ParcelasListComponent implements OnInit {
 
   verDetalhes(parcela: ParcelaComissaoGridDto) {
     this.router.navigate(['/comissoes/detalhes', parcela.idComissao]);
+  }
+
+  // ─── Remessa Imobtech ─────────────────────────────────────────────────────────
+
+  verRemessa(parcela: ParcelaComissaoGridDto) {
+    this.displayRemessaDialog = true;
+    this.loadingRemessa = true;
+    this.remessa = null;
+
+    this.imobtechRemessaService.obterRemessaPorParcelaId(parcela.id).subscribe({
+      next: (res) => {
+        this.remessa = res ?? null;
+        this.loadingRemessa = false;
+      },
+      error: () => {
+        this.remessa = null;
+        this.loadingRemessa = false;
+      }
+    });
+  }
+
+  getRemessaStatusLabel(status: StatusRemessaImobtech): string {
+    switch (status) {
+      case StatusRemessaImobtech.Pendente: return 'Pendente';
+      case StatusRemessaImobtech.PendenteProcessamento: return 'Aguardando Processamento';
+      case StatusRemessaImobtech.Processado: return 'Processado';
+      case StatusRemessaImobtech.Erro: return 'Erro';
+      case StatusRemessaImobtech.Cancelado: return 'Cancelado';
+      default: return 'Desconhecido';
+    }
+  }
+
+  getRemessaStatusSeverity(status: StatusRemessaImobtech): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    switch (status) {
+      case StatusRemessaImobtech.Processado: return 'success';
+      case StatusRemessaImobtech.PendenteProcessamento: return 'info';
+      case StatusRemessaImobtech.Pendente: return 'warn';
+      case StatusRemessaImobtech.Erro: return 'danger';
+      case StatusRemessaImobtech.Cancelado: return 'secondary';
+      default: return 'secondary';
+    }
   }
 
   // ─── Liberação Individual ─────────────────────────────────────────────────────

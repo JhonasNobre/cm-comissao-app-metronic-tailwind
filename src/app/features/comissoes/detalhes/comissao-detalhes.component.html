@@ -109,36 +109,114 @@
 
             <!-- Tab 1: Parcelas de pagamento -->
             <p-tabpanel value="1">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border mt-4">
+
+                <!-- Barra de ações: 2 botões de sincronização -->
+                <div class="flex items-center justify-between mt-4 mb-2 flex-wrap gap-2">
+                    <div class="text-sm text-gray-500 flex items-center gap-1">
+                        <ng-container *ngIf="parcelasPagamento.length > 0">
+                            <i class="pi pi-clock text-gray-400"></i>
+                            Última sincronização:
+                            <strong>{{ parcelasPagamento[0].sincronizadoEm | date:'dd/MM/yyyy HH:mm' }}</strong>
+                        </ng-container>
+                        <ng-container *ngIf="parcelasPagamento.length === 0 && !loadingParcelasPagamento">
+                            Nenhuma parcela sincronizada. Use o botão ao lado para buscar do UAU.
+                        </ng-container>
+                    </div>
+                    <div class="flex gap-2">
+                        <button pButton pRipple
+                            label="Sincronizar esta venda"
+                            icon="pi pi-refresh"
+                            class="p-button-sm p-button-outlined p-button-primary"
+                            [loading]="sincronizandoParcelas"
+                            [disabled]="sincronizandoParcelas || sincronizandoTodas"
+                            (click)="sincronizarParcelasVenda()"
+                            pTooltip="Busca parcelas desta venda diretamente do banco UAU">
+                        </button>
+                        <button pButton pRipple
+                            label="Sincronizar todas"
+                            icon="pi pi-sync"
+                            class="p-button-sm p-button-outlined p-button-secondary"
+                            [loading]="sincronizandoTodas"
+                            [disabled]="sincronizandoParcelas || sincronizandoTodas"
+                            (click)="sincronizarTodasParcelasVendas()"
+                            pTooltip="Sincroniza parcelas de TODAS as vendas com o banco UAU (operação lenta)">
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div *ngIf="loadingParcelasPagamento" class="flex justify-center items-center py-12">
+                    <i class="pi pi-spin pi-spinner text-3xl text-blue-500 mr-3"></i>
+                    <span class="text-gray-500">Carregando parcelas...</span>
+                </div>
+
+                <!-- Erro -->
+                <div *ngIf="!loadingParcelasPagamento && erroParcelasPagamento"
+                    class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                    <i class="pi pi-exclamation-triangle text-red-500 mt-0.5"></i>
+                    <div>
+                        <p class="font-medium text-red-700">Erro ao carregar parcelas</p>
+                        <p class="text-sm text-red-600 mt-1">{{erroParcelasPagamento}}</p>
+                        <button pButton pRipple label="Tentar novamente" icon="pi pi-refresh"
+                            class="p-button-sm p-button-outlined p-button-danger mt-2"
+                            (click)="recarregarParcelasPagamento()">
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabela -->
+                <div *ngIf="!loadingParcelasPagamento && !erroParcelasPagamento"
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border mt-2">
                     <p-table [value]="parcelasPagamento" [tableStyle]="{ 'min-width': '50rem' }"
                         styleClass="p-datatable-sm">
                         <ng-template pTemplate="header">
                             <tr class="text-xs text-gray-400 uppercase bg-gray-50">
-                                <th>ID DA PARCELA</th>
-                                <th>CLIENTE</th>
+                                <th>PARCELA</th>
+                                <th>TIPO</th>
                                 <th>VALOR</th>
-                                <th>PRODUTO</th>
-                                <th>IMÓVEL</th>
-                                <th class="text-center">STATUS DO PAGAMENTO</th>
+                                <th>VALOR CORRIGIDO</th>
+                                <th>VENCIMENTO</th>
+                                <th>RECEBIMENTO</th>
+                                <th class="text-center">STATUS</th>
                             </tr>
                         </ng-template>
                         <ng-template pTemplate="body" let-p>
                             <tr class="text-sm border-b">
-                                <td class="py-3">{{p.id}}</td>
-                                <td>{{p.cliente}}</td>
+                                <td class="py-3 font-mono">{{p.numParcela}}/{{p.numParcGer}}</td>
+                                <td>
+                                    <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                                        {{p.tipoParcela}}
+                                    </span>
+                                </td>
                                 <td class="font-bold">{{p.valor | currency:'BRL'}}</td>
-                                <td>{{p.produto}}</td>
-                                <td>{{p.imovel}}</td>
+                                <td class="text-gray-600">
+                                    <ng-container *ngIf="p.valorCorrigido > 0">
+                                        {{p.valorCorrigido | currency:'BRL'}}
+                                    </ng-container>
+                                    <ng-container *ngIf="p.valorCorrigido === 0">—</ng-container>
+                                </td>
+                                <td [class.text-red-600]="p.status === 'Atrasada'">
+                                    {{p.dataVencimento | date:'dd/MM/yyyy'}}
+                                </td>
+                                <td class="text-green-700">
+                                    <ng-container *ngIf="p.dataRecebimento">
+                                        {{p.dataRecebimento | date:'dd/MM/yyyy'}}
+                                    </ng-container>
+                                    <ng-container *ngIf="!p.dataRecebimento">—</ng-container>
+                                </td>
                                 <td class="text-center">
                                     <p-tag [value]="p.status"
-                                        [severity]="p.status === 'Atrasado' ? 'danger' : p.status === 'Recebido' ? 'success' : 'info'"></p-tag>
+                                        [severity]="p.status === 'Atrasada' ? 'danger' : p.status === 'Recebida' ? 'success' : 'info'">
+                                    </p-tag>
                                 </td>
                             </tr>
                         </ng-template>
                         <ng-template pTemplate="emptymessage">
                             <tr>
-                                <td colspan="6" class="text-center p-4 text-gray-500">Nenhuma parcela de pagamento
-                                    disponível.</td>
+                                <td colspan="7" class="text-center p-8 text-gray-400">
+                                    <i class="pi pi-inbox text-4xl block mb-2 opacity-30"></i>
+                                    Nenhuma parcela sincronizada. Clique em <strong>"Sincronizar esta venda"</strong> para buscar do UAU.
+                                </td>
                             </tr>
                         </ng-template>
                     </p-table>
@@ -147,11 +225,14 @@
 
             <!-- Tab 2: Parcelas de comissão -->
             <p-tabpanel value="2">
-                <div class="flex justify-end gap-2 mb-4 mt-4" *ngIf="comissao.status === EStatusComissao.Aprovada">
-                    <button pButton pRipple label="Cancelar"
-                        class="p-button-text p-button-secondary p-button-sm"></button>
-                    <button pButton pRipple label="Liberar Comissões" class="p-button-primary p-button-sm"
-                        [disabled]="selectedParcelasComissao.length === 0" (click)="liberarComissoesEmMassa()"></button>
+                <div class="flex justify-end gap-2 mb-4 mt-4">
+                    <div class="flex gap-2" *ngIf="comissao.status === EStatusComissao.Aprovada">
+                        <button pButton pRipple label="Cancelar"
+                            class="p-button-text p-button-secondary p-button-sm"></button>
+                        <button pButton pRipple label="Liberar Comissões" class="p-button-primary p-button-sm"
+                            [disabled]="selectedParcelasComissao.length === 0"
+                            (click)="liberarComissoesEmMassa()"></button>
+                    </div>
                 </div>
 
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border">
@@ -172,6 +253,7 @@
                                 <th>VALOR</th>
                                 <th>DATA PREVISTA</th>
                                 <th class="text-center">STATUS DA PARCELA</th>
+                                <th class="text-center">REMESSA</th>
                             </tr>
                         </ng-template>
                         <ng-template pTemplate="body" let-p>
@@ -196,6 +278,18 @@
                                 <td class="text-center">
                                     <p-tag [value]="p.statusParcelaLabel"
                                         [severity]="p.statusParcelaLabel === 'Bloqueada' ? 'danger' : p.statusParcelaLabel === 'Liberada' ? 'success' : 'warn'"></p-tag>
+                                </td>
+                                <td class="text-center">
+                                    <button *ngIf="p.statusParcelaLabel !== 'Pendente'"
+                                        class="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 cursor-pointer border-0 bg-transparent mx-auto"
+                                        pTooltip="Ver remessa desta parcela"
+                                        tooltipPosition="left"
+                                        (click)="verRemessa(p.id)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                        </svg>
+                                    </button>
                                 </td>
                             </tr>
                         </ng-template>
@@ -509,6 +603,65 @@
             <button pButton pRipple label="Confirmar Rejeição" icon="pi pi-check" class="p-button-danger"
                 (click)="confirmarRejeicao()" [loading]="saving" [disabled]="!motivoRejeicao">
             </button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Modal: Remessa Imobtech -->
+    <p-dialog header="Remessa Imobtech" [(visible)]="remessaModalVisible" [modal]="true"
+        [style]="{width: '520px'}" [draggable]="false" [resizable]="false">
+
+        <!-- Loading -->
+        <div *ngIf="loadingRemessa" class="flex justify-center items-center py-10">
+            <i class="pi pi-spin pi-spinner text-3xl text-primary"></i>
+        </div>
+
+        <!-- Sem remessa -->
+        <div *ngIf="!loadingRemessa && !remessa" class="text-center py-8">
+            <i class="pi pi-inbox text-4xl text-gray-300 block mb-3"></i>
+            <p class="text-gray-500 font-medium">Nenhuma remessa encontrada para esta comissão.</p>
+            <p class="text-gray-400 text-sm mt-1">A remessa é gerada ao liberar as parcelas de comissão.</p>
+        </div>
+
+        <!-- Dados da remessa -->
+        <div *ngIf="!loadingRemessa && remessa" class="flex flex-col gap-0 pt-2">
+            <div class="flex items-center py-3 border-b">
+                <span class="text-gray-500 w-40 text-sm">Status</span>
+                <p-tag [value]="getRemessaStatusLabel(remessa.status)"
+                    [severity]="getRemessaStatusSeverity(remessa.status)"></p-tag>
+            </div>
+            <div class="flex items-center py-3 border-b">
+                <span class="text-gray-500 w-40 text-sm">ID Imobtech</span>
+                <span class="font-mono text-sm break-all">{{remessa.imobtechRemessaId || '—'}}</span>
+            </div>
+            <div class="flex items-center py-3 border-b">
+                <span class="text-gray-500 w-40 text-sm">Valor Total</span>
+                <span class="font-bold">{{remessa.valorTotal | currency:'BRL'}}</span>
+            </div>
+            <div class="flex items-center py-3 border-b">
+                <span class="text-gray-500 w-40 text-sm">Enviado em</span>
+                <span>{{remessa.dataEnvio ? (remessa.dataEnvio | date:'dd/MM/yyyy HH:mm') : '—'}}</span>
+            </div>
+            <div class="flex items-center py-3 border-b">
+                <span class="text-gray-500 w-40 text-sm">Última atualização</span>
+                <span>{{remessa.dataProcessamento ? (remessa.dataProcessamento | date:'dd/MM/yyyy HH:mm') : '—'}}</span>
+            </div>
+            <div class="flex items-center py-3" [class.border-b]="remessa.mensagemErro">
+                <span class="text-gray-500 w-40 text-sm">Tentativas</span>
+                <span>{{remessa.tentativasReprocessamento}}</span>
+            </div>
+            <div *ngIf="remessa.mensagemErro" class="py-3">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div class="flex items-start gap-2">
+                        <i class="pi pi-exclamation-triangle text-red-500 mt-0.5"></i>
+                        <span class="text-red-700 text-sm">{{remessa.mensagemErro}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <button pButton pRipple label="Fechar" icon="pi pi-times" class="p-button-text"
+                (click)="remessaModalVisible = false"></button>
         </ng-template>
     </p-dialog>
 

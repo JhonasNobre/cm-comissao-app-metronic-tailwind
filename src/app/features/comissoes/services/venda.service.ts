@@ -28,4 +28,50 @@ export class VendaService extends BaseService {
     getById(id: string): Observable<VendaImportada> {
         return this.http.get<VendaImportada>(`${this.baseUrl}/${id}`);
     }
+
+    /**
+     * Retorna as parcelas sincronizadas localmente para uma venda
+     */
+    getParcelas(vendaId: string): Observable<ParcelaVenda[]> {
+        return this.http.get<ParcelaVenda[]>(`${this.baseUrl}/${vendaId}/parcelas`);
+    }
+
+    /**
+     * Sincroniza as parcelas de uma venda específica com o banco legado (UAU)
+     */
+    sincronizarParcelas(vendaId: string): Observable<number> {
+        return this.http.post<number>(`${this.baseUrl}/${vendaId}/parcelas/sincronizar`, {});
+    }
+
+    /**
+     * Sincroniza as parcelas de TODAS as vendas com código legado
+     */
+    sincronizarTodasParcelas(): Observable<SincronizarTodasResult> {
+        return this.http.post<SincronizarTodasResult>(`${this.baseUrl}/parcelas/sincronizar-todas`, {});
+    }
+}
+
+export interface ParcelaVenda {
+    id: string;
+    numParcela: number;
+    numParcGer: number;
+    tipoParcela: string;
+    valor: number;
+    valorCorrigido: number;
+    valorRecebido: number;
+    multa: number;
+    juros: number;
+    correcaoAtraso: number;
+    dataVencimento: string;
+    dataRecebimento: string | null;
+    dataProrrogacao: string | null;
+    status: 'AReceber' | 'Atrasada' | 'Recebida';
+    sincronizadoEm: string;
+}
+
+export interface SincronizarTodasResult {
+    vendasProcessadas: number;
+    vendasComErro: number;
+    totalParcelasSincronizadas: number;
+    erros: string[];
 }

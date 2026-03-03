@@ -27,4 +27,9 @@ export interface Company extends BaseEntity {
     photo?: string; // Mapped for GenericPTable display
     createdAt: Date;
     updatedAt?: Date;
+    // Configuração legada (UAU/ClickMenos)
+    codigoLegado?: number;
+    codigoDominioLegado?: number;
+    dominioLegado?: string;
+    ambienteLegado?: string;
 }

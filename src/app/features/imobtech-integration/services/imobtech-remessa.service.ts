@@ -45,6 +45,20 @@ export class ImobtechRemessaService {
     }
 
     /**
+     * Obtém a remessa associada a uma comissão
+     */
+    obterRemessaPorComissaoId(idComissao: string): Observable<{ data: ObterRemessaResponse }> {
+        return this.http.get<{ data: ObterRemessaResponse }>(`${this.baseUrl}/remessas/comissao/${idComissao}`);
+    }
+
+    /**
+     * Obtém a remessa associada a uma parcela de comissão específica (por beneficiário)
+     */
+    obterRemessaPorParcelaId(idParcelaComissao: string): Observable<ObterRemessaResponse | null> {
+        return this.http.get<ObterRemessaResponse | null>(`${this.baseUrl}/remessas/parcela/${idParcelaComissao}`);
+    }
+
+    /**
      * Reprocessa uma remessa com erro
      */
     reprocessarRemessa(id: string): Observable<void> {

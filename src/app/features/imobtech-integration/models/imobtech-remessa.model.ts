@@ -13,11 +13,11 @@ export interface RemessaDto {
 }
 
 export enum StatusRemessaImobtech {
-    Pendente = 0,
-    Processando = 1,
-    Sucesso = 2,
-    Erro = 3,
-    Cancelado = 4
+    Pendente = 'Pendente',
+    PendenteProcessamento = 'PendenteProcessamento',
+    Processado = 'Processado',
+    Erro = 'Erro',
+    Cancelado = 'Cancelado'
 }
 
 export interface ListarRemessasResponse {
