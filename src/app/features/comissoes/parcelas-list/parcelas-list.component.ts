@@ -292,13 +292,15 @@ export class ParcelasListComponent implements OnInit {
   }
 
   confirmarLiberacaoMassa() {
-    // Agrupar parcelas selecionadas por idComissao
-    const comissaoIds = [...new Set(this.selectedParcelas.map(p => p.idComissao))];
+    // Iterar por parcela individual, enviando idParcela em cada chamada
+    // para que o backend valide apenas o beneficiário daquela parcela
+    const total = this.selectedParcelas.length;
     let completed = 0;
     let errors = 0;
 
-    comissaoIds.forEach(idComissao => {
-      this.comissaoService.liberarComissaoImobtech(idComissao, {
+    this.selectedParcelas.forEach(parcela => {
+      this.comissaoService.liberarComissaoImobtech(parcela.idComissao, {
+        idParcela: parcela.id,
         clienteQuitouAntecipado: false
       }).subscribe({
         next: (res) => {
@@ -310,7 +312,7 @@ export class ParcelasListComponent implements OnInit {
             detail: res.mensagem,
             life: 6000
           });
-          if (completed + errors === comissaoIds.length) {
+          if (completed + errors === total) {
             this.displayLiberacaoMassaDialog = false;
             this.selectedParcelas = [];
             this.dt.reset();
@@ -318,8 +320,8 @@ export class ParcelasListComponent implements OnInit {
         },
         error: () => {
           errors++;
-          this.messageService.add({ severity: 'error', summary: 'Erro', detail: `Erro ao liberar comissão ${idComissao.substring(0, 8)}...` });
-          if (completed + errors === comissaoIds.length) {
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: `Erro ao liberar parcela ${parcela.id.substring(0, 8)}...` });
+          if (completed + errors === total) {
             this.displayLiberacaoMassaDialog = false;
             this.selectedParcelas = [];
             this.dt.reset();
