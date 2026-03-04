@@ -18,7 +18,9 @@ export enum TipoRateio {
 export enum RegraLiberacao {
     Diretamente = 1,
     Parcela = 2,
-    Percentual = 3
+    Percentual = 3,
+    Antecipacao = 4,
+    Manual = 5
 }
 
 export enum TipoValor {
@@ -60,7 +62,9 @@ export const TipoRateioLabels: Record<TipoRateio, string> = {
 export const RegraLiberacaoLabels: Record<RegraLiberacao, string> = {
     [RegraLiberacao.Diretamente]: 'Liberação Direta',
     [RegraLiberacao.Parcela]: 'Por Parcelas Pagas',
-    [RegraLiberacao.Percentual]: 'Por Percentual Pago'
+    [RegraLiberacao.Percentual]: 'Por Percentual Pago',
+    [RegraLiberacao.Antecipacao]: 'Antecipação',
+    [RegraLiberacao.Manual]: 'Manual'
 };
 
 export const StatusComissaoLabels: Record<StatusComissao, string> = {
