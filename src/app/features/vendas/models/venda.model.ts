@@ -12,6 +12,7 @@ export interface VendaImportada {
     quemAprovouLegado?: string;
     percentualComissaoLegado?: number;
     idEstruturaComissao?: string;
+    nomeEstruturaComissao?: string;
 }
 
 export interface VendaFiltros {

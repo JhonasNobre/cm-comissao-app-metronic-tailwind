@@ -47,9 +47,14 @@
                 </p>
             </div>
             } @else {
-            <div class="p-3 bg-green-50 rounded border border-green-100 flex items-center gap-2">
-                <i class="pi pi-check-circle text-green-600 flex-shrink-0"></i>
-                <p class="text-sm text-green-800">Estrutura de comissão vinculada. Clique em <strong>Confirmar e Gerar</strong> para continuar.</p>
+            <div class="p-3 bg-green-50 rounded border border-green-100 flex items-start gap-2">
+                <i class="pi pi-check-circle text-green-600 flex-shrink-0 mt-0.5"></i>
+                <div>
+                    <p class="text-sm text-green-800">Clique em <strong>Confirmar e Gerar</strong> para continuar.</p>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Estrutura de Comissão: <strong>{{ vendaSelecionada?.nomeEstruturaComissao || vendaSelecionada?.idEstruturaComissao }}</strong>
+                    </p>
+                </div>
             </div>
             }
         </div>
